@@ -1,0 +1,138 @@
+# Dependabot configuration — keeps every dependency surface fresh against the
+# upstream registries. PRs land grouped per ecosystem so the review queue does
+# not fragment into one PR per package.
+#
+# Conventions:
+#   • Schedule: weekly, Mondays 06:00 UTC (same window as the secret-scan
+#     re-scan and the OpenSSF Scorecard run — easier on-call handoff).
+#   • Commit messages: Conventional Commits compatible (`build`, `ci`,
+#     `chore`); the repo's commit-msg hook (`--strict --force-scope`)
+#     accepts Dependabot's scope-included template.
+#   • SHA pinning is enforced indirectly: every workflow uses tag pins that
+#     Dependabot bumps for us — pair with branch protection requiring this
+#     workflow to keep the chain safe.
+#
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+updates:
+  # ───────────────────────────────────────────────────────────────────────
+  # GitHub Actions — every workflow file in .github/workflows/.
+  # ───────────────────────────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directories:
+      - /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: ci
+      include: scope
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Python (uv) — one entry per uv project. Each component is independent
+  # per the root pyproject.toml; grouping keeps the runtime vs. dev split
+  # explicit so dev-only bumps land separately from runtime ones.
+  # ───────────────────────────────────────────────────────────────────────
+  - package-ecosystem: uv
+    directories:
+      - /
+      - /agents
+      - /services/slack-notifier
+      - /services/action-broker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: build
+      prefix-development: chore
+      include: scope
+    labels:
+      - dependencies
+      - python
+    groups:
+      python-runtime:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      python-dev:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Terraform — every root and every module directory. Dependabot watches
+  # provider pins and registry module versions; required-version constraints
+  # in versions.tf are bumped in place.
+  # ───────────────────────────────────────────────────────────────────────
+  - package-ecosystem: terraform
+    directories:
+      - /terraform/bootstrap
+      - /terraform/environments/dev
+      - /terraform/environments/prod
+      - /terraform/modules/action-broker
+      - /terraform/modules/agent-runtime
+      - /terraform/modules/eventing
+      - /terraform/modules/foundation
+      - /terraform/modules/governance
+      - /terraform/modules/observability
+      - /terraform/modules/slack-notifier
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    labels:
+      - dependencies
+      - terraform
+    groups:
+      terraform:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Docker — base image tags in the two Cloud Run service Dockerfiles.
+  # ───────────────────────────────────────────────────────────────────────
+  - package-ecosystem: docker
+    directories:
+      - /services/slack-notifier
+      - /services/action-broker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    labels:
+      - dependencies
+      - docker
+    groups:
+      docker:
+        patterns:
+          - "*"

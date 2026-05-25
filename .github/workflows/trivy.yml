@@ -1,0 +1,71 @@
+# Trivy — IaC misconfiguration + dependency vulnerability scanning across
+# the whole tree. Mirrors the `terraform_trivy` pre-commit hook (which
+# pre-commit.ci skips per the ci.skip block in .pre-commit-config.yaml), and
+# extends coverage to non-Terraform misconfig (Dockerfiles, GitHub Actions)
+# and to OS / language-package CVEs.
+#
+# Results are uploaded as SARIF to GitHub Code Scanning.
+#
+# Docs: https://github.com/aquasecurity/trivy-action
+
+name: Trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Mondays 06:00 UTC — DB updates land daily, weekly re-scan is enough.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-${{ github.ref }}-${{ matrix.scan-type }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scan:
+    name: Trivy ${{ matrix.scan-type }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # Upload SARIF to Code Scanning
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scan-type: config
+            # Terraform + Dockerfile + GitHub Actions misconfiguration.
+            sarif: trivy-config.sarif
+            category: trivy-config
+          - scan-type: fs
+            # Filesystem scan: pulls vulns from pyproject.toml / uv.lock /
+            # package.json / etc. across the tree.
+            sarif: trivy-fs.sarif
+            category: trivy-fs
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: ${{ matrix.scan-type }}
+          scan-ref: .
+          format: sarif
+          output: ${{ matrix.sarif }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          # exit-code: 0 lets the SARIF upload finish even on findings; the
+          # Code Scanning alert is the authoritative gate, not the job step.
+          exit-code: "0"
+
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ matrix.sarif }}
+          category: ${{ matrix.category }}
