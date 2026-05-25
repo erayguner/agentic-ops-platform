@@ -23,14 +23,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: trivy-${{ github.ref }}-${{ matrix.scan-type }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   scan:
     name: Trivy ${{ matrix.scan-type }}
     runs-on: ubuntu-latest
+    # Job-level concurrency: matrix.* is only in scope inside the job, so each
+    # matrix leg gets its own group (trivy-<ref>-config, trivy-<ref>-fs).
+    concurrency:
+      group: trivy-${{ github.ref }}-${{ matrix.scan-type }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: read
       security-events: write   # Upload SARIF to Code Scanning

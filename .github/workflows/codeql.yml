@@ -22,14 +22,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: codeql-${{ github.ref }}-${{ matrix.language }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
+    # Job-level concurrency: matrix.* is only in scope inside the job, so each
+    # matrix leg gets its own group (codeql-<ref>-python, codeql-<ref>-actions).
+    concurrency:
+      group: codeql-${{ github.ref }}-${{ matrix.language }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: read
       security-events: write
