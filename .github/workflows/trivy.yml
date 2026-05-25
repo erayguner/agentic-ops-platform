@@ -49,10 +49,10 @@ jobs:
             category: trivy-fs
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: ${{ matrix.scan-type }}
           scan-ref: .
@@ -65,7 +65,7 @@ jobs:
           exit-code: "0"
 
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ matrix.sarif }}
           category: ${{ matrix.category }}
