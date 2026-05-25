@@ -1,0 +1,92 @@
+name: ✨ Feature request
+description: Propose an enhancement or new capability.
+title: "feat: "
+labels: ["enhancement", "triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a feature. The more context you give about the *problem*, the better the resulting design will be.
+
+        For open-ended ideas not yet at "feature request" maturity, please use GitHub Discussions instead.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve? Who has it? What can't they do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: A concrete description of the change you'd like.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider, and why did you prefer the proposal above?
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part(s) of the repository would change?
+      multiple: true
+      options:
+        - Terraform module
+        - Terraform environment
+        - Agent (ADK)
+        - Service — Slack notifier
+        - Service — Action Broker
+        - Interface contract / schemas
+        - Documentation / design review
+        - Tooling / CI / pre-commit
+    validations:
+      required: true
+
+  - type: textarea
+    id: contract-impact
+    attributes:
+      label: Interface-contract impact
+      description: |
+        Does this change `INTERFACE-CONTRACT.md` — schemas, topic names, SA names, action classes, Slack channels?
+        If yes, sketch the diff or the new structure here.
+
+  - type: textarea
+    id: action-class
+    attributes:
+      label: Action-class / autonomy implications
+      description: |
+        If this introduces or modifies an action class, propose the autonomy tier per `docs/DESIGN-REVIEW.md` §3.3,
+        the action-class name, and the per-environment defaults (`dev` / `prod`).
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout considerations
+      description: |
+        How would this be introduced safely? Feature flag? Migration path? Breaking change?
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I searched the open and closed issues for duplicates.
+          required: true
+        - label: I've read the relevant sections of `docs/DESIGN-REVIEW.md`.
+          required: true
+        - label: This proposal contains **no** real GCP project IDs, account emails, OAuth tokens, or other estate-specific values.
+          required: true

@@ -1,0 +1,53 @@
+# AOP Agents — ADK 2.0 Python agent skeletons.
+#
+# Managed by uv. To install the deps and create a venv:
+#     uv sync
+#
+# To run the compile check:
+#     uv run python -m compileall -q .
+#
+# To bump the lockfile after editing dependencies:
+#     uv lock
+#
+# This component IS a package (multiple sub-packages: aop_common, aop_orchestrator,
+# aop_sre, aop_devsecops, aop_platform, aop_finops). Directory names match
+# package names so no source mapping is required.
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aop-agents"
+version = "0.1.0"
+description = "Agentic Operations Platform — ADK 2.0 agent skeletons (orchestrator, SRE, DevSecOps, Platform, FinOps)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+authors = [
+    { name = "Agentic Operations Platform contributors" },
+]
+
+dependencies = [
+    # ADK 2.0 GA'd 2026-05-19 — pinned EXACTLY to the 2.0.x line.
+    # 2.0 is a breaking change from 1.x; do not float to 2.1.x without review.
+    "google-adk==2.0.*",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.5",
+    "google-cloud-pubsub>=2.21",
+    "google-cloud-firestore>=2.16",
+    "google-cloud-logging>=3.10",
+    "opentelemetry-api>=1.27",
+    "opentelemetry-sdk>=1.27",
+    "opentelemetry-exporter-gcp-trace>=1.7",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "aop_common",
+    "aop_orchestrator",
+    "aop_sre",
+    "aop_devsecops",
+    "aop_platform",
+    "aop_finops",
+]

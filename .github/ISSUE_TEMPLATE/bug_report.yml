@@ -1,0 +1,106 @@
+name: 🐛 Bug report
+description: Report a defect in the AOP scaffold — Terraform, agents, services, or documentation.
+title: "bug: "
+labels: ["bug", "triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please complete the form below so we can reproduce and fix it quickly.
+
+        **For security vulnerabilities, do NOT use this form** — follow `SECURITY.md` and use GitHub's private vulnerability reporting.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short, plain-English description of the bug (one or two sentences).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the repository is affected?
+      options:
+        - Terraform module
+        - Terraform environment (dev / prod / bootstrap)
+        - Agent (ADK) — orchestrator
+        - Agent (ADK) — SRE / DevSecOps / Platform / FinOps
+        - Service — Slack notifier
+        - Service — Action Broker
+        - Interface contract / schemas
+        - Pre-commit / CI / tooling
+        - Documentation / design review
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps that produce the bug from a clean checkout.
+      placeholder: |
+        1. `git clone …` & `cd agentic-ops-platform`
+        2. `uv sync` in `services/slack-notifier`
+        3. `terraform -chdir=terraform/environments/dev validate`
+        4. Observe error: …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Versions and OS so we can match your setup.
+      placeholder: |
+        - OS:                         macOS 26.0 / Ubuntu 24.04 / ...
+        - Terraform CLI version:      1.15.x
+        - hashicorp/google version:   7.33.x
+        - Python version:             3.13.x
+        - uv version:                 0.5.x
+        - Docker version (if used):   28.x
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / output
+      description: Paste relevant logs or stack traces. **Redact** real project IDs, account emails, billing-account IDs, OAuth tokens, API keys, SA keys, KMS key paths.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Screenshots, related issues, workarounds you tried, hypotheses about root cause.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I searched the open and closed issues for duplicates.
+          required: true
+        - label: This report contains **no** real GCP project IDs, account emails, billing-account IDs, OAuth tokens, API keys, SA keys, or other estate-specific values.
+          required: true
+        - label: This is not a security vulnerability; if it were, I would use SECURITY.md instead.
+          required: true

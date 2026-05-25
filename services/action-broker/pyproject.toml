@@ -1,0 +1,39 @@
+# Action Broker — Cloud Run service. The single policy-gated execution surface
+# for agent write actions.
+#
+# Managed by uv. To install the deps and create a venv:
+#     uv sync
+#
+# To run locally in dry-run (executors raise NotImplementedError, events log only):
+#     LIVE_MODE=false uv run uvicorn main:app --reload --port 8080
+#
+# To bump the lockfile after editing dependencies:
+#     uv lock
+
+[project]
+name = "aop-action-broker"
+version = "0.1.0"
+description = "AOP Action Broker — the single policy-gated execution surface for agent write actions."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+authors = [
+    { name = "Agentic Operations Platform contributors" },
+]
+
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.5",
+    "google-cloud-pubsub>=2.21",
+    "google-cloud-firestore>=2.16",
+    "google-cloud-iam>=2.15",
+    "google-auth>=2.30",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+]
+
+# This is an application, not a library — uv should not try to build a wheel.
+[tool.uv]
+package = false

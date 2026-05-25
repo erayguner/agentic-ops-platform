@@ -1,0 +1,164 @@
+# Repo-root pyproject.toml.
+#
+# This file does NOT declare runtime dependencies. Each Python component
+# (agents/, services/slack-notifier/, services/action-broker/) has its OWN
+# pyproject.toml with its own dependencies and its own uv.lock. The components
+# are independent uv projects so each can build into its own container image.
+#
+# This file's job is to:
+#   1. Provide repo-wide DEV dependencies (linters, pre-commit, type checker,
+#      test runner) installable via:  uv sync
+#   2. Hold shared tool configuration ([tool.ruff], [tool.mypy], [tool.pytest])
+#      that every component picks up automatically (tools walk parent dirs to
+#      find pyproject.toml).
+#
+# Use uv for ALL Python package management in this repo. Do not use pip.
+#
+# Install everything (root + a component):
+#     uv sync                                       # root dev deps
+#     uv sync --directory agents                    # agents component
+#     uv sync --directory services/slack-notifier   # slack-notifier
+#     uv sync --directory services/action-broker    # action-broker
+
+[project]
+name = "agentic-ops-platform"
+version = "0.1.0"
+description = "Governed multi-agent DevSecOps / SRE / platform engineering on Google Cloud — reference scaffold."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+authors = [
+    { name = "Agentic Operations Platform contributors" },
+]
+
+# Repo root is a "virtual" project — uv won't try to build it.
+[tool.uv]
+package = false
+
+# Repo-wide dev tooling. Runtime deps live in each component's pyproject.toml.
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "types-pyyaml>=6.0",
+]
+
+# ============================================================================
+# Shared tool configuration (every component inherits these via parent-dir
+# lookup unless overridden in the component's own pyproject.toml).
+# ============================================================================
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = [
+    ".terraform",
+    "__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # flake8-bugbear
+    "C4",       # flake8-comprehensions
+    "UP",       # pyupgrade
+    "S",        # bandit (security)
+    "SIM",      # flake8-simplify
+    "RUF",      # ruff-specific
+    "PL",       # pylint
+    "TID",      # tidy imports
+    "PT",       # pytest style
+    "ASYNC",    # async best practices
+    "G",        # logging format
+    "T20",      # no print
+]
+ignore = [
+    "E501",     # line length (ruff format handles)
+    "PLR0913",  # too many arguments
+    "S101",     # assert (allowed in tests)
+    "S603",     # subprocess without shell=True is the safe form
+    "PLR2004",  # magic value in comparison
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106", "PLR2004"]
+"**/__init__.py" = ["F401"]                     # re-exports
+"agents/deployment/**" = ["T201"]               # CLI may print
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+exclude = [
+    "build/",
+    "dist/",
+    ".venv/",
+    "agents/deployment/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "google.adk.*",
+    "google.cloud.*",
+    "slack_sdk.*",
+    "vertexai.*",
+    "opentelemetry.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["agents", "services"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--showlocals",
+]
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "integration: requires live infrastructure (skip in unit-test runs)",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["agents", "services"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/deployment/*",
+]
+
+[tool.coverage.report]
+skip_covered = false
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
+]

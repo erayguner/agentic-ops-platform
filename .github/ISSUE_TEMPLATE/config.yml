@@ -1,0 +1,24 @@
+# GitHub will offer ONLY these structured templates plus the contact links below.
+# Free-form blank issues are disabled to make sure every report carries
+# actionable, structured information.
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🔒 Report a security vulnerability (PRIVATE)
+    url: https://github.com/CHANGEME/CHANGEME/security/advisories/new
+    about: |
+      Do NOT open a public issue for security vulnerabilities.
+      Use GitHub's private vulnerability reporting. See SECURITY.md
+      for the full policy, scope, and disclosure timelines.
+
+  - name: 💬 Ask a question or start a discussion
+    url: https://github.com/CHANGEME/CHANGEME/discussions
+    about: |
+      For open-ended questions, design debate, or proposals that aren't
+      yet a concrete feature request, please use GitHub Discussions.
+
+  - name: 📖 Read the design review first
+    url: https://github.com/CHANGEME/CHANGEME/blob/main/docs/DESIGN-REVIEW.md
+    about: |
+      Most "how should this work?" questions are answered in the design
+      review. Please skim it before filing an issue.

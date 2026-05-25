@@ -1,0 +1,145 @@
+# Action-class policy — placeholder
+# INTERFACE-CONTRACT §5 × §3.3 autonomy tiers
+#
+# tier: 0=observe  1=recommend  2=act-guarded  3=act-slack-approved  4=act-autonomous
+# bounds: validated by policy.py._check_bounds()
+#
+# This file is version-controlled; tier promotions require ≥2 reviewers
+# and a green policy-unit-test run (DESIGN-REVIEW §5.5).
+
+action_classes:
+  - name: cloud_run.scale_within_range
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds:
+          min_instances: 0
+          max_instances: 20
+      - env: prod
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds:
+          min_instances: 1
+          max_instances: 10
+
+  - name: cloud_run.restart_revision
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds: {}
+
+  - name: cloud_run.rollback_to_previous
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 2
+        bounds: {}
+
+  - name: iam.disable_service_account_key
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+
+  - name: secret_manager.disable_version
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds: {}
+
+  - name: scc.mute_finding
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds: {}
+
+  - name: workflows.run
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds: {}
+
+  - name: terraform.plan
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+
+  - name: cost.shrink_idle_resource
+    environments:
+      - env: dev
+        tier: 2
+        allowed: true
+        required_approvers: 0
+        bounds:
+          max_blast_radius: 5
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds:
+          max_blast_radius: 2
+
+  - name: incident.escalate_to_human
+    environments:
+      - env: dev
+        tier: 0
+        allowed: true
+        required_approvers: 0
+        bounds: {}
+      - env: prod
+        tier: 0
+        allowed: true
+        required_approvers: 0
+        bounds: {}
