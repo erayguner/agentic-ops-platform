@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from aop_common.schemas import ActionRequest, Recommendation
+from aop_common.schemas import ActionRequest
 
 logger = logging.getLogger(__name__)
 

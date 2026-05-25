@@ -16,8 +16,6 @@ import logging
 from aop_common.config import AopSettings
 from aop_common.mcp_tools import PLATFORM_MCP_ENDPOINTS, build_mcp_toolsets
 from aop_common.models import ModelFactory
-from aop_common.schemas import Finding
-from aop_platform.prompts import PLATFORM_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +71,13 @@ def build_platform_agent(settings: AopSettings) -> object:
 
     ADK 2.0 API — confirm LlmAgent constructor signature against adk.dev/2.0/ release notes
     """
-    model_factory = ModelFactory.from_settings(settings)
+    ModelFactory.from_settings(settings)
     toolsets = build_mcp_toolsets(
         PLATFORM_MCP_ENDPOINTS,
         region=settings.region,
         extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
     )
-    agent_card = build_agent_card(settings)
+    build_agent_card(settings)
 
     logger.info(
         "build_platform_agent: model=%s endpoint_count=%d",

@@ -109,16 +109,12 @@ def build_mcp_toolsets(
         # ADK 2.0 import path — confirm against adk.dev/2.0/ release notes
         from google.adk.tools.mcp_tool import McpToolset  # type: ignore[import-untyped]
         from google.auth import default as google_auth_default  # type: ignore[import-untyped]
-        from google.auth.transport.requests import Request  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ImportError(
-            "google-adk>=2.0 and google-auth are required. "
-            "Run: pip install 'google-adk==2.0.*'"
+            "google-adk>=2.0 and google-auth are required. " "Run: pip install 'google-adk==2.0.*'"
         ) from exc
 
-    credentials, _ = google_auth_default(
-        scopes=["https://www.googleapis.com/auth/cloud-platform"]
-    )
+    credentials, _ = google_auth_default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
 
     all_endpoints = list(allowed_endpoints)
     if extra_custom_endpoints:

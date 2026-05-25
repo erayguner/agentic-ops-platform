@@ -13,9 +13,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from unittest.mock import patch
 
-import pytest
 
-from blockkit import _countdown_text, _action_elements, _reference_elements, render_block_kit, resolve_channel
+from blockkit import _countdown_text, _action_elements, render_block_kit, resolve_channel
 from schemas import (
     AffectedComponent,
     AgentMeta,

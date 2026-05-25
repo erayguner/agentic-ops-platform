@@ -102,7 +102,7 @@ class AuditEmitter:
         )
 
         payload = record.model_dump(by_alias=True, mode="json")
-        data = json.dumps(payload).encode("utf-8")
+        json.dumps(payload).encode("utf-8")
 
         logger.info(
             "AuditEmitter.record: audit_id=%s phase=%s correlation_id=%s",

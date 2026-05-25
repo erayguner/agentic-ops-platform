@@ -10,7 +10,6 @@ Coverage gaps addressed:
 - approval_id is unique per call
 """
 import json
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -122,9 +121,8 @@ class TestHandleBlockActionsReject:
     @pytest.mark.asyncio
     async def test_each_call_produces_unique_approval_id(self) -> None:
         payload = _slack_payload(action_id="approve_act_001", value="act_001")
-        captured_ids: list[str] = []
 
-        original_init = __import__("interactivity").ActionApproval.__init__
+        __import__("interactivity").ActionApproval.__init__
 
         results = [
             await handle_block_actions(payload, None, None)

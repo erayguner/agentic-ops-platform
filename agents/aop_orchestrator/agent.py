@@ -23,7 +23,6 @@ import logging
 from aop_common.config import AopSettings
 from aop_common.mcp_tools import ORCHESTRATOR_MCP_ENDPOINTS, build_mcp_toolsets
 from aop_common.models import ModelFactory
-from aop_orchestrator.prompts import ORCHESTRATOR_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -207,8 +206,8 @@ def build_orchestrator(settings: AopSettings) -> object:
 
     ADK 2.0 API — confirm WorkflowAgent / graph edge API against adk.dev/2.0/ release notes
     """
-    model_factory = ModelFactory.from_settings(settings)
-    toolsets = build_mcp_toolsets(
+    ModelFactory.from_settings(settings)
+    build_mcp_toolsets(
         ORCHESTRATOR_MCP_ENDPOINTS,
         region=settings.region,
         extra_custom_endpoints=[

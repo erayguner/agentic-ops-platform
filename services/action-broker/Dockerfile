@@ -10,10 +10,13 @@ ARG UV_VERSION=0.5.10
 ARG PYTHON_VERSION=3.13
 
 # ── uv binary (single-file from Astral's distroless image) ──────────────────
-FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+# Tag + digest pinning: Dependabot tracks the tag and proposes a digest bump
+# when the upstream image is re-pushed. Without the digest, the tag alone is
+# mutable (the publisher can re-point it). See ADR / Scorecard Pinned-Dependencies.
+FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:e4c08963c249b0e07d88e9313374d00491e69eed0c99ca5ee443e5c234a16a38 AS uv
 
 # ── builder ─────────────────────────────────────────────────────────────────
-FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
+FROM python:${PYTHON_VERSION}-slim-bookworm@sha256:e4fa1f978c539608a10cdf74700ac32a3f719dfc6e8b6b6001da82deb36302a2 AS builder
 
 COPY --from=uv /uv /uvx /bin/
 
@@ -36,7 +39,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # ── runtime ─────────────────────────────────────────────────────────────────
-FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
+FROM python:${PYTHON_VERSION}-slim-bookworm@sha256:e4fa1f978c539608a10cdf74700ac32a3f719dfc6e8b6b6001da82deb36302a2 AS runtime
 
 RUN groupadd --system --gid 10001 app \
  && useradd  --system --uid 10001 --gid app --no-create-home --shell /sbin/nologin app

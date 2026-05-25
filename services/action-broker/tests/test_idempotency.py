@@ -10,7 +10,6 @@ Coverage gaps addressed:
 """
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from idempotency import IdempotencyStore, _make_key
 

@@ -8,14 +8,14 @@ resolves the acting Slack user to an operator email, and publishes an
 LIVE_SLACK_ENABLED=False (default): logs the approval payload instead of
   publishing to Pub/Sub.
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import os
-import urllib.parse
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from schemas import ActionApproval
 
@@ -25,9 +25,23 @@ LIVE_SLACK_ENABLED = os.environ.get("LIVE_SLACK_ENABLED", "false").lower() == "t
 TOPIC_ACTIONS_APPROVED = "ops.actions.approved"
 
 
+def _safe_log(value: object) -> str:
+    """Sanitise an attacker-controllable value before it reaches the log stream.
+
+    Strips CR/LF (the only chars that can forge new log entries on most line-
+    oriented loggers) and truncates so a single malicious value cannot evict
+    surrounding lines from a bounded log buffer.
+    """
+    if value is None:
+        return ""
+    s = str(value).replace("\r", "\\r").replace("\n", "\\n")
+    return s if len(s) <= 200 else s[:200] + "…"
+
+
 # ---------------------------------------------------------------------------
 # User resolution  (Slack user ID → operator email)
 # ---------------------------------------------------------------------------
+
 
 async def _resolve_operator_email(slack_user_id: str, slack_client) -> str:
     """
@@ -41,13 +55,16 @@ async def _resolve_operator_email(slack_user_id: str, slack_client) -> str:
         profile = resp.get("user", {}).get("profile", {})
         return profile.get("email") or f"slack:{slack_user_id}"
     except Exception as exc:
-        logger.warning("Could not resolve Slack user %s: %s", slack_user_id, exc)
+        logger.warning(
+            "Could not resolve Slack user %s: %s", _safe_log(slack_user_id), _safe_log(exc)
+        )
         return f"slack:{slack_user_id}"
 
 
 # ---------------------------------------------------------------------------
 # Approval publisher
 # ---------------------------------------------------------------------------
+
 
 async def _publish_approval(approval: ActionApproval, pubsub_client) -> None:
     """Publish ActionApproval to ops.actions.approved."""
@@ -58,12 +75,15 @@ async def _publish_approval(approval: ActionApproval, pubsub_client) -> None:
     data = approval.model_dump_json(by_alias=True).encode()
     future = pubsub_client.publish(topic_path, data)
     future.result(timeout=10)
-    logger.info("Published ActionApproval action_id=%s decision=%s", approval.action_id, approval.decision)
+    logger.info(
+        "Published ActionApproval action_id=%s decision=%s", approval.action_id, approval.decision
+    )
 
 
 # ---------------------------------------------------------------------------
 # Main handler
 # ---------------------------------------------------------------------------
+
 
 async def handle_block_actions(
     raw_payload: str,
@@ -83,7 +103,7 @@ async def handle_block_actions(
         return {"ok": False, "error": "invalid_payload"}
 
     if payload.get("type") != "block_actions":
-        logger.debug("Unhandled interactivity type: %s", payload.get("type"))
+        logger.debug("Unhandled interactivity type: %s", _safe_log(payload.get("type")))
         return {"ok": True, "ignored": True}
 
     actions: list[dict] = payload.get("actions", [])
@@ -100,7 +120,7 @@ async def handle_block_actions(
     elif action_id_raw.startswith("reject_"):
         decision = "rejected"
     else:
-        logger.debug("Unhandled action_id prefix: %s", action_id_raw)
+        logger.debug("Unhandled action_id prefix: %s", _safe_log(action_id_raw))
         return {"ok": True, "ignored": True}
 
     slack_user = payload.get("user", {}).get("id", "unknown")
@@ -111,7 +131,7 @@ async def handle_block_actions(
         approval_id=f"apv_{uuid.uuid4().hex[:12]}",
         decision=decision,
         approver_identity=[operator_email],
-        approved_at=datetime.now(tz=timezone.utc),
+        approved_at=datetime.now(tz=UTC),
     )
 
     if LIVE_SLACK_ENABLED and pubsub_client is not None:

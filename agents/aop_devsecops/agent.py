@@ -20,8 +20,6 @@ from aop_common.mcp_tools import (
     build_mcp_toolsets,
 )
 from aop_common.models import ModelFactory
-from aop_common.schemas import Finding
-from aop_devsecops.prompts import DEVSECOPS_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -76,14 +74,14 @@ def build_devsecops_agent(settings: AopSettings) -> object:
 
     ADK 2.0 API — confirm LlmAgent constructor signature against adk.dev/2.0/ release notes
     """
-    model_factory = ModelFactory.from_settings(settings)
+    ModelFactory.from_settings(settings)
     secops_ep = SECOPS_MCP_TEMPLATE.format(region=settings.region)
     toolsets = build_mcp_toolsets(
         DEVSECOPS_MCP_ENDPOINTS + [secops_ep],
         region=settings.region,
         extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
     )
-    agent_card = build_agent_card(settings)
+    build_agent_card(settings)
 
     logger.info(
         "build_devsecops_agent: model=%s endpoint_count=%d secops_region=%s",

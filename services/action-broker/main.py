@@ -26,7 +26,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from pydantic import ValidationError
 
 from broker import Broker, BrokerError

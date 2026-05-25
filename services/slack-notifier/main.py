@@ -23,7 +23,7 @@ import urllib.parse
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, Request, Response, status
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from pydantic import ValidationError
 
 from interactivity import handle_block_actions

@@ -64,7 +64,7 @@ class SlackEmitter:
             NotImplementedError: Skeleton — real publish not wired.
         """
         payload = notification.model_dump(by_alias=True, mode="json")
-        data = json.dumps(payload).encode("utf-8")
+        json.dumps(payload).encode("utf-8")
 
         logger.info(
             "SlackEmitter.emit: notification_id=%s correlation_id=%s severity=%s",

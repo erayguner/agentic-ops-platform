@@ -9,7 +9,6 @@ Coverage gaps addressed:
 - redact_dict() on nested dicts, lists, non-string values
 - Multiple patterns firing in a single string
 """
-import pytest
 
 from redaction import redact, redact_dict
 
