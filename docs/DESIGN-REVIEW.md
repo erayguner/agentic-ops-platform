@@ -18,7 +18,7 @@
 
 This review has ten parts, matching the commission brief:
 
-1. **Current-state assessment** — what exists today and where the gaps are.
+1. **Current-state assessment** — *omitted from this public reference; see the note in Part 1.*
 2. **Capability review** — the May 2026 Gemini Enterprise / Google Cloud agentic landscape.
 3. **Target multi-agent architecture** — the DevSecOps / SRE / Platform operating model.
 4. **MCP strategy** — native Google MCP servers and the custom integrations required.
@@ -44,7 +44,6 @@ Capabilities move fast; every capability claim in Part 2 is tagged:
 
 ### Method and limitations
 
-- **Current state** was derived from **live, read-only discovery** of the Google Cloud estate on 2026-05-22 using `gcloud` (Cloud Asset Inventory `search-all-resources`, IAM policy reads, Service Usage, Monitoring). No changes were made. One project (`ai-studio-generated-project`) could not be inspected — the active account lacks Service Usage permission on it.
 - **Capability research** was conducted against official Google Cloud documentation, the Google Cloud blog, ADK and A2A release notes, and the HashiCorp Terraform Registry (live provider-schema queries) on 2026-05-22, with deliberate emphasis on the February–May 2026 window (the period after a January 2026 knowledge cut-off, including Google Cloud Next '26).
 - Google's April 2026 rebranding means product names are in flux. Where a name changed, both are given. Treat **Announced-GA*** items as planning assumptions, not commitments.
 
@@ -52,13 +51,13 @@ Capabilities move fast; every capability claim in Part 2 is tagged:
 
 ## Executive Summary
 
-**The situation.** The Google Cloud estate today is four independent projects on a personal account, with **no organisation resource, no policy hierarchy, no centralised identity, no alerting, and no security-operations tooling**. It is a capable *experimentation* environment — Vertex AI, Gemini Cloud Assist, Model Armor, the Agent Registry API and the Observability API are already switched on in `agent-experiments` — but it has **none of the governance scaffolding** an autonomous, action-taking agent framework requires. Building agents that can *act* on this foundation, as it stands, would be unsafe.
+**The situation.** Greenfield Google Cloud estates that have already started experimenting with agentic capabilities — Vertex AI, Gemini Cloud Assist, Model Armor, the Agent Registry API, the Observability API — typically lack the surrounding **governance scaffolding** an autonomous, action-taking agent framework requires: organisation resource, policy hierarchy, centralised identity, alerting, security-operations tooling. Building agents that can *act* on that kind of foundation, as-is, would be unsafe.
 
 **The opportunity.** The May 2026 Google Cloud agent stack is, for the first time, genuinely production-grade for operations use cases. The managed agent runtime (Vertex AI **Agent Engine**), the **Agent Development Kit (ADK) 2.0** with a graph-based workflow runtime, the **Agent2Agent (A2A)** interoperability protocol, a fleet of **50+ Google-managed MCP servers** that expose Cloud Logging, Monitoring, Trace, GKE, Cloud Run, SecOps and more as governed tools, and native **Gemini Cloud Assist** ops agents (FinOps, infrastructure operations, root-cause Investigations) together make it possible to build a governed DevSecOps / SRE / Platform automation layer **almost entirely from native components**.
 
 **The core recommendation.** Do not build agents first. Build the **foundation and the guardrails** first, then introduce agents in **observe-only** mode, and earn the right to *act* by moving deliberately up a defined autonomy ladder. Specifically:
 
-1. **Establish a governed foundation** — a Cloud Identity / Organisation resource, a folder hierarchy, environment-separated projects, least-privilege IAM, the elimination of ~17 exported service-account keys, Terraform-managed from day one.
+1. **Establish a governed foundation** — a Cloud Identity / Organisation resource, a folder hierarchy, environment-separated projects, least-privilege IAM, elimination of any exported service-account keys, Terraform-managed from day one.
 2. **Stand up the observability and eventing backbone** — alerting, log routing, Security Command Center, Model Armor floor settings, and the Slack notification path — *before* any agent exists.
 3. **Introduce agents behind a strict operating model** — a clean separation of **Observe → Recommend → Approve → Act**, where every write action funnels through a single policy-enforcing **Action Broker** and no agent ever holds raw write credentials.
 4. **Keep everything model- and tool-agnostic** — ADK's model abstraction, MCP for tools, A2A for agent-to-agent — so new Google capabilities slot in without redesign.
@@ -71,113 +70,10 @@ Capabilities move fast; every capability claim in Part 2 is tagged:
 
 ## Part 1 — Current-State Assessment
 
-### 1.1 Estate topology
-
-The estate is **four projects with no parent organisation**. `gcloud organizations list` returns empty; `gcloud projects get-ancestors` confirms every project's only ancestor is itself. This is the single most consequential structural fact in this review.
-
-| Project ID | Name | Number | Role in estate | Inspectable |
-|---|---|---|---|---|
-| `kitchen-sink-experiments` | My First Project | <project-number> | "Kitchen-sink" — 74 APIs, the bulk of real assets, prior IaC, billing export, Workflows automation | Yes (owner) |
-| `agent-experiments` | agent-experiments | <project-number> | Agentic experimentation — Agent Registry, Gemini Cloud Assist, Model Armor, Observability APIs enabled | Yes (owner) |
-| `enterprise-integration-experiments` | enterprise-integration | <project-number> | Enterprise ITSM-integration experiments — APIs enabled, but no workloads currently deployed | Yes (owner) |
-| `ai-studio-generated-project` | <ai-studio-default> | <project-number> | Google AI Studio / Gemini API-generated project | **No** — account lacks `serviceusage` permission |
-
-**Billing.** Two billing accounts: one **open**, `billingAccounts/XXXXXX-XXXXXX-XXXXXX` ("My Billing Account", **GBP**), and one **closed** trial account (USD). Billing currency and the user account indicate a **UK-based owner** — relevant to data-residency choices (§8.2).
-
-**What "no organisation" costs you.** Without an Organisation resource there is: no place to attach **Organisation Policy** constraints; no **folder hierarchy** for policy inheritance and blast-radius separation; no **organisation-scoped Security Command Center**; no central **log sink** or **audit aggregation**; no organisation-level IAM, custom roles, or **break-glass** structure; and no clean home for **VPC Service Controls** access policies. Every governance control in Parts 5–8 is materially weaker, or simply unavailable, while the estate stays org-less. **Establishing an organisation is the precondition for everything else** and is Recommendation R1.
-
-### 1.2 Identity, access and governance
-
-| Observation | Evidence | Implication |
-|---|---|---|
-| **Single human principal owns everything** | `user:owner@example.org` holds `roles/owner` on all three inspectable projects | No separation of duties; no break-glass; the account is a single point of compromise *and* a single point of failure |
-| **Primitive roles pervasive** | `roles/owner`, `roles/editor`, `roles/viewer` used directly; default Compute/App Engine service accounts hold `roles/editor` | No least privilege; a compromised default SA can do almost anything |
-| **~17 exported service-account keys** | 12 user-managed keys in `kitchen-sink-experiments` (incl. one on the **default compute SA**), 5 in `agent-experiments` | Long-lived, exfiltratable credentials — the highest-severity finding in this review |
-| **4 API keys** | 2 in each playground project ("<api-key-1>", "<api-key-2>", "API key 1" ×2) | Long-lived, hard to scope, easily leaked |
-| **Service-account sprawl** | 9 SAs in `kitchen-sink-experiments` (`terraform-cloud`, `<analytics-bigquery-sa>`, `<itsm-integration-sa>`, `vertex-express`, `workflows-sa`, `appscript`, …) | Ad-hoc; no naming standard; unclear ownership |
-| **One custom role** | `<fleet-management>_operator` in `agent-experiments` | Least-privilege is *possible* here — it has been done once — but is not the norm |
-| **Essential Contacts set** | 1 contact in `kitchen-sink-experiments` | A small positive; should be standardised across the estate |
-
-The `terraform-cloud` service account (with `roles/editor` **and** two exported keys) shows Terraform has been used before — but in exactly the over-privileged, key-based pattern this review recommends replacing.
-
-### 1.3 Workloads and platform footprint
-
-`kitchen-sink-experiments` holds essentially all the real infrastructure:
-
-- **Compute / serverless:** No Compute Engine instances, GKE clusters, Cloud Run services or Cloud Functions were returned by inventory. `gcf-v2-sources` / `gcf-v2-uploads` buckets and a `gcf-artifacts` Artifact Registry repo indicate **Cloud Functions (Gen 2) were deployed previously** and removed. The live automation today is **Cloud Workflows**.
-- **Workflows (4):** `<internal-product>`, `<internal-product>-dryrun`, `<itsm-integration-workflow>`, `<test-workflow>`. The presence of a **dry-run variant** of `<internal-product>` is a genuinely encouraging signal — it shows the owner already thinks in terms of *plan-then-apply* and *safe rehearsal*, which is exactly the mental model this design formalises.
-- **Data:** Firestore (`(default)`, `nam5`); 3 BigQuery datasets including `billing_dataset` with **billing export tables** already wired up — a ready-made foundation for FinOps; a Dataform repository; 2 Dataplex DataScans.
-- **Storage (6 buckets):** including `<internal-product>-dev-tfstate` and `<internal-product>-prod-tfstate` (**Terraform state buckets already exist**), plus hygiene noise (`<test-bucket>`).
-- **Security primitives:** 3 KMS key rings / CMEK keys (`<internal-product>-dev-keyring`, `<internal-product>-dev-eu-keyring`); a `block-public-access` firewall rule (a deliberate hardening), alongside the four default-allow rules.
-- **Networking:** Two VPC networks — the auto-mode `default` and a custom `prod-vpc`. The `default` network's `default-allow-ssh` / `default-allow-rdp` rules are open to `0.0.0.0/0`.
-- **Secrets (6):** `slack-token` and `slack-test-channel` **already exist** — an informal Slack integration is in place; also `github-client-id/secret`, and `<itsm-oauth-token>` (a typo'd name) and `test-key` (hygiene issues).
-
-`enterprise-integration-experiments` has APIs enabled (GKE, Compute, Cloud SQL, Redis, Vertex AI) but **no live workloads** — its service agents for Redis/GKE imply resources existed and were torn down. `agent-experiments` has the agentic APIs enabled and the "<internal-fleet-management>" artefacts (a custom role, service accounts, a Cloud Build pipeline for upgrading Vertex AI Workbench instances) but, again, **no running Cloud Run / GKE / Compute workloads**.
-
-**Net:** the estate is **greenfield for the agent platform**. There is no production workload whose operation would be disrupted by building the framework — a significant de-risking fact. It also means the agents will, initially, have relatively little to *observe*; their first job is as much to **instrument the estate** as to watch it.
-
-### 1.4 Observability and operations
-
-This is a **near-total gap**.
-
-| Capability | State |
-|---|---|
-| Notification channels | **None** in the projects assessed |
-| Alert policies | **None** in the projects assessed |
-| Dashboards | None observed beyond Google defaults |
-| Log routing | Only the built-in `_Default` / `_Required` sinks — **no aggregation, no export, no audit log retention strategy** (billing export to BigQuery is the lone exception) |
-| SLOs / uptime checks | None |
-| Error budgets / on-call | None |
-| Incident tooling | None |
-
-There is, today, **no way for the estate to tell anyone that anything is wrong.** A production-aligned agent framework cannot be layered onto silence — the observability and eventing backbone (Part 6) must be built *first*, both because the agents consume it and because it is independently valuable.
-
-### 1.5 Security posture
-
-Consolidated, in priority order:
-
-1. **Exported service-account keys (~17).** Critical. Long-lived bearer credentials, including one on a default compute SA. Must be eliminated and replaced with Workload Identity Federation / attached service accounts / Agent Identity.
-2. **No Security Command Center.** No vulnerability scanning, no threat detection, no posture management, no central findings. `securitycenter.googleapis.com` is not enabled anywhere.
-3. **No Organisation Policy.** Constraints such as `iam.disableServiceAccountKeyCreation`, `compute.requireOsLogin`, `gcp.resourceLocations`, `iam.allowedPolicyMemberDomains` cannot be enforced.
-4. **Primitive-role / over-privileged identities.** Default SAs with `roles/editor`; human owner everywhere.
-5. **Default networking.** Auto-mode `default` VPC with subnets in every region and internet-open SSH/RDP rules.
-6. **Model Armor enabled but unconfigured.** `modelarmor.googleapis.com` is on in `agent-experiments` but no templates or floor settings exist — the AI-safety control is present but inert.
-7. **API keys.** Four long-lived API keys with unclear scope.
-8. **Inconsistent access.** The owner cannot even enumerate services on `ai-studio-generated-project` — access is not deliberately designed.
-
-### 1.6 IaC and automation maturity
-
-There is a **real but immature** IaC practice: a `terraform-cloud` service account, `*-tfstate` GCS buckets for dev and prod, and the `<internal-product>` Workflows with a dry-run twin. The owner clearly understands plan/apply and environment separation in principle. What is missing is the disciplined wrapper: version-pinned providers, a module/environment layout, keyless CI identity, a policy-as-code gate, and least-privilege automation credentials. The recommendation (Part 7) **builds on this instinct** rather than introducing it cold.
-
-### 1.7 Operational gap analysis
-
-| # | Gap | Severity | Consequence for an agent framework |
-|---|---|---|---|
-| G1 | No organisation / folder hierarchy | **Critical** | No policy inheritance, no org-scoped governance or SCC, no clean environment separation |
-| G2 | ~17 exported SA keys; primitive roles | **Critical** | Agents inheriting this identity model would be dangerously over-privileged; keys are an open exfiltration path |
-| G3 | No observability — zero alerting, no log routing | **Critical** | Nothing for agents to consume; no way to detect agent failure; no audit retention |
-| G4 | No Security Command Center | **High** | The DevSecOps agent has no primary findings source |
-| G5 | No Organisation Policy / Model Armor config | **High** | No preventative guardrails; AI-safety control inert |
-| G6 | No environment separation (dev vs prod) | **High** | No blast-radius control; agents could not be safely promoted dev→prod |
-| G7 | Mixed data residency (europe-west2 + us-central1 + `nam5`) | **Medium** | No residency standard for a UK owner; compliance ambiguity |
-| G8 | Single human principal; no break-glass | **Medium** | No separation of duties; approval workflows have no second actor |
-| G9 | Immature IaC (keys, broad rights, no policy gate) | **Medium** | The platform-as-code supply chain is itself a risk |
-| G10 | Resource / naming hygiene drift | **Low** | Indicates absence of a lifecycle discipline agents will need to enforce |
-
-### 1.8 What is already working in your favour
-
-A fair assessment also records the assets to build on:
-
-- **Billing export to BigQuery** is live — FinOps analytics can start immediately.
-- **Agentic APIs are already enabled** in `agent-experiments` (Agent Registry, Gemini Cloud Assist, Model Armor, Observability, Generative Language) — the experimentation substrate exists.
-- **Terraform state buckets and an IaC habit** already exist.
-- **CMEK key rings** exist — customer-managed encryption is understood.
-- **A Slack integration seed** exists (`slack-token`, `slack-test-channel` secrets).
-- **Cloud Asset Inventory** is enabled in two projects — the discovery/governance backbone is partly in place.
-- **Dry-run thinking** is already evident in the `<internal-product>` Workflows.
-- The estate is **greenfield for production workloads** — the framework can be built without operational risk to a live service.
-
-The work ahead is less "transformation" than **disciplined consolidation**: take instincts that are already present and make them systematic, governed and code-defined.
+*Omitted from this public reference. Part 1 is a current-state assessment of
+a specific Google Cloud estate; that audit is organisation-specific and is
+not part of the framework. The design recommendations in Parts 2-10 are
+framework-level and stand alone — they do not depend on the audit findings.*
 
 ---
 
@@ -580,7 +476,7 @@ A fourth "MCP-equivalent" is **Apigee MCP** — for any *existing internal API* 
 
 ### 4.5 MCP server registry / catalogue
 
-Until **Agent Registry MCP** is GA-stable in-console (it is currently **Preview**, and is already API-enabled in `agent-experiments`), the platform maintains a **lightweight Firestore-backed catalogue** of available MCP servers: name, endpoint, IAM identity required, owner, status, schema URL, last health check. Agents discover servers from the catalogue; the catalogue is itself behind an `Org Context MCP` tool (`list_mcp_servers(agent_role)`). When Agent Registry MCP matures, the platform migrates with no agent-side change — the catalogue API is the abstraction.
+Until **Agent Registry MCP** is GA-stable in-console (it is currently **Preview**), the platform maintains a **lightweight Firestore-backed catalogue** of available MCP servers: name, endpoint, IAM identity required, owner, status, schema URL, last health check. Agents discover servers from the catalogue; the catalogue is itself behind an `Org Context MCP` tool (`list_mcp_servers(agent_role)`). When Agent Registry MCP matures, the platform migrates with no agent-side change — the catalogue API is the abstraction.
 
 ---
 
@@ -937,7 +833,7 @@ Three structural rules:
 
 ### 7.4 State and backend
 
-- **GCS backend**, one bucket per environment, **versioning on**, **CMEK** with `<internal-product>-dev-keyring`/`<internal-product>-prod-keyring` keys.
+- **GCS backend**, one bucket per environment, **versioning on**, **CMEK** with per-environment keyrings.
 - **Native locking** — Terraform ≥ 1.10 / OpenTofu ≥ 1.11 use GCS object-generation locking; **no separate Firestore lock table is required** (older guidance is obsolete).
 - **State bucket IAM** is the tightest in the repo: `tf-runner-<env>` SA only, plus a break-glass `tf-emergency` SA disabled by default.
 - **State bucket lives behind VPC-SC** when the perimeter is established (Phase 2 — §9).
@@ -1031,7 +927,7 @@ The Terraform surface is broad and well-aligned to this architecture. The summar
 |---|---|---|
 | **Identity** | One identity per agent; PAB resource cap; no SA keys | Dedicated SAs (GA) → Agent Identity (Preview); WIF for CI; `iam.disableServiceAccountKeyCreation` enforced |
 | **Network** | Custom-mode VPC; private Google access; (later) VPC-SC perimeter | Replace `default` VPC; perimeter for `ops-agents-prod` + the audit BQ dataset; `_dry_run_*` variants used to stage |
-| **Data** | CMEK everywhere; Secret Manager for all secrets; write-only secret attrs | Reuse `<internal-product>-*` keyrings; `_wo` for Slack token; **no plaintext in state** |
+| **Data** | CMEK everywhere; Secret Manager for all secrets; write-only secret attrs | Per-environment keyrings; `_wo` for Slack token; **no plaintext in state** |
 | **Model & tool I/O** | Model Armor floor settings; output redaction in Slack-notifier; structured tool calls only | Floor mode `INSPECT_AND_BLOCK` for prod; **custom MCP servers do their own input hygiene** since Model Armor does not cover them |
 | **Action** | Action Broker is the only writer; per-action-class impersonation; idempotency; rate limit | Bounded `generateAccessToken` on narrow SAs; idempotency key = `correlation_id + action_class + target` |
 | **Supply chain** | Pinned ADK (`google-adk==2.x`); signed images; SBOM | Artifact Registry; **Binary Authorization** in prod; `cosign` signatures; `containerscanning` enabled |
@@ -1107,11 +1003,11 @@ Three horizons. Each phase delivers value even if the next one is deferred.
 
 **Deliverables:**
 
-- **F1. Establish Cloud Identity & Organisation.** Free-tier Cloud Identity → an Organisation resource → folder hierarchy (`shared/`, `dev/`, `prod/`). Migrate the four existing projects in (R1).
-- **F2. IAM remediation.** Eliminate all ~17 exported service-account keys; replace with WIF / attached SAs; enforce `iam.disableServiceAccountKeyCreation` at folder/org; introduce custom IAM roles; demote primitive grants on default SAs (R2).
+- **F1. Establish Cloud Identity & Organisation.** Free-tier Cloud Identity → an Organisation resource → folder hierarchy (`shared/`, `dev/`, `prod/`). Migrate any existing projects in (R1).
+- **F2. IAM remediation.** Eliminate any exported service-account keys; replace with WIF / attached SAs; enforce `iam.disableServiceAccountKeyCreation` at folder/org; introduce custom IAM roles; demote primitive grants on default SAs (R2).
 - **F3. Foundation Terraform.** Stand up the `bootstrap/` + `foundation/` + `governance/` modules; CI via WIF (no keys); policy gate (`gcloud beta terraform vet` + OPA); state buckets per env with CMEK.
-- **F4. Observability backbone.** `observability/` module: Slack notification channel (using the existing `slack-token`), alert policies, log sinks → BigQuery audit dataset, log-based metrics for the policy/audit/error rate path, baseline dashboards, uptime checks on the Slack-notifier and Action Broker (R3).
-- **F5. Security baseline.** Enable Security Command Center v2 at folder; Model Armor floor settings (`INSPECT_AND_BLOCK`); custom SCC module for SA-key-creation alerting; replace `default` VPC with custom-mode; close internet-open SSH/RDP rules; align CMEK across environments (R4).
+- **F4. Observability backbone.** `observability/` module: Slack notification channel (token in Secret Manager), alert policies, log sinks → BigQuery audit dataset, log-based metrics for the policy/audit/error rate path, baseline dashboards, uptime checks on the Slack-notifier and Action Broker (R3).
+- **F5. Security baseline.** Enable Security Command Center v2 at folder; Model Armor floor settings (`INSPECT_AND_BLOCK`); custom SCC module for SA-key-creation alerting; replace any auto-mode `default` VPC with a custom-mode VPC; close any internet-open SSH/RDP rules; align CMEK across environments (R4).
 - **F6. Eventing spine.** `eventing/` module: Pub/Sub topics + schemas (`ops.signals`, `ops.findings`, `ops.actions.*`, `ops.audit`, `ops.notifications`) + DLQs; Eventarc for SCC findings, Monitoring alerts, Audit Logs.
 - **F7. Slack-notifier service.** Cloud Run service rendering `OpsNotification` → Block Kit; secrets via Secret Manager; Slack interactivity endpoint (no agent yet — used immediately by Cloud Monitoring native channel).
 - **F8. Action Broker service (skeleton, no live agent traffic yet).** Cloud Run service exposing the `propose / request_approval / execute / rollback` MCP tools; policy engine wired; idempotency store; *not yet exercised by an agent* — exercised by a manual smoke test.
@@ -1177,10 +1073,10 @@ The recommendations below collapse the design into a numbered, sequenced backlog
 | # | Recommendation | Priority | Rationale | Dependencies | Risks if not done |
 |---|---|---|---|---|---|
 | **R1** | Establish a **Cloud Identity / Organisation** resource and a folder hierarchy; migrate the four existing projects in. | **P0** | Without an Organisation, no policy inheritance, no org-scoped SCC, no centralised IAM, no break-glass — every later control is weaker. | A free-tier Cloud Identity sign-up; no other GCP prerequisites. | All later governance work is structurally compromised. |
-| **R2** | **Eliminate the ~17 exported service-account keys** and enforce `iam.disableServiceAccountKeyCreation`; standardise on attached SAs + WIF for CI; replace key-based SAs (incl. `terraform-cloud@`) with WIF identities. | **P0** | Highest-severity security finding in this review; long-lived bearer credentials including one on a default compute SA. | R1 (for folder-level org policy); a small WIF-pool Terraform module. | Trivially exploitable credential exposure; any later identity model rests on insecure ground. |
+| **R2** | **Eliminate any exported service-account keys** and enforce `iam.disableServiceAccountKeyCreation`; standardise on attached SAs + WIF for CI; replace any key-based SAs with WIF identities. | **P0** | Long-lived bearer credentials are exfiltratable and disproportionately dangerous on agent platforms where many SAs hold narrow write grants. | R1 (for folder-level org policy); a small WIF-pool Terraform module. | Trivially exploitable credential exposure; any later identity model rests on insecure ground. |
 | **R3** | Stand up the **observability backbone**: native Slack `notification_channel` (using the existing `slack-token`), ≥10 baseline alert policies, log sinks → BQ audit dataset, log-based metrics for error rate / policy denials / token spend, baseline dashboards, uptime checks. | **P0** | The estate currently has **zero alerts and no log routing**; agents cannot operate where nothing is observable, and the operator cannot operate the agents. | R1 (folder sinks). | No visibility; agents cannot be operated safely; SLA-bound work is impossible. |
 | **R4** | Enable **Security Command Center v2** at folder; configure **Model Armor floor settings** (`INSPECT_AND_BLOCK`) and starter templates; install a **custom SCC module** that alerts on SA-key creation. | **P0** | DevSecOps agent has no findings source without SCC; Model Armor is the AI-safety control already API-enabled but inert; SA-key alerting catches regressions of R2. | R1; R2 to demonstrate effectiveness. | DevSecOps agent has no input; AI-safety control remains unused; key sprawl recurs silently. |
-| **R5** | Adopt the **Terraform foundation repo** (this scaffold); pin `google` 7.x and `google-beta` 7.x exactly per env; GCS backend per env with CMEK and native locking; CI via WIF; policy gate (`gcloud beta terraform vet` + OPA); no `terraform apply` from laptops. | **P0** | Today's IaC posture is real but unsafe (`terraform-cloud` SA over-privileged with exported keys). | R2 (WIF). | Continued ad-hoc IaC; supply-chain of the platform-as-code is the next finding. |
+| **R5** | Adopt the **Terraform foundation repo** (this scaffold); pin `google` 7.x and `google-beta` 7.x exactly per env; GCS backend per env with CMEK and native locking; CI via WIF; policy gate (`gcloud beta terraform vet` + OPA); no `terraform apply` from laptops. | **P0** | The common alternative — over-privileged service-account-key-based IaC — fails closed only if the runner is uncompromised; a governed platform should not depend on that assumption. | R2 (WIF). | Continued ad-hoc IaC; supply-chain of the platform-as-code is the next finding. |
 | **R6** | **Standardise residency** on `europe-west2` (London) for the UK-based owner; document an exception list; align CMEK, BQ datasets, Workflows, Firestore to the standard. | **P1** | Today's residency is mixed (`europe-west2`, `us-central1`, `nam5`) with no policy; for a UK owner and GBP billing this is a compliance hygiene issue. | R1 (for `gcp.resourceLocations` org policy). | Compliance ambiguity; future regulatory work re-opens the platform. |
 | **R7** | Build the **Action Broker** as the only execution surface for agent writes, with per-action-class impersonation, idempotency, post-condition verification and auto-rollback. | **P1** | The architectural choke-point that makes action-taking agents defensible; nothing in the design depends on every agent being well-behaved. | R2, R5; an `eventing/` Pub/Sub spine. | Distributed write IAM across agents; blast radius of any prompt injection vastly larger. |
 | **R8** | Deploy the **Slack-notifier service** rendering the `OpsNotification` contract (Part 6.6) — *before* any agent exists; have Cloud Monitoring's native channel use the same Slack workspace immediately. | **P1** | Slack discipline must be in place before agents start posting; investment is reused by R3 alerts on day one. | R3; existing `slack-token` secret. | Inconsistent / noisy / unsafe Slack messaging; "approval fatigue" pre-built. |
@@ -1210,16 +1106,7 @@ The recommendations below collapse the design into a numbered, sequenced backlog
 
 ## Appendix A — Current-state evidence summary
 
-Discovery was conducted 2026-05-22 against the active account `owner@example.org` using `gcloud` (Cloud Asset Inventory `search-all-resources`, IAM policy reads, Service Usage, Cloud Monitoring read-only). All commands were read-only; no changes were made.
-
-| Project | Number | APIs (selected) | Notable assets | Observability | Notes |
-|---|---|---|---|---|---|
-| `kitchen-sink-experiments` ("My First Project") | <project-number> | 74 incl. `cloudaicompanion`, `aiplatform`, `binaryauthorization`, `workflows`, `eventarc` | 4 Workflows (incl. `<internal-product>` + `<internal-product>-dryrun`), 6 GCS buckets (incl. `<internal-product>-{dev,prod}-tfstate`), 3 KMS keyrings, Firestore, billing export to BQ, custom `prod-vpc`, `block-public-access` firewall, **12 SA keys**, 9 SAs incl. `terraform-cloud`, 2 API keys, 6 secrets (incl. `slack-token`, `slack-test-channel`) | **0 notification channels, 0 alert policies**; only default log sinks | Kitchen-sink project; primary remediation target |
-| `agent-experiments` | <project-number> | `agentregistry`, `geminicloudassist`, `modelarmor`, `observability`, `generativelanguage`, `apphub`, `apptopology`, `appoptimize`, `iap`, `networksecurity` | experimental BigQuery public-dataset import, "<internal-fleet-management>" custom role + SAs, default VPC only, **5 SA keys** (incl. one on default compute SA), 2 API keys ("<api-key-1>", "<api-key-2>"), 5 SAs | **0 notification channels, 0 alert policies** | Agentic experimentation substrate; APIs already on, no policy applied |
-| `enterprise-integration-experiments` | <project-number> | `aiplatform`, `container`, `compute`, `sqladmin`, `redis`, `firestore`, `billingbudgets`, `cloudbilling` | No Compute, GKE, Cloud SQL or Redis instances (service agents exist; resources removed); budgets configured | Not separately checked | Service agents present but resources empty |
-| `ai-studio-generated-project` ("<redacted>") | <project-number> | Inaccessible (account lacks `serviceusage`) | Inaccessible | n/a | Likely Google AI Studio / Gemini API-generated project |
-
-**Cross-cutting:** no organisation (`gcloud organizations list = []`); single human owner across all inspectable projects; ~17 user-managed SA keys total; billing accounts: 1 open (GBP), 1 closed trial (USD); active project region default `us-central1`, but the dominant *real* region in `kitchen-sink-experiments` is `europe-west2`.
+*Omitted from this public reference (see Part 1 note).*
 
 ---
 
