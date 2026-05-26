@@ -103,15 +103,10 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full branching strategy, Conv
 - **Some Google capabilities used here are Preview** (Agent Identity, Memory Bank Revisions, Gen AI Evaluation Service, Cloud Asset Inventory MCP, Agent Registry MCP). See the design review §2.10 for the maturity snapshot; the scaffold's seams already accept the GA fallback.
 - **No exported service-account keys.** CI must use Workload Identity Federation.
 
-## Public release
+## Configuration
 
-This repository has been **sanitised for public release**:
-
-- Part 1 (current state) and Appendix A in `docs/DESIGN-REVIEW.md` describe a real Google Cloud estate; every real identifier (project ID, project number, billing-account ID, account email, internal SA / KMS / bucket / secret / workflow / role name, internal product code name) has been replaced with an angle-bracketed placeholder or a representative role name. The *shape* of the findings is preserved.
 - `terraform/environments/*/terraform.tfvars` and the `bootstrap/` variables hold **placeholder values only**. Bind your own project IDs, billing-account ID, Slack OAuth token, and WIF identity at deploy time via your CI's secret manager — **never commit real values.** `*.auto.tfvars` and `*.local.tfvars` are gitignored for local overrides.
 - Scaffold defaults are `LIVE_MODE=false` and `LIVE_SLACK_ENABLED=false` — services log rendered payloads instead of calling Google or Slack APIs.
-
-If you find a residual leak of any sensitive value in this repository, please follow `SECURITY.md` to report it privately.
 
 ## License & contributing
 

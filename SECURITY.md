@@ -29,7 +29,7 @@ This repository is a **reference scaffold and design review** — there is no de
 - **Insecure defaults in Terraform modules** — for example, overly permissive IAM bindings, missing CMEK on a sensitive resource, missing `deletion_policy = "PREVENT"` on a production-critical resource, missing `auth_token_wo` for a secret-bearing notification channel, or a default that would produce a public-Internet attack surface on apply.
 - **Insecure defaults in the agent / service skeletons** — for example, missing Slack request-signature verification, weak ID-token verification on MCP endpoints, secrets logged at INFO level, or a `LIVE_MODE` guard that fails open.
 - **Documentation that could mislead a deployer into an unsafe configuration** — for example, a recommendation that contradicts the principles in `docs/DESIGN-REVIEW.md` Part 5 / Part 8.
-- **Residual sanitisation leaks** — if you find any real-looking GCP project ID, project number, billing-account ID, email, OAuth token, API key, SA key, KMS key path, GCS bucket name, secret name, workflow name, or internal product code name in this repository, please report it under this policy.
+- **Inadvertently committed secrets** — if you find any real-looking GCP project ID, project number, billing-account ID, email, OAuth token, API key, SA key, or KMS key path in this repository, please report it under this policy.
 
 ## Out of scope
 
