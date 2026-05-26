@@ -11,6 +11,7 @@ Cost-intelligence specialist. Monitors spend anomalies, budget burn rate, idle/o
 | `bigquery.googleapis.com/mcp` | GA | Billing export queries (billing_dataset) |
 | `recommender.googleapis.com/mcp` | GA | Active rightsizing recommendations |
 | `geminicloudassist.googleapis.com/mcp` | Preview | FinOps agent narrative (graceful fallback) |
+| `developerknowledge.googleapis.com/mcp` | GA | Billing / Recommender API documentation lookup |
 | Action Broker MCP (custom) | — | cost.shrink_idle_resource proposals |
 
 ## Action classes this agent may propose

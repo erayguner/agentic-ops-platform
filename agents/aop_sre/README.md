@@ -16,6 +16,7 @@ Reliability specialist. Investigates latency, error rate, saturation, SLO burn, 
 | `run.googleapis.com/mcp` | GA | Cloud Run revision and health |
 | `networkmanagement.googleapis.com/mcp` | GA | Network topology / connectivity |
 | `geminicloudassist.googleapis.com/mcp` | Preview | Cloud Assist Investigations (Premium-gated) |
+| `developerknowledge.googleapis.com/mcp` | GA | Official Google docs lookup for runtime config / debugging |
 | Action Broker MCP (custom) | — | Action proposals only — no direct writes |
 
 ## Action classes this agent may propose

@@ -13,6 +13,7 @@ Drift and deployment-health specialist. Detects configuration drift versus decla
 | `container.googleapis.com/mcp` | GA | GKE cluster/workload health |
 | `run.googleapis.com/mcp` | GA | Cloud Run service health and config |
 | `compute.googleapis.com/mcp` | GA | Network config drift (VPC, firewall) |
+| `developerknowledge.googleapis.com/mcp` | GA | Official Google resource-pattern / best-practice docs |
 | Action Broker MCP (custom) | — | terraform.plan and workflows.run proposals |
 
 ## Action classes this agent may propose

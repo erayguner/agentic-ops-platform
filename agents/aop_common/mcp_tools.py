@@ -37,6 +37,7 @@ NETWORK_INTELLIGENCE_MCP = "https://networkmanagement.googleapis.com/mcp"
 AGENT_REGISTRY_MCP = "https://agentregistry.googleapis.com/mcp"  # Preview
 GEMINI_CLOUD_ASSIST_MCP = "https://geminicloudassist.googleapis.com/mcp"  # Preview
 RECOMMENDER_MCP = "https://recommender.googleapis.com/mcp"
+DEVELOPER_KNOWLEDGE_MCP = "https://developerknowledge.googleapis.com/mcp"  # GA — Google developer documentation lookup
 
 # Per-agent allow-lists (§4.2 INTERFACE-CONTRACT / §4.2 DESIGN-REVIEW)
 ORCHESTRATOR_MCP_ENDPOINTS: list[str] = [
@@ -54,6 +55,7 @@ SRE_MCP_ENDPOINTS: list[str] = [
     CLOUD_RUN_MCP,
     NETWORK_INTELLIGENCE_MCP,
     GEMINI_CLOUD_ASSIST_MCP,
+    DEVELOPER_KNOWLEDGE_MCP,
 ]
 
 DEVSECOPS_MCP_ENDPOINTS: list[str] = [
@@ -61,6 +63,7 @@ DEVSECOPS_MCP_ENDPOINTS: list[str] = [
     ASSET_INVENTORY_MCP,
     RESOURCE_MANAGER_MCP,
     COMPUTE_MCP,
+    DEVELOPER_KNOWLEDGE_MCP,
     # SecOps endpoint is region-parameterised; resolved at runtime via build_mcp_toolsets
 ]
 
@@ -70,12 +73,14 @@ PLATFORM_MCP_ENDPOINTS: list[str] = [
     GKE_MCP,
     CLOUD_RUN_MCP,
     COMPUTE_MCP,
+    DEVELOPER_KNOWLEDGE_MCP,
 ]
 
 FINOPS_MCP_ENDPOINTS: list[str] = [
     BIGQUERY_MCP,
     RECOMMENDER_MCP,
     GEMINI_CLOUD_ASSIST_MCP,
+    DEVELOPER_KNOWLEDGE_MCP,
 ]
 
 
