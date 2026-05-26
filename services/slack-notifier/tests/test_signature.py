@@ -45,8 +45,7 @@ def _make_request(
         sig = signature
 
     headers: dict = {}
-    if True:  # always set unless explicitly omitted below
-        headers["X-Slack-Request-Timestamp"] = ts
+    headers["X-Slack-Request-Timestamp"] = ts
     headers["X-Slack-Signature"] = sig
 
     request = MagicMock()
