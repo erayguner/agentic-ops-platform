@@ -27,13 +27,14 @@ A reference scaffold for a **governed multi-agent DevSecOps / SRE / Platform Eng
 1. **`docs/DESIGN-REVIEW.md`** — the complete strategic + technical design review (current state, capability landscape, target architecture, MCP strategy, governance, observability + Slack contract, Terraform approach, security/resilience/escalation, roadmap, prioritised recommendations, appendices).
 2. **`docs/AGENT_GOVERNANCE_FRAMEWORK.md`** — the version-pinned governance framework this project conforms to (v1.1). Upstream-owned, downstream-adopted; do not edit in this repo (raise the change upstream and re-vendor).
 3. **`docs/GOVERNANCE-MAPPING.md`** — the AOP-specific Appendix A: every framework control mapped to the file / module / resource that implements it here, plus the current §19 compliance attestation.
-4. **`terraform/`**, **`agents/`**, **`services/`** — the three scaffolds, each with its own `README.md`. Cross-component schemas are defined inline in `agents/aop_common/schemas.py`, `services/slack-notifier/schemas.py`, and `services/action-broker/schemas.py`.
+4. **`terraform/FRAMEWORK.md`** — the reusable Terraform deployment framework: per-agent modules, composition module, pre-flight script, examples for `dev` / `staging` / `prod` and downstream consumers, release-please integration, and rollback runbook.
+5. **`terraform/`**, **`agents/`**, **`services/`** — the three scaffolds, each with its own `README.md`. Cross-component schemas are defined inline in `agents/aop_common/schemas.py`, `services/slack-notifier/schemas.py`, and `services/action-broker/schemas.py`.
 
 ---
 
 ## Layout
 
-```
+```text
 agentic-ops-platform/
 ├── README.md                       ← you are here
 ├── docs/

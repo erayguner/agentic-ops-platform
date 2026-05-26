@@ -1,0 +1,42 @@
+# release-please — automated semantic-version releases driven by Conventional
+# Commits. On every push to main, this workflow either:
+#   - opens / updates a "release PR" with the next version + CHANGELOG diff
+#   - cuts the GitHub Release when that PR is merged
+#
+# Conventional Commit scopes used by this repo:
+#   feat(framework): …      → minor bump
+#   fix(agents): …          → patch bump
+#   feat(framework)!: …     → major bump
+#
+# Docs: https://github.com/googleapis/release-please
+# Action ref: https://github.com/googleapis/release-please-action
+
+name: release-please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main
