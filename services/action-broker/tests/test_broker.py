@@ -9,20 +9,20 @@ Coverage gaps addressed:
   live post-condition failure with successful rollback, rollback also fails
 - _emit_audit: called on every code path (verified via pubsub mock)
 """
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from broker import Broker, BrokerError
 from policy import Decision
 from schemas import ActionApproval
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_decision(
     *,
@@ -77,19 +77,21 @@ def _default_propose_kwargs(**overrides) -> dict:
 # propose_action — unknown action_class
 # ---------------------------------------------------------------------------
 
+
 class TestProposeActionUnknownClass:
     def test_raises_broker_error_for_unregistered_action_class(self) -> None:
         broker = _make_broker()
-        with patch("broker.is_registered", return_value=False):
-            with pytest.raises(BrokerError, match="Unknown action_class"):
-                broker.propose_action(
-                    **_default_propose_kwargs(action_class="not.real")
-                )
+        with (
+            patch("broker.is_registered", return_value=False),
+            pytest.raises(BrokerError, match="Unknown action_class"),
+        ):
+            broker.propose_action(**_default_propose_kwargs(action_class="not.real"))
 
 
 # ---------------------------------------------------------------------------
 # propose_action — idempotency hit
 # ---------------------------------------------------------------------------
+
 
 class TestProposeActionIdempotencyHit:
     def test_returns_already_executed_with_prior_outcome(self) -> None:
@@ -107,6 +109,7 @@ class TestProposeActionIdempotencyHit:
 # propose_action — validation failure
 # ---------------------------------------------------------------------------
 
+
 class TestProposeActionValidationFailure:
     def test_raises_broker_error_on_invalid_params(self) -> None:
         broker = _make_broker()
@@ -116,9 +119,9 @@ class TestProposeActionValidationFailure:
         with (
             patch("broker.is_registered", return_value=True),
             patch("broker.get_executor", return_value=executor),
+            pytest.raises(BrokerError, match="Parameter validation failed"),
         ):
-            with pytest.raises(BrokerError, match="Parameter validation failed"):
-                broker.propose_action(**_default_propose_kwargs())
+            broker.propose_action(**_default_propose_kwargs())
 
     def test_emits_audit_on_validation_failure(self) -> None:
         broker = _make_broker()
@@ -129,9 +132,9 @@ class TestProposeActionValidationFailure:
             patch("broker.is_registered", return_value=True),
             patch("broker.get_executor", return_value=executor),
             patch("broker.publish_audit") as mock_audit,
+            pytest.raises(BrokerError),
         ):
-            with pytest.raises(BrokerError):
-                broker.propose_action(**_default_propose_kwargs())
+            broker.propose_action(**_default_propose_kwargs())
 
         mock_audit.assert_called_once()
 
@@ -139,6 +142,7 @@ class TestProposeActionValidationFailure:
 # ---------------------------------------------------------------------------
 # propose_action — policy deny
 # ---------------------------------------------------------------------------
+
 
 class TestProposeActionPolicyDeny:
     def test_returns_denied_status(self) -> None:
@@ -161,9 +165,7 @@ class TestProposeActionPolicyDeny:
         assert "action_id" in result
 
     def test_does_not_call_execute_when_denied(self) -> None:
-        broker = _make_broker(
-            policy_decision=_make_decision(allowed=False, deny_reason="blocked")
-        )
+        broker = _make_broker(policy_decision=_make_decision(allowed=False, deny_reason="blocked"))
         executor = MagicMock()
         executor.validate.return_value = None
 
@@ -179,6 +181,7 @@ class TestProposeActionPolicyDeny:
 # ---------------------------------------------------------------------------
 # propose_action — tier 1/2 auto-approve (dry-run path)
 # ---------------------------------------------------------------------------
+
 
 class TestProposeActionAutoApprove:
     def test_tier2_returns_stub_not_executed_in_dry_run(self) -> None:
@@ -238,6 +241,7 @@ class TestProposeActionAutoApprove:
 # propose_action — tier 3/4 pending approval
 # ---------------------------------------------------------------------------
 
+
 class TestProposeActionPendingApproval:
     def test_tier3_returns_pending_approval_status(self) -> None:
         broker = _make_broker(policy_decision=_make_decision(tier=3))
@@ -292,6 +296,7 @@ class TestProposeActionPendingApproval:
 # on_approval
 # ---------------------------------------------------------------------------
 
+
 class TestOnApproval:
     def _approval(self, decision: str) -> ActionApproval:
         return ActionApproval(
@@ -299,7 +304,7 @@ class TestOnApproval:
             approval_id="apv_xyz",
             decision=decision,
             approver_identity=["operator@example.com"],
-            approved_at=datetime.now(tz=timezone.utc),
+            approved_at=datetime.now(tz=UTC),
         )
 
     def test_rejected_returns_rejected_status(self) -> None:
@@ -324,9 +329,11 @@ class TestOnApproval:
 # _execute_action — live path failures (LIVE_MODE=True)
 # ---------------------------------------------------------------------------
 
+
 class TestExecuteActionLiveFailures:
     def _make_action_request(self, action_id: str = "act_test123"):
         from schemas import ActionRequest
+
         return ActionRequest(
             action_id=action_id,
             recommendation={"action_class": "cloud_run.scale_within_range"},
@@ -344,18 +351,18 @@ class TestExecuteActionLiveFailures:
             patch("broker.mint_credentials", return_value=MagicMock()),
             patch("broker.get_executor", return_value=executor),
             patch("broker.publish_audit"),
+            pytest.raises(BrokerError, match="Execution failed"),
         ):
-            with pytest.raises(BrokerError, match="Execution failed"):
-                broker._execute_action(
-                    self._make_action_request(),
-                    "cloud_run.scale_within_range",
-                    {"name": "svc"},
-                    {"instances": 3},
-                    "dev",
-                    "corr-1",
-                    "agent@sa",
-                    _make_decision(tier=2),
-                )
+            broker._execute_action(
+                self._make_action_request(),
+                "cloud_run.scale_within_range",
+                {"name": "svc"},
+                {"instances": 3},
+                "dev",
+                "corr-1",
+                "agent@sa",
+                _make_decision(tier=2),
+            )
 
     def test_post_condition_failure_triggers_rollback(self) -> None:
         broker = _make_broker()

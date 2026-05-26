@@ -22,7 +22,7 @@ resource "google_service_account" "action_broker" {
 }
 
 # ---------------------------------------------------------------------------
-# Per-action-class execution SAs — INTERFACE-CONTRACT §2
+# Per-action-class execution SAs.
 # The Broker impersonates each for short-lived write operations.
 # No exported keys — impersonation only via generateAccessToken.
 # ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ resource "google_service_account" "action_terraform_plan" {
 }
 
 # ---------------------------------------------------------------------------
-# Role grants on per-action-class SAs (least-privilege, INTERFACE-CONTRACT §2)
+# Role grants on per-action-class SAs (least-privilege).
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------

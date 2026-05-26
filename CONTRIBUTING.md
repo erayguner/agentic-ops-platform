@@ -25,7 +25,7 @@ uv run pytest        # if tests exist for the area you touched
 
 ## Before you start
 
-1. **Read** `docs/DESIGN-REVIEW.md` and `INTERFACE-CONTRACT.md`. The design review is the source of truth; the interface contract is the cross-component compatibility surface. Changes that contradict either should justify the change in the PR description and update the source-of-truth file atomically in the same PR.
+1. **Read** `docs/DESIGN-REVIEW.md`. The design review is the source of truth. Cross-component schemas are inline in the Python `schemas.py` modules (one each in `agents/aop_common/`, `services/slack-notifier/`, `services/action-broker/`) — these are the authoritative naming + field contracts. Any change that contradicts the design review or breaks a schema must justify it in the PR description and update the relevant files atomically in the same PR.
 2. **Read** `docs/AGENT_GOVERNANCE_FRAMEWORK.md` and `docs/GOVERNANCE-MAPPING.md`. The framework is the governance standard this project conforms to (**v1.1**); the mapping is the per-control attestation. Any change to a control surface (`services/action-broker/policy/`, `aop_common/`, `terraform/modules/governance/`, approval/audit flows) **must** update `docs/GOVERNANCE-MAPPING.md` in the same PR. Framework changes go upstream — do not edit `docs/AGENT_GOVERNANCE_FRAMEWORK.md` in this repo.
 3. **No secrets in commits.** Use `terraform.tfvars` for placeholder values only. Commit nothing that resembles a real GCP project ID, project number, billing-account ID, OAuth token, API key, SA key, or KMS key path. The `.gitignore` excludes `*.auto.tfvars` / `*.local.tfvars` — use those for any real values during local testing. **Gitleaks runs as a pre-commit hook as a last line of defence.**
 
@@ -110,8 +110,8 @@ feat(finops): add cost-anomaly detection for Cloud Run revisions
 fix(slack-notifier): correct channel routing for critical platform signals
 
 The routing table swapped #ops-platform and #ops-incidents for critical
-platform signals; #ops-incidents is the correct channel per
-INTERFACE-CONTRACT.md §1.
+platform signals; #ops-incidents is the correct channel per the routing
+table in `services/slack-notifier/blockkit.py`.
 
 Closes #142
 ```
@@ -133,7 +133,7 @@ The `!` after the scope marks a breaking change in the subject line.
 3. **CI must pass.** All required pre-commit hooks, `terraform validate`, `pytest` (where applicable), and the secret-detection workflow.
 4. **Reviews required.**
    - **1 reviewer** for changes scoped to `docs/`, tests, dev tooling, or non-prod-touching code.
-   - **2 reviewers** for changes that touch `terraform/environments/prod/`, `services/action-broker/policy/action_classes.yaml` (autonomy-tier changes), `INTERFACE-CONTRACT.md` (schema or contract changes), or anything tagged with the `security` label.
+   - **2 reviewers** for changes that touch `terraform/environments/prod/`, `services/action-broker/policy/action_classes.yaml` (autonomy-tier changes), any `schemas.py` (cross-component schema changes), or anything tagged with the `security` label.
 5. **Squash-merge** when ready. The squash commit message becomes the canonical history entry.
 6. **Delete the branch** after merge.
 
@@ -264,7 +264,7 @@ rule automatically. These changes are:
   `aop_common/mcp_tools.py` — the cross-agent governance surfaces.
 - `terraform/modules/governance/` — Model Armor, Org Policy, SCC v2.
 - `terraform/modules/action-broker/` — per-action-class SAs, PAB, IAM.
-- `INTERFACE-CONTRACT.md` — schemas or naming.
+- `agents/aop_common/schemas.py`, `services/*/schemas.py` — cross-component schemas and naming.
 - `docs/GOVERNANCE-MAPPING.md` — attestation status.
 
 For each, the PR must:

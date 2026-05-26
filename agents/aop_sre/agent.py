@@ -38,7 +38,7 @@ def build_agent_card(settings: AopSettings) -> object:
             "and deploy-related regressions. Produces Finding v1 with typed recommendations."
         ),
         model_id=settings.model_id,
-        mcp_servers=SRE_MCP_ENDPOINTS + [settings.action_broker_mcp_endpoint],
+        mcp_servers=[*SRE_MCP_ENDPOINTS, settings.action_broker_mcp_endpoint],
         skills=[
             AgentSkill(
                 name="investigate_reliability",
@@ -95,6 +95,5 @@ def build_sre_agent(settings: AopSettings) -> object:
     #   )
 
     raise NotImplementedError(
-        "build_sre_agent is a skeleton. "
-        "Wire the ADK 2.0 LlmAgent before deploying to Agent Engine."
+        "build_sre_agent is a skeleton. Wire the ADK 2.0 LlmAgent before deploying to Agent Engine."
     )

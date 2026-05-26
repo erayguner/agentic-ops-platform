@@ -7,16 +7,17 @@ Coverage gaps addressed:
 - _StubCredentials: attributes, refresh raises NotImplementedError
 - SA email format: project ID interpolation
 """
+
+from datetime import UTC
 from unittest.mock import patch
 
 import pytest
-
 from impersonation import _StubCredentials, mint_credentials, sa_email_for_action
-
 
 # ---------------------------------------------------------------------------
 # sa_email_for_action
 # ---------------------------------------------------------------------------
+
 
 class TestSaEmailForAction:
     def test_known_action_class_returns_formatted_email(self) -> None:
@@ -60,6 +61,7 @@ class TestSaEmailForAction:
 # mint_credentials — dry-run
 # ---------------------------------------------------------------------------
 
+
 class TestMintCredentialsDryRun:
     def test_dry_run_returns_stub_credentials(self) -> None:
         with patch("impersonation.LIVE_MODE", False):
@@ -83,14 +85,17 @@ class TestMintCredentialsDryRun:
         assert "my-proj" in creds.sa_email
 
     def test_unknown_action_class_raises_value_error(self) -> None:
-        with patch("impersonation.LIVE_MODE", False):
-            with pytest.raises(ValueError, match="No per-action-class SA mapped"):
-                mint_credentials("not.a.real.action", "proj")
+        with (
+            patch("impersonation.LIVE_MODE", False),
+            pytest.raises(ValueError, match="No per-action-class SA mapped"),
+        ):
+            mint_credentials("not.a.real.action", "proj")
 
 
 # ---------------------------------------------------------------------------
 # _StubCredentials
 # ---------------------------------------------------------------------------
+
 
 class TestStubCredentials:
     def test_refresh_raises_not_implemented_error(self) -> None:
@@ -99,6 +104,7 @@ class TestStubCredentials:
             stub.refresh(None)
 
     def test_expiry_is_in_the_future(self) -> None:
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         stub = _StubCredentials("sa@proj.iam.gserviceaccount.com")
-        assert stub.expiry > datetime.now(tz=timezone.utc)
+        assert stub.expiry > datetime.now(tz=UTC)

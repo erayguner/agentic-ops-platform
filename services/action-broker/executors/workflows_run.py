@@ -3,12 +3,15 @@ Executor: workflows.run
 
 Triggers a Cloud Workflows execution.  The ``workflow_name`` parameter
 distinguishes dry-run variants (``*-dryrun``) from production workflows,
-per INTERFACE-CONTRACT §5 and DESIGN-REVIEW §3.3.
+per DESIGN-REVIEW §3.3.
 """
+
 from __future__ import annotations
-import logging, os
+
+import logging
+import os
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
@@ -21,14 +24,14 @@ class Outcome:
     resource_refs: list[str]
 
 
-def validate(params: Dict[str, Any]) -> None:
+def validate(params: dict[str, Any]) -> None:
     required = {"workflow_name", "project", "region"}
     missing = required - params.keys()
     if missing:
         raise ValueError(f"Missing params: {missing}")
 
 
-def execute(params: Dict[str, Any], credentials) -> Outcome:
+def execute(params: dict[str, Any], credentials) -> Outcome:
     if not LIVE_MODE:
         raise NotImplementedError("workflows.run stub; LIVE_MODE=false")
     wf = params["workflow_name"]
@@ -43,11 +46,17 @@ def execute(params: Dict[str, Any], credentials) -> Outcome:
     )
 
 
-def verify(params: Dict[str, Any], outcome: Outcome) -> bool:
+def verify(params: dict[str, Any], outcome: Outcome) -> bool:
     return outcome.status == "success"
 
 
-def rollback(params: Dict[str, Any], outcome: Outcome) -> Outcome:
+def rollback(params: dict[str, Any], outcome: Outcome) -> Outcome:
     # Workflow rollback is not generically possible; escalate.
-    logger.warning("Workflow rollback requested but not auto-implemented for %s", params.get("workflow_name"))
-    return Outcome(status="rolled_back", detail="workflow rollback: manual intervention required", resource_refs=[])
+    logger.warning(
+        "Workflow rollback requested but not auto-implemented for %s", params.get("workflow_name")
+    )
+    return Outcome(
+        status="rolled_back",
+        detail="workflow rollback: manual intervention required",
+        resource_refs=[],
+    )

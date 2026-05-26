@@ -9,43 +9,43 @@ libraries consume it transparently.
 
 LIVE_MODE=False: returns a stub Credentials object; no real IAM call is made.
 
-SA naming convention (INTERFACE-CONTRACT §2):
+SA naming convention:
   sa-action-<class-slug>@<project>.iam.gserviceaccount.com
 
 Example:
   cloud_run.scale_within_range → sa-action-cloudrun-scale
   iam.disable_service_account_key → sa-action-iam-disable-key
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
 LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "ops-agents-dev")
 
-# Map action_class → per-action-class SA slug (INTERFACE-CONTRACT §2)
+# Map action_class → per-action-class SA slug.
 _ACTION_SA_MAP: dict[str, str] = {
-    "cloud_run.scale_within_range":       "sa-action-cloudrun-scale",
-    "cloud_run.restart_revision":         "sa-action-cloudrun-rollback",
-    "cloud_run.rollback_to_previous":     "sa-action-cloudrun-rollback",
-    "iam.disable_service_account_key":    "sa-action-iam-disable-key",
-    "secret_manager.disable_version":     "sa-action-secret-disable",
-    "scc.mute_finding":                   "sa-action-scc-mute",
-    "workflows.run":                      "sa-action-workflows-run",
-    "terraform.plan":                     "sa-action-terraform-plan",
-    "cost.shrink_idle_resource":          "sa-action-cloudrun-scale",  # reuse scoped SA
-    "incident.escalate_to_human":         "sa-action-cloudrun-scale",  # read-only; SA unused
+    "cloud_run.scale_within_range": "sa-action-cloudrun-scale",
+    "cloud_run.restart_revision": "sa-action-cloudrun-rollback",
+    "cloud_run.rollback_to_previous": "sa-action-cloudrun-rollback",
+    "iam.disable_service_account_key": "sa-action-iam-disable-key",
+    "secret_manager.disable_version": "sa-action-secret-disable",
+    "scc.mute_finding": "sa-action-scc-mute",
+    "workflows.run": "sa-action-workflows-run",
+    "terraform.plan": "sa-action-terraform-plan",
+    "cost.shrink_idle_resource": "sa-action-cloudrun-scale",  # reuse scoped SA
+    "incident.escalate_to_human": "sa-action-cloudrun-scale",  # read-only; SA unused
 }
 
 _TOKEN_LIFETIME_SECONDS = 3600  # 1 hour maximum
 
 
-def sa_email_for_action(action_class: str, project_id: str) -> Optional[str]:
+def sa_email_for_action(action_class: str, project_id: str) -> str | None:
     slug = _ACTION_SA_MAP.get(action_class)
     if slug is None:
         return None
@@ -67,7 +67,8 @@ def mint_credentials(action_class: str, project_id: str = GCP_PROJECT_ID):
     if not LIVE_MODE:
         logger.info(
             "[DRY-RUN] Would mint credentials for SA=%s action_class=%s",
-            sa_email, action_class,
+            sa_email,
+            action_class,
         )
         return _StubCredentials(sa_email)
 
@@ -85,18 +86,19 @@ def mint_credentials(action_class: str, project_id: str = GCP_PROJECT_ID):
         }
     )
 
-    expiry = datetime.now(tz=timezone.utc) + timedelta(seconds=_TOKEN_LIFETIME_SECONDS)
+    expiry = datetime.now(tz=UTC) + timedelta(seconds=_TOKEN_LIFETIME_SECONDS)
     logger.info("Minted short-lived token for SA=%s", sa_email)
     return Credentials(token=resp.access_token, expiry=expiry)
 
 
 class _StubCredentials:
     """Minimal stub used in dry-run mode."""
+
     def __init__(self, sa_email: str) -> None:
-        self.token = "DRY_RUN_TOKEN"
+        self.token = "DRY_RUN_TOKEN"  # noqa: S105 — stub, not a real credential
         self.sa_email = sa_email
-        self.expiry = datetime.now(tz=timezone.utc) + timedelta(hours=1)
+        self.expiry = datetime.now(tz=UTC) + timedelta(hours=1)
         self.valid = False
 
-    def refresh(self, request):  # noqa: D401
+    def refresh(self, request):
         raise NotImplementedError("Stub credentials cannot be refreshed")

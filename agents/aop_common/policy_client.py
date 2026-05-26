@@ -34,8 +34,7 @@ class OrgContextClient:
             NotImplementedError: Skeleton.
         """
         raise NotImplementedError(
-            "OrgContextClient.owner_of is a skeleton. "
-            "Wire the Org Context MCP server before use."
+            "OrgContextClient.owner_of is a skeleton. Wire the Org Context MCP server before use."
         )
 
     def team_for(self, service: str) -> str:

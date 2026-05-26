@@ -95,10 +95,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def _reasoning_engine_resource_name(project: str, region: str, agent: str) -> str:
     """Return the expected resource name for the ReasoningEngine."""
-    return (
-        f"projects/{project}/locations/{region}"
-        f"/reasoningEngines/{agent}-agent"
-    )
+    return f"projects/{project}/locations/{region}/reasoningEngines/{agent}-agent"
 
 
 def deploy(args: argparse.Namespace) -> int:

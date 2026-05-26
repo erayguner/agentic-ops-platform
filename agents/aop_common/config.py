@@ -42,9 +42,7 @@ class AopSettings(BaseSettings):
             "Example: spiffe://agents.example/sre  or  sa-sre@ops-agents-prod.iam.gserviceaccount.com"
         ),
     )
-    environment: str = Field(
-        "dev", description="Deployment environment — 'dev' or 'prod'"
-    )
+    environment: str = Field("dev", description="Deployment environment — 'dev' or 'prod'")
 
     # ------------------------------------------------------------------ #
     # Model configuration
@@ -64,7 +62,7 @@ class AopSettings(BaseSettings):
     model_max_output_tokens: int = Field(8192, gt=0)
 
     # ------------------------------------------------------------------ #
-    # Pub/Sub topic names  (§3 of INTERFACE-CONTRACT.md — exact names)
+    # Pub/Sub topic names (canonical — must match `terraform/modules/eventing/main.tf`).
     # ------------------------------------------------------------------ #
     topic_signals: str = Field("ops.signals")
     topic_findings: str = Field("ops.findings")
@@ -122,9 +120,7 @@ class AopSettings(BaseSettings):
 
     def model_post_init(self, __context: object) -> None:
         """Expand {project} placeholder in secret paths after all fields are set."""
-        self.secret_slack_oauth_token = self.secret_slack_oauth_token.format(
-            project=self.project
-        )
+        self.secret_slack_oauth_token = self.secret_slack_oauth_token.format(project=self.project)
         self.secret_slack_signing_secret = self.secret_slack_signing_secret.format(
             project=self.project
         )

@@ -7,6 +7,7 @@ Slack WebClient to deliver an OpsNotification to the correct channel.
 LIVE_SLACK_ENABLED=False (default): logs the rendered Block Kit JSON instead
 of calling chat.postMessage.
 """
+
 from __future__ import annotations
 
 import json
@@ -67,10 +68,9 @@ async def deliver_notification(
         logger.info("Slack postMessage ok: ts=%s channel=%s", resp.get("ts"), channel)
         return resp.data
     except Exception as exc:
-        logger.error(
+        logger.exception(
             "Slack postMessage failed notification_id=%s: %s",
             notification.notification_id,
             exc,
-            exc_info=True,
         )
         raise

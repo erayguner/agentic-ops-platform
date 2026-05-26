@@ -10,6 +10,7 @@ Coverage gaps addressed:
 - Missing SLACK_SIGNING_SECRET env var → RuntimeError
 - Edge: timestamp exactly at boundary (within and outside window)
 """
+
 import hashlib
 import hmac
 import time
@@ -17,13 +18,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
-
 from signature import _REPLAY_WINDOW_SECONDS, verify_slack_signature
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     *,
@@ -45,7 +45,7 @@ def _make_request(
         sig = signature
 
     headers: dict = {}
-    if timestamp is not None or True:  # always set unless explicitly omitted below
+    if True:  # always set unless explicitly omitted below
         headers["X-Slack-Request-Timestamp"] = ts
     headers["X-Slack-Signature"] = sig
 
@@ -75,30 +75,37 @@ def _make_request_missing_headers(*, drop_timestamp=False, drop_signature=False)
 # Missing / malformed headers
 # ---------------------------------------------------------------------------
 
+
 class TestMissingHeaders:
     @pytest.mark.asyncio
     async def test_missing_timestamp_raises_401(self) -> None:
         req = _make_request_missing_headers(drop_timestamp=True)
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_missing_signature_raises_401(self) -> None:
         req = _make_request_missing_headers(drop_signature=True)
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
     async def test_non_integer_timestamp_raises_401(self) -> None:
         req = _make_request_missing_headers()
         req.headers["X-Slack-Request-Timestamp"] = "not-a-number"
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 401
 
 
@@ -106,23 +113,28 @@ class TestMissingHeaders:
 # Replay-attack window
 # ---------------------------------------------------------------------------
 
+
 class TestReplayWindow:
     @pytest.mark.asyncio
     async def test_timestamp_too_old_raises_403(self) -> None:
         old_ts = str(int(time.time()) - _REPLAY_WINDOW_SECONDS - 1)
         req = _make_request(timestamp=old_ts)
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
     async def test_timestamp_too_new_raises_403(self) -> None:
         future_ts = str(int(time.time()) + _REPLAY_WINDOW_SECONDS + 1)
         req = _make_request(timestamp=future_ts)
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -139,6 +151,7 @@ class TestReplayWindow:
 # Signature verification
 # ---------------------------------------------------------------------------
 
+
 class TestSignatureVerification:
     @pytest.mark.asyncio
     async def test_valid_signature_returns_body(self) -> None:
@@ -151,9 +164,11 @@ class TestSignatureVerification:
     @pytest.mark.asyncio
     async def test_wrong_signature_raises_403(self) -> None:
         req = _make_request(signature="v0=deadbeefdeadbeefdeadbeefdeadbeefdeadbeef1234")
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": "test-signing-secret"}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 403
 
     @pytest.mark.asyncio
@@ -173,15 +188,18 @@ class TestSignatureVerification:
         }
         req.body = AsyncMock(return_value=b"payload=tampered")
 
-        with patch.dict("os.environ", {"SLACK_SIGNING_SECRET": secret}):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_slack_signature(req)
+        with (
+            patch.dict("os.environ", {"SLACK_SIGNING_SECRET": secret}),
+            pytest.raises(HTTPException) as exc_info,
+        ):
+            await verify_slack_signature(req)
         assert exc_info.value.status_code == 403
 
 
 # ---------------------------------------------------------------------------
 # Missing env var
 # ---------------------------------------------------------------------------
+
 
 class TestMissingSigningSecret:
     @pytest.mark.asyncio

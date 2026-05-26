@@ -1,5 +1,5 @@
 # Action-class policy — placeholder
-# INTERFACE-CONTRACT §5 × §3.3 autonomy tiers
+# Action-class × autonomy-tier matrix (see DESIGN-REVIEW §3.3 for tier semantics).
 #
 # tier: 0=observe  1=recommend  2=act-guarded  3=act-slack-approved  4=act-autonomous
 # bounds: validated by policy.py._check_bounds()

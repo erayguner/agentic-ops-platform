@@ -4,7 +4,7 @@ Provisions the five AOP agents on Vertex AI Agent Engine (reasoning engines) plu
 
 ## Resources created
 
-- **5 service accounts** — `sa-orchestrator`, `sa-sre`, `sa-devsecops`, `sa-platform`, `sa-finops` (INTERFACE-CONTRACT §2).
+- **5 service accounts** — `sa-orchestrator`, `sa-sre`, `sa-devsecops`, `sa-platform`, `sa-finops`.
 - **IAM bindings** — read-only grants per DESIGN-REVIEW §5.3. No write IAM on any agent SA.
 - **5 reasoning engines** — one per agent. `agent_framework = "google-adk"`; `deletion_policy` driven by `deletion_policy_prevent` variable (defaults `PREVENT` in prod).
 - **Memory Bank skeleton** — one `google_vertex_ai_reasoning_engine` using `provider = google-beta` for the `context_spec` block. Annotated with an inline comment explaining the beta requirement and a TODO for when the field graduates to GA.

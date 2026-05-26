@@ -38,7 +38,7 @@ def build_agent_card(settings: AopSettings) -> object:
             "Produces Finding v1."
         ),
         model_id=settings.model_id,
-        mcp_servers=FINOPS_MCP_ENDPOINTS + [settings.action_broker_mcp_endpoint],
+        mcp_servers=[*FINOPS_MCP_ENDPOINTS, settings.action_broker_mcp_endpoint],
         skills=[
             AgentSkill(
                 name="investigate_cost_anomaly",

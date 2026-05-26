@@ -8,15 +8,15 @@ Coverage gaps addressed:
 - None Firestore client handling (graceful no-op)
 - LIVE_MODE env var toggling
 """
+
 from unittest.mock import MagicMock, patch
 
-
 from idempotency import IdempotencyStore, _make_key
-
 
 # ---------------------------------------------------------------------------
 # _make_key
 # ---------------------------------------------------------------------------
+
 
 class TestMakeKey:
     def test_same_inputs_produce_same_key(self) -> None:
@@ -53,6 +53,7 @@ class TestMakeKey:
 # ---------------------------------------------------------------------------
 # IdempotencyStore.check
 # ---------------------------------------------------------------------------
+
 
 class TestIdempotencyStoreCheck:
     def test_check_in_dry_run_always_returns_none(self) -> None:
@@ -111,6 +112,7 @@ class TestIdempotencyStoreCheck:
 # ---------------------------------------------------------------------------
 # IdempotencyStore.record
 # ---------------------------------------------------------------------------
+
 
 class TestIdempotencyStoreRecord:
     def test_record_in_dry_run_does_not_call_firestore(self) -> None:

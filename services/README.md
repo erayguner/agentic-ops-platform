@@ -33,9 +33,9 @@ python3 -m compileall -q services/
 
 | Thing | Source of truth |
 |---|---|
-| Topic names | `INTERFACE-CONTRACT.md §3` |
-| Schema field names | `INTERFACE-CONTRACT.md §4` |
-| Action-class strings | `INTERFACE-CONTRACT.md §5` |
-| SA names | `INTERFACE-CONTRACT.md §2` |
-| Slack channels | `INTERFACE-CONTRACT.md §1` |
+| Topic names | `terraform/modules/eventing/main.tf` |
+| Schema field names | `agents/aop_common/schemas.py`, `services/*/schemas.py` |
+| Action-class strings | `services/action-broker/policy/action_classes.yaml` |
+| SA names | `terraform/modules/agent-runtime/main.tf`, `terraform/modules/action-broker/main.tf` |
+| Slack channels | `services/slack-notifier/blockkit.py` |
 | Block Kit layout | `docs/DESIGN-REVIEW.md §6.6` |

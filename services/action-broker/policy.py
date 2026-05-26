@@ -11,12 +11,13 @@ Usage:
     engine = PolicyEngine.load()
     decision = engine.decide("cloud_run.scale_within_range", "prod", target, params)
 """
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import yaml
 
@@ -32,8 +33,8 @@ class PolicyRule:
     tier: int
     allowed: bool
     required_approvers: int
-    bounds: Dict[str, Any]
-    deny_reason: Optional[str]
+    bounds: dict[str, Any]
+    deny_reason: str | None
 
 
 @dataclass
@@ -41,19 +42,19 @@ class Decision:
     tier: int
     allowed: bool
     required_approvers: int
-    bounds: Dict[str, Any]
-    deny_reason: Optional[str] = None
+    bounds: dict[str, Any]
+    deny_reason: str | None = None
     rule_matched: str = "default-deny"
 
 
 class PolicyEngine:
-    def __init__(self, rules: List[PolicyRule]) -> None:
-        self._rules: Dict[tuple[str, str], PolicyRule] = {
+    def __init__(self, rules: list[PolicyRule]) -> None:
+        self._rules: dict[tuple[str, str], PolicyRule] = {
             (r.action_class, r.environment): r for r in rules
         }
 
     @classmethod
-    def load(cls, path: Path = _POLICY_PATH) -> "PolicyEngine":
+    def load(cls, path: Path = _POLICY_PATH) -> PolicyEngine:
         try:
             raw = yaml.safe_load(path.read_text())
         except FileNotFoundError:
@@ -63,18 +64,20 @@ class PolicyEngine:
             logger.error("Policy YAML parse error: %s — engine in DENY mode", exc)
             return cls([])
 
-        rules: List[PolicyRule] = []
+        rules: list[PolicyRule] = []
         for entry in raw.get("action_classes", []):
             for env in entry.get("environments", []):
-                rules.append(PolicyRule(
-                    action_class=entry["name"],
-                    environment=env["env"],
-                    tier=env.get("tier", 1),
-                    allowed=env.get("allowed", True),
-                    required_approvers=env.get("required_approvers", 1),
-                    bounds=env.get("bounds", {}),
-                    deny_reason=env.get("deny_reason"),
-                ))
+                rules.append(
+                    PolicyRule(
+                        action_class=entry["name"],
+                        environment=env["env"],
+                        tier=env.get("tier", 1),
+                        allowed=env.get("allowed", True),
+                        required_approvers=env.get("required_approvers", 1),
+                        bounds=env.get("bounds", {}),
+                        deny_reason=env.get("deny_reason"),
+                    )
+                )
         logger.info("PolicyEngine loaded %d rules from %s", len(rules), path)
         return cls(rules)
 
@@ -82,8 +85,8 @@ class PolicyEngine:
         self,
         action_class: str,
         environment: str,
-        target: Dict[str, Any],
-        params: Dict[str, Any],
+        target: dict[str, Any],
+        params: dict[str, Any],
     ) -> Decision:
         """
         Return a ``Decision`` for the proposed action.
@@ -97,7 +100,8 @@ class PolicyEngine:
         if rule is None:
             logger.warning(
                 "No policy rule for action_class=%s env=%s — default DENY",
-                action_class, environment,
+                action_class,
+                environment,
             )
             return Decision(
                 tier=0,
@@ -139,19 +143,28 @@ class PolicyEngine:
         )
 
 
-def _check_bounds(params: Dict[str, Any], bounds: Dict[str, Any]) -> Optional[str]:
+def _check_bounds(params: dict[str, Any], bounds: dict[str, Any]) -> str | None:
     """
     Validate params against bounds.  Returns a violation string or None.
 
     Supported bound keys: min_instances, max_instances, max_blast_radius.
     """
-    if "max_instances" in bounds and "instances" in params:
-        if params["instances"] > bounds["max_instances"]:
-            return f"instances={params['instances']} > max={bounds['max_instances']}"
-    if "min_instances" in bounds and "instances" in params:
-        if params["instances"] < bounds["min_instances"]:
-            return f"instances={params['instances']} < min={bounds['min_instances']}"
-    if "max_blast_radius" in bounds and "target_count" in params:
-        if params["target_count"] > bounds["max_blast_radius"]:
-            return f"target_count={params['target_count']} > max={bounds['max_blast_radius']}"
+    if (
+        "max_instances" in bounds
+        and "instances" in params
+        and params["instances"] > bounds["max_instances"]
+    ):
+        return f"instances={params['instances']} > max={bounds['max_instances']}"
+    if (
+        "min_instances" in bounds
+        and "instances" in params
+        and params["instances"] < bounds["min_instances"]
+    ):
+        return f"instances={params['instances']} < min={bounds['min_instances']}"
+    if (
+        "max_blast_radius" in bounds
+        and "target_count" in params
+        and params["target_count"] > bounds["max_blast_radius"]
+    ):
+        return f"target_count={params['target_count']} > max={bounds['max_blast_radius']}"
     return None

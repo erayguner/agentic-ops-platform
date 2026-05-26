@@ -54,9 +54,9 @@ body:
   - type: textarea
     id: contract-impact
     attributes:
-      label: Interface-contract impact
+      label: Cross-component schema impact
       description: |
-        Does this change `INTERFACE-CONTRACT.md` — schemas, topic names, SA names, action classes, Slack channels?
+        Does this change cross-component surfaces — schemas (any `schemas.py`), topic names, SA names, action classes, Slack channels?
         If yes, sketch the diff or the new structure here.
 
   - type: textarea

@@ -1,18 +1,19 @@
 """
 Pub/Sub event publishers for the Action Broker.
 
-Topics published (INTERFACE-CONTRACT §3):
+Topics published:
   ops.actions.requested  — on propose_action
   ops.actions.executed   — on execute / rollback completion
   ops.audit              — on every phase transition
 
 LIVE_MODE=False (default): log the event payload; do not call Pub/Sub.
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +24,9 @@ TOPIC_ACTIONS_EXECUTED = "ops.actions.executed"
 TOPIC_AUDIT = "ops.audit"
 
 
-def _publish(pubsub_client, project_id: str, topic: str, payload: Dict[str, Any]) -> None:
+def _publish(pubsub_client, project_id: str, topic: str, payload: dict[str, Any]) -> None:
     import json
+
     data = json.dumps(payload, default=str).encode()
 
     if not LIVE_MODE or pubsub_client is None:
@@ -40,7 +42,7 @@ def _publish(pubsub_client, project_id: str, topic: str, payload: Dict[str, Any]
 def publish_action_requested(
     pubsub_client,
     project_id: str,
-    action_request: Dict[str, Any],
+    action_request: dict[str, Any],
 ) -> None:
     _publish(pubsub_client, project_id, TOPIC_ACTIONS_REQUESTED, action_request)
 
@@ -48,7 +50,7 @@ def publish_action_requested(
 def publish_action_executed(
     pubsub_client,
     project_id: str,
-    action_executed: Dict[str, Any],
+    action_executed: dict[str, Any],
 ) -> None:
     _publish(pubsub_client, project_id, TOPIC_ACTIONS_EXECUTED, action_executed)
 
@@ -56,6 +58,6 @@ def publish_action_executed(
 def publish_audit(
     pubsub_client,
     project_id: str,
-    audit_record: Dict[str, Any],
+    audit_record: dict[str, Any],
 ) -> None:
     _publish(pubsub_client, project_id, TOPIC_AUDIT, audit_record)

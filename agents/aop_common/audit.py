@@ -18,7 +18,7 @@ from aop_common.schemas import AuditRecord, ModelUsage, PolicyDecision
 
 logger = logging.getLogger(__name__)
 
-# Exact topic name per INTERFACE-CONTRACT §3
+# Canonical audit topic name.
 _TOPIC_AUDIT = "ops.audit"
 
 
@@ -52,9 +52,7 @@ class AuditEmitter:
 
             return pubsub_v1.PublisherClient()
         except ImportError as exc:
-            raise ImportError(
-                "google-cloud-pubsub>=2.21 is required for AuditEmitter."
-            ) from exc
+            raise ImportError("google-cloud-pubsub>=2.21 is required for AuditEmitter.") from exc
 
     def record(
         self,

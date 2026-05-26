@@ -2,6 +2,7 @@
 Add the action-broker service directory to sys.path so tests can import
 modules that use flat (non-package) imports.
 """
+
 import sys
 from pathlib import Path
 

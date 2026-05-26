@@ -18,7 +18,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------- #
-# Managed MCP endpoint constants (§4.2 of INTERFACE-CONTRACT, §2.7 DESIGN-REVIEW)
+# Managed MCP endpoint constants (DESIGN-REVIEW §2.7).
 # --------------------------------------------------------------------------- #
 
 LOGGING_MCP = "https://logging.googleapis.com/mcp"
@@ -37,9 +37,11 @@ NETWORK_INTELLIGENCE_MCP = "https://networkmanagement.googleapis.com/mcp"
 AGENT_REGISTRY_MCP = "https://agentregistry.googleapis.com/mcp"  # Preview
 GEMINI_CLOUD_ASSIST_MCP = "https://geminicloudassist.googleapis.com/mcp"  # Preview
 RECOMMENDER_MCP = "https://recommender.googleapis.com/mcp"
-DEVELOPER_KNOWLEDGE_MCP = "https://developerknowledge.googleapis.com/mcp"  # GA — Google developer documentation lookup
+DEVELOPER_KNOWLEDGE_MCP = (
+    "https://developerknowledge.googleapis.com/mcp"  # GA — Google developer documentation lookup
+)
 
-# Per-agent allow-lists (§4.2 INTERFACE-CONTRACT / §4.2 DESIGN-REVIEW)
+# Per-agent allow-lists (DESIGN-REVIEW §4.2).
 ORCHESTRATOR_MCP_ENDPOINTS: list[str] = [
     LOGGING_MCP,
     PUBSUB_MCP,
@@ -116,7 +118,7 @@ def build_mcp_toolsets(
         from google.auth import default as google_auth_default  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ImportError(
-            "google-adk>=2.0 and google-auth are required. " "Run: pip install 'google-adk==2.0.*'"
+            "google-adk>=2.0 and google-auth are required. Run: pip install 'google-adk==2.0.*'"
         ) from exc
 
     credentials, _ = google_auth_default(scopes=["https://www.googleapis.com/auth/cloud-platform"])

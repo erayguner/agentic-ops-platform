@@ -48,10 +48,10 @@ Leave any section that genuinely does not apply, but do not delete it.
 - **Required follow-up** — additional infra changes, policy PRs, doc updates, or eval re-runs that must land before this is "done"?
 
 
-## Interface-contract impact
-<!-- REQUIRED if this PR touches schemas, topic names, SAs, action classes, Slack channels, or any other cross-component contract surface. -->
-- [ ] No change to `INTERFACE-CONTRACT.md`.
-- [ ] `INTERFACE-CONTRACT.md` updated in this PR; downstream files updated atomically:
+## Cross-component schema impact
+<!-- REQUIRED if this PR touches schemas, topic names, SAs, action classes, Slack channels, or any other cross-component surface. -->
+- [ ] No change to any cross-component schema, topic, SA, action class, or Slack channel.
+- [ ] Cross-component change in this PR; the following are updated atomically:
   - [ ] `agents/aop_common/schemas.py`
   - [ ] `services/slack-notifier/schemas.py`
   - [ ] `services/action-broker/schemas.py`

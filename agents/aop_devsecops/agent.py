@@ -42,8 +42,7 @@ def build_agent_card(settings: AopSettings) -> object:
             "vulnerability signals, and policy violations. Produces Finding v1."
         ),
         model_id=settings.model_id,
-        mcp_servers=DEVSECOPS_MCP_ENDPOINTS
-        + [secops_ep, settings.action_broker_mcp_endpoint],
+        mcp_servers=[*DEVSECOPS_MCP_ENDPOINTS, secops_ep, settings.action_broker_mcp_endpoint],
         skills=[
             AgentSkill(
                 name="investigate_security",
@@ -77,7 +76,7 @@ def build_devsecops_agent(settings: AopSettings) -> object:
     ModelFactory.from_settings(settings)
     secops_ep = SECOPS_MCP_TEMPLATE.format(region=settings.region)
     toolsets = build_mcp_toolsets(
-        DEVSECOPS_MCP_ENDPOINTS + [secops_ep],
+        [*DEVSECOPS_MCP_ENDPOINTS, secops_ep],
         region=settings.region,
         extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
     )

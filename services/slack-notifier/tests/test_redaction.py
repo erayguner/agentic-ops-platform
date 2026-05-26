@@ -12,10 +12,10 @@ Coverage gaps addressed:
 
 from redaction import redact, redact_dict
 
-
 # ---------------------------------------------------------------------------
 # Individual pattern tests
 # ---------------------------------------------------------------------------
+
 
 class TestRedactBearerToken:
     def test_bearer_token_is_redacted(self) -> None:
@@ -128,9 +128,7 @@ class TestRedactPasswordFields:
 class TestRedactPrivateKey:
     def test_pem_private_key_is_redacted(self) -> None:
         key_block = (
-            "-----BEGIN RSA KEY-----\n"
-            "MIIEowIBAAKCAQEA1234567890abcdefghij\n"
-            "-----END RSA KEY-----"
+            "-----BEGIN RSA KEY-----\nMIIEowIBAAKCAQEA1234567890abcdefghij\n-----END RSA KEY-----"
         )
         result = redact(key_block)
         assert "[REDACTED:PRIVATE_KEY]" in result
@@ -140,6 +138,7 @@ class TestRedactPrivateKey:
 # ---------------------------------------------------------------------------
 # Clean string — no false positives
 # ---------------------------------------------------------------------------
+
 
 class TestRedactNoFalsePositives:
     def test_normal_log_line_unchanged(self) -> None:
@@ -155,6 +154,7 @@ class TestRedactNoFalsePositives:
 # ---------------------------------------------------------------------------
 # redact_dict
 # ---------------------------------------------------------------------------
+
 
 class TestRedactDict:
     def test_string_value_is_redacted(self) -> None:

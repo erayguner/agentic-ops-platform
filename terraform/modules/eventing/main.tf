@@ -9,7 +9,7 @@ locals {
     var.labels,
   )
 
-  # All canonical AOP topics from INTERFACE-CONTRACT §3
+  # All canonical AOP topics.
   topics = [
     "ops.signals",
     "ops.findings",
@@ -172,7 +172,7 @@ resource "google_pubsub_topic" "ops_audit" {
 }
 
 # ---------------------------------------------------------------------------
-# DLQ topics — one per main topic per INTERFACE-CONTRACT §3
+# DLQ topics — one per main topic.
 # ---------------------------------------------------------------------------
 
 resource "google_pubsub_topic" "ops_signals_dlq" {

@@ -6,7 +6,7 @@ The Pub/Sub event spine and Eventarc bridge layer for the AOP.
 
 - **7 Pub/Sub topics** — `ops.signals`, `ops.findings`, `ops.actions.requested`, `ops.actions.approved`, `ops.actions.executed`, `ops.notifications`, `ops.audit`.
 - **7 DLQ topics** — one per main topic (e.g. `ops.signals.dlq`).
-- **3 Avro schemas** — attached to `ops.signals`, `ops.notifications`, and `ops.audit`. Minimal but valid Avro records matching INTERFACE-CONTRACT §4.
+- **3 Avro schemas** — attached to `ops.signals`, `ops.notifications`, and `ops.audit`. Minimal but valid Avro records matching the Pydantic models in `agents/aop_common/schemas.py`.
 - **BigQuery table** — `audit_events` (day-partitioned on timestamp) in the governance audit dataset.
 - **BigQuery subscription** — `ops.audit.bq-sub` pushes audit records directly into the BQ table via `use_topic_schema = true`.
 - **Eventarc trigger 1** — Cloud Audit Logs (IAM) → `ops.signals` (Pub/Sub destination).

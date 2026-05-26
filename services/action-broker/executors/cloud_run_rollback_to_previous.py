@@ -1,8 +1,11 @@
 """Executor: cloud_run.rollback_to_previous — stub."""
+
 from __future__ import annotations
-import logging, os
+
+import logging
+import os
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
@@ -15,14 +18,14 @@ class Outcome:
     resource_refs: list[str]
 
 
-def validate(params: Dict[str, Any]) -> None:
+def validate(params: dict[str, Any]) -> None:
     required = {"service_name", "project", "region"}
     missing = required - params.keys()
     if missing:
         raise ValueError(f"Missing params: {missing}")
 
 
-def execute(params: Dict[str, Any], credentials) -> Outcome:
+def execute(params: dict[str, Any], credentials) -> Outcome:
     if not LIVE_MODE:
         raise NotImplementedError("cloud_run.rollback_to_previous stub; LIVE_MODE=false")
     service = f"projects/{params['project']}/locations/{params['region']}/services/{params['service_name']}"
@@ -30,11 +33,11 @@ def execute(params: Dict[str, Any], credentials) -> Outcome:
     return Outcome(status="success", detail="rolled back to previous", resource_refs=[service])
 
 
-def verify(params: Dict[str, Any], outcome: Outcome) -> bool:
+def verify(params: dict[str, Any], outcome: Outcome) -> bool:
     return outcome.status == "success"
 
 
-def rollback(params: Dict[str, Any], outcome: Outcome) -> Outcome:
+def rollback(params: dict[str, Any], outcome: Outcome) -> Outcome:
     if not LIVE_MODE:
         raise NotImplementedError("Rollback stub; LIVE_MODE=false")
     logger.info("Re-rolling forward %s", params.get("service_name"))

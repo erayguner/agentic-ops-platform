@@ -8,6 +8,7 @@ Implements the documented Slack signing-secret protocol:
 
 Reference: https://api.slack.com/authentication/verifying-requests-from-slack
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -46,8 +47,8 @@ async def verify_slack_signature(request: Request) -> bytes:
 
     try:
         ts = int(timestamp_header)
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid timestamp header")
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail="Invalid timestamp header") from exc
 
     # Replay-attack window
     now = int(time.time())
@@ -58,9 +59,7 @@ async def verify_slack_signature(request: Request) -> bytes:
     body: bytes = await request.body()
     basestring = f"v0:{ts}:{body.decode()}".encode()
 
-    expected = "v0=" + hmac.new(
-        _get_signing_secret(), basestring, hashlib.sha256
-    ).hexdigest()
+    expected = "v0=" + hmac.new(_get_signing_secret(), basestring, hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(expected, signature_header):
         logger.warning("Slack signature mismatch")

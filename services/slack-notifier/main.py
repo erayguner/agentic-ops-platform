@@ -13,6 +13,7 @@ Environment variables:
   PUBSUB_PUSH_TOKEN       — shared secret embedded in the push subscription URL
   GCP_PROJECT_ID          — target GCP project for Pub/Sub publishing
 """
+
 from __future__ import annotations
 
 import base64
@@ -24,10 +25,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
-from pydantic import ValidationError
-
 from interactivity import handle_block_actions
 from notifier import deliver_notification
+from pydantic import ValidationError
 from schemas import OpsNotification
 from signature import verify_slack_signature
 
@@ -55,8 +55,8 @@ async def lifespan(app: FastAPI):
     pubsub_client = None
 
     if LIVE_SLACK_ENABLED:
-        from slack_sdk.web.async_client import AsyncWebClient  # type: ignore
         from google.cloud import pubsub_v1
+        from slack_sdk.web.async_client import AsyncWebClient  # type: ignore
 
         token = os.environ.get("SLACK_BOT_TOKEN", "")
         if not token:
@@ -80,6 +80,7 @@ app = FastAPI(title="aop-slack-notifier", lifespan=lifespan)
 # Health
 # ---------------------------------------------------------------------------
 
+
 @app.get("/healthz", status_code=200)
 async def healthz() -> dict:
     return {"status": "ok", "live_slack": LIVE_SLACK_ENABLED}
@@ -88,6 +89,7 @@ async def healthz() -> dict:
 # ---------------------------------------------------------------------------
 # Pub/Sub push handler
 # ---------------------------------------------------------------------------
+
 
 @app.post("/pubsub/push", status_code=204)
 async def pubsub_push(
@@ -125,9 +127,9 @@ async def pubsub_push(
     try:
         await deliver_notification(notification, _state.get("slack"))
     except Exception as exc:
-        logger.error("deliver_notification failed: %s", exc, exc_info=True)
+        logger.exception("deliver_notification failed: %s", exc)
         # Return 500 so Pub/Sub retries (transient Slack error)
-        raise HTTPException(status_code=500, detail="Delivery failed; will retry")
+        raise HTTPException(status_code=500, detail="Delivery failed; will retry") from exc
 
     return Response(status_code=204)
 
@@ -135,6 +137,7 @@ async def pubsub_push(
 # ---------------------------------------------------------------------------
 # Slack interactivity
 # ---------------------------------------------------------------------------
+
 
 @app.post("/slack/interactivity")
 async def slack_interactivity(request: Request) -> dict:
@@ -151,8 +154,8 @@ async def slack_interactivity(request: Request) -> dict:
         form = urllib.parse.parse_qs(raw_body.decode())
         raw_payload = form.get("payload", ["{}"])[0]
     except Exception as exc:
-        logger.error("Could not parse interactivity form body: %s", exc)
-        raise HTTPException(status_code=400, detail="Invalid interactivity body")
+        logger.exception("Could not parse interactivity form body: %s", exc)
+        raise HTTPException(status_code=400, detail="Invalid interactivity body") from exc
 
     result = await handle_block_actions(
         raw_payload=raw_payload,

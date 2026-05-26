@@ -18,7 +18,7 @@ from aop_common.schemas import OpsNotification
 
 logger = logging.getLogger(__name__)
 
-# Exact topic name per INTERFACE-CONTRACT §3
+# Canonical notifications topic name.
 _TOPIC_NOTIFICATIONS = "ops.notifications"
 
 
@@ -31,9 +31,7 @@ class SlackEmitter:
 
     def __init__(self, project: str) -> None:
         self._project = project
-        self._topic_path: str = (
-            f"projects/{project}/topics/{_TOPIC_NOTIFICATIONS}"
-        )
+        self._topic_path: str = f"projects/{project}/topics/{_TOPIC_NOTIFICATIONS}"
         self._publisher = self._build_publisher()
 
     def _build_publisher(self) -> object:
@@ -47,9 +45,7 @@ class SlackEmitter:
 
             return pubsub_v1.PublisherClient()
         except ImportError as exc:
-            raise ImportError(
-                "google-cloud-pubsub>=2.21 is required for SlackEmitter."
-            ) from exc
+            raise ImportError("google-cloud-pubsub>=2.21 is required for SlackEmitter.") from exc
 
     def emit(self, notification: OpsNotification) -> str:
         """Publish an OpsNotification to ops.notifications.

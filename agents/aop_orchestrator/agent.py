@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 # AgentCard (A2A)
 # --------------------------------------------------------------------------- #
 
+
 # ADK 2.0 API — confirm AgentCard / AgentSkill constructor against adk.dev/2.0/ release notes
 def build_agent_card(settings: AopSettings) -> object:
     """Build the A2A AgentCard describing orchestrator capabilities.
@@ -48,8 +49,8 @@ def build_agent_card(settings: AopSettings) -> object:
             "operational signals. Owns the Slack incident conversation. Manages HITL approval."
         ),
         model_id=settings.model_id,
-        mcp_servers=ORCHESTRATOR_MCP_ENDPOINTS
-        + [
+        mcp_servers=[
+            *ORCHESTRATOR_MCP_ENDPOINTS,
             settings.action_broker_mcp_endpoint,
             settings.org_context_mcp_endpoint,
         ],
@@ -73,6 +74,7 @@ def build_agent_card(settings: AopSettings) -> object:
 # --------------------------------------------------------------------------- #
 # Workflow nodes
 # --------------------------------------------------------------------------- #
+
 
 def receive_signal_node(signal_data: dict) -> dict:
     """Node 1: receive and validate an OpsSignal from ops.signals.
@@ -109,8 +111,8 @@ def classify_node(state: dict) -> dict:
     """
     signal = state["signal"]
     logger.info("classify: signal_id=%s severity=%s", signal.signal_id, signal.severity)
-    state["domain"] = "sre"          # SKELETON: LLM classification result
-    state["confidence"] = 0.90       # SKELETON: LLM confidence score
+    state["domain"] = "sre"  # SKELETON: LLM classification result
+    state["confidence"] = 0.90  # SKELETON: LLM confidence score
     return state
 
 
@@ -171,6 +173,7 @@ def close_node(state: dict) -> dict:
 # Routing logic (conditional edges)
 # --------------------------------------------------------------------------- #
 
+
 def _needs_approval(state: dict) -> bool:
     """Return True if the finding contains a Tier 3 or Tier 4 recommendation."""
     finding = state.get("finding")
@@ -189,6 +192,7 @@ def _is_duplicate(state: dict) -> bool:
 # --------------------------------------------------------------------------- #
 # Agent constructor
 # --------------------------------------------------------------------------- #
+
 
 def build_orchestrator(settings: AopSettings) -> object:
     """Construct and return the ADK 2.0 Orchestrator WorkflowAgent.

@@ -10,7 +10,7 @@
 # See README.md for the move-state procedure.
 
 locals {
-  # Map env → state bucket name per INTERFACE-CONTRACT §1
+  # Map env → state bucket name.
   state_buckets = {
     for env in var.envs : env => "${var.org_slug}-tfstate-${env}"
   }

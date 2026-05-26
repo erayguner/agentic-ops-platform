@@ -128,9 +128,9 @@ step (see `terraform/modules/agent-runtime/`).
 - **No agent holds write IAM on GCP.** All writes go through the Action
   Broker MCP only.
 - **Structured output fixed to `Finding`.** Every specialist returns
-  `Finding v1` exactly per `INTERFACE-CONTRACT.md §4.2`.
-- **Pub/Sub is the event spine.** Schema field names match
-  `INTERFACE-CONTRACT.md §4` exactly.
+  `Finding v1` as defined in `aop_common/schemas.py`.
+- **Pub/Sub is the event spine.** Schema field names match the
+  Pydantic models in `aop_common/schemas.py` exactly.
 - **Agent Identity (SPIFFE) when GA.** Today: dedicated SA + PAB
   (`AOP_AGENT_IDENTITY` env var; SPIFFE-shaped string accepted as a
   forward-compat placeholder).

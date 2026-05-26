@@ -75,7 +75,7 @@ class ModelFactory:
         )
 
     @classmethod
-    def from_settings(cls, settings: Any) -> "ModelFactory":
+    def from_settings(cls, settings: Any) -> ModelFactory:
         """Convenience constructor from an AopSettings instance.
 
         Args:

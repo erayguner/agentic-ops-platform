@@ -17,6 +17,7 @@ Environment variables:
   PUBSUB_PUSH_TOKEN   — shared secret on the push subscription URL
   PORT                — injected by Cloud Run (default 8080)
 """
+
 from __future__ import annotations
 
 import base64
@@ -24,14 +25,13 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Dict
-
-from fastapi import FastAPI, HTTPException, Query, Request, Response
-from pydantic import ValidationError
+from typing import Any
 
 from broker import Broker, BrokerError
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from idempotency import IdempotencyStore
 from policy import PolicyEngine
+from pydantic import ValidationError
 from schemas import ActionApproval
 
 logging.basicConfig(
@@ -44,7 +44,7 @@ LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "ops-agents-dev")
 PUBSUB_PUSH_TOKEN = os.environ.get("PUBSUB_PUSH_TOKEN", "")
 
-_state: Dict[str, Any] = {}
+_state: dict[str, Any] = {}
 
 # ---------------------------------------------------------------------------
 # MCP tool catalogue (Streamable HTTP — minimal)
@@ -56,14 +56,21 @@ _MCP_TOOLS = [
         "description": "Propose a governed action for policy evaluation and (if approved) execution.",
         "inputSchema": {
             "type": "object",
-            "required": ["action_class", "target", "params", "requested_by", "correlation_id", "environment"],
+            "required": [
+                "action_class",
+                "target",
+                "params",
+                "requested_by",
+                "correlation_id",
+                "environment",
+            ],
             "properties": {
-                "action_class":    {"type": "string"},
-                "target":          {"type": "object"},
-                "params":          {"type": "object"},
-                "requested_by":    {"type": "string"},
-                "correlation_id":  {"type": "string"},
-                "environment":     {"type": "string", "enum": ["dev", "prod"]},
+                "action_class": {"type": "string"},
+                "target": {"type": "object"},
+                "params": {"type": "object"},
+                "requested_by": {"type": "string"},
+                "correlation_id": {"type": "string"},
+                "environment": {"type": "string", "enum": ["dev", "prod"]},
             },
         },
     },
@@ -83,7 +90,7 @@ _MCP_TOOLS = [
             "type": "object",
             "required": ["action_id", "approval_token"],
             "properties": {
-                "action_id":      {"type": "string"},
+                "action_id": {"type": "string"},
                 "approval_token": {"type": "string"},
             },
         },
@@ -113,6 +120,7 @@ _MCP_TOOLS = [
 # Lifespan
 # ---------------------------------------------------------------------------
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     policy_engine = PolicyEngine.load()
@@ -120,7 +128,8 @@ async def lifespan(app: FastAPI):
     pubsub_client = None
     firestore_client = None
     if LIVE_MODE:
-        from google.cloud import pubsub_v1, firestore  # type: ignore
+        from google.cloud import firestore, pubsub_v1  # type: ignore
+
         pubsub_client = pubsub_v1.PublisherClient()
         firestore_client = firestore.Client(project=GCP_PROJECT_ID)
         logger.info("Live Pub/Sub + Firestore clients initialised")
@@ -143,6 +152,7 @@ app = FastAPI(title="aop-action-broker", lifespan=lifespan)
 # Health
 # ---------------------------------------------------------------------------
 
+
 @app.get("/healthz", status_code=200)
 async def healthz() -> dict:
     return {"status": "ok", "live_mode": LIVE_MODE}
@@ -151,6 +161,7 @@ async def healthz() -> dict:
 # ---------------------------------------------------------------------------
 # ID-token verification helper
 # ---------------------------------------------------------------------------
+
 
 async def _verify_id_token(request: Request) -> str:
     """
@@ -164,18 +175,20 @@ async def _verify_id_token(request: Request) -> str:
         raise HTTPException(status_code=401, detail="Missing Bearer token")
     token = auth_header.removeprefix("Bearer ")
     try:
-        from google.oauth2 import id_token as id_token_module  # type: ignore
         from google.auth.transport import requests as google_requests  # type: ignore
+        from google.oauth2 import id_token as id_token_module  # type: ignore
+
         info = id_token_module.verify_oauth2_token(token, google_requests.Request())
         return info.get("email", info.get("sub", "unknown"))
     except Exception as exc:
         logger.warning("ID token verification failed: %s", exc)
-        raise HTTPException(status_code=401, detail="Invalid ID token")
+        raise HTTPException(status_code=401, detail="Invalid ID token") from exc
 
 
 # ---------------------------------------------------------------------------
 # MCP Streamable HTTP endpoints
 # ---------------------------------------------------------------------------
+
 
 @app.post("/mcp/tools/list")
 async def mcp_tools_list(request: Request) -> dict:
@@ -205,19 +218,31 @@ async def mcp_tools_call(request: Request) -> dict:
             return {"content": [{"type": "text", "text": json.dumps(result)}]}
 
         if tool_name == "request_approval":
-            return {"content": [{"type": "text", "text": json.dumps(
-                {"status": "not_implemented", "action_id": tool_input.get("action_id")}
-            )}]}
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps(
+                            {"status": "not_implemented", "action_id": tool_input.get("action_id")}
+                        ),
+                    }
+                ]
+            }
 
         if tool_name in ("execute", "rollback", "status"):
-            return {"content": [{"type": "text", "text": json.dumps(
-                {"status": "not_implemented", "tool": tool_name}
-            )}]}
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps({"status": "not_implemented", "tool": tool_name}),
+                    }
+                ]
+            }
 
     except BrokerError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except KeyError as exc:
-        raise HTTPException(status_code=400, detail=f"Missing input field: {exc}")
+        raise HTTPException(status_code=400, detail=f"Missing input field: {exc}") from exc
 
     raise HTTPException(status_code=404, detail=f"Unknown tool: {tool_name!r}")
 
@@ -225,6 +250,7 @@ async def mcp_tools_call(request: Request) -> dict:
 # ---------------------------------------------------------------------------
 # Pub/Sub approved subscription handler
 # ---------------------------------------------------------------------------
+
 
 @app.post("/pubsub/approved", status_code=204)
 async def pubsub_approved(
@@ -256,7 +282,7 @@ async def pubsub_approved(
     try:
         broker.on_approval(approval)
     except Exception as exc:
-        logger.error("on_approval failed: %s", exc, exc_info=True)
-        raise HTTPException(status_code=500, detail="Approval handling failed")
+        logger.exception("on_approval failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Approval handling failed") from exc
 
     return Response(status_code=204)

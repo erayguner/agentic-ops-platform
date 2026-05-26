@@ -63,12 +63,13 @@ class ActionBrokerClient:
         5. Emit ActionRequest to ops.actions.requested.
 
         Args:
-            action_class: Canonical action class from INTERFACE-CONTRACT §5.
+            action_class: Canonical action class string (see
+                          `services/action-broker/policy/action_classes.yaml`).
                           E.g. "cloud_run.rollback_to_previous".
             target: Resource target dict (type, name, project, region).
             params: Action-class-specific parameters.
             rationale: Human-readable rationale for the proposed action.
-            proposed_tier: Autonomy tier the agent proposes (0–4).
+            proposed_tier: Autonomy tier the agent proposes (0-4).
             correlation_id: Incident correlation id for audit linkage.
             approval_window_until: RFC3339 expiry timestamp for Tier-3 approvals.
 

@@ -47,7 +47,7 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
-# Service accounts — one per agent (INTERFACE-CONTRACT §2)
+# Service accounts — one per agent.
 # ---------------------------------------------------------------------------
 
 resource "google_service_account" "orchestrator" {
@@ -261,7 +261,7 @@ resource "google_project_iam_member" "finops_recommender_viewer" {
 }
 
 # ---------------------------------------------------------------------------
-# Pub/Sub publisher bindings — INTERFACE-CONTRACT §3 producer matrix.
+# Pub/Sub publisher bindings — producer matrix.
 #
 # Specialists publish Finding v1 → ops.findings.
 # Every agent (orchestrator + specialists) publishes:

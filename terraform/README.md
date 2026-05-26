@@ -50,7 +50,7 @@ Merge: terraform apply (dev) via WIF → sa-tf-runner-dev
 
 ## Naming conventions
 
-All names follow INTERFACE-CONTRACT.md exactly. Key rules:
+All names follow the project's naming conventions. Key rules:
 - Service accounts: `sa-<component>` and `sa-action-<class-slug>`
 - Pub/Sub topics: `ops.<phase>` with `.dlq` suffix for dead-letter topics
 - Resources carry labels: `app=aop`, `env=<env>`, `component=<name>`, `managed_by=terraform`

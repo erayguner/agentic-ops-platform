@@ -9,12 +9,11 @@ Coverage gaps addressed:
 - render_block_kit: structure validation, fallback text, blocks present, actions block
 - Missing optional fields: likely_cause, references all None, no agent tokens
 """
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
-
-from blockkit import _countdown_text, _action_elements, render_block_kit, resolve_channel
+from blockkit import _action_elements, _countdown_text, render_block_kit, resolve_channel
 from schemas import (
     AffectedComponent,
     AgentMeta,
@@ -23,12 +22,12 @@ from schemas import (
     References,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures / factories
 # ---------------------------------------------------------------------------
 
-def _component(name: str = "my-service", region: Optional[str] = "us-central1") -> AffectedComponent:
+
+def _component(name: str = "my-service", region: str | None = "us-central1") -> AffectedComponent:
     return AffectedComponent(type="cloud_run", name=name, project="proj", region=region)
 
 
@@ -49,14 +48,14 @@ def _notification(
     *,
     domain: str = "sre",
     severity: str = "high",
-    recommended_actions: Optional[list] = None,
-    approval_window_until: Optional[datetime] = None,
-    likely_cause: Optional[str] = None,
+    recommended_actions: list | None = None,
+    approval_window_until: datetime | None = None,
+    likely_cause: str | None = None,
 ) -> OpsNotification:
     return OpsNotification(
         notification_id="notif-001",
         correlation_id="corr-001",
-        produced_at=datetime.now(tz=timezone.utc),
+        produced_at=datetime.now(tz=UTC),
         severity=severity,
         environment="prod",
         domain=domain,
@@ -76,6 +75,7 @@ def _notification(
 # resolve_channel
 # ---------------------------------------------------------------------------
 
+
 class TestResolveChannel:
     def test_sre_routes_to_ops_incidents(self) -> None:
         assert resolve_channel(_notification(domain="sre")) == "#ops-incidents"
@@ -93,13 +93,20 @@ class TestResolveChannel:
         assert resolve_channel(_notification(domain="platform", severity="low")) == "#ops-platform"
 
     def test_platform_medium_severity_routes_to_ops_platform(self) -> None:
-        assert resolve_channel(_notification(domain="platform", severity="medium")) == "#ops-platform"
+        assert (
+            resolve_channel(_notification(domain="platform", severity="medium")) == "#ops-platform"
+        )
 
     def test_platform_critical_escalates_to_ops_incidents(self) -> None:
-        assert resolve_channel(_notification(domain="platform", severity="critical")) == "#ops-incidents"
+        assert (
+            resolve_channel(_notification(domain="platform", severity="critical"))
+            == "#ops-incidents"
+        )
 
     def test_platform_high_escalates_to_ops_incidents(self) -> None:
-        assert resolve_channel(_notification(domain="platform", severity="high")) == "#ops-incidents"
+        assert (
+            resolve_channel(_notification(domain="platform", severity="high")) == "#ops-incidents"
+        )
 
     def test_unknown_domain_defaults_to_ops_incidents(self) -> None:
         assert resolve_channel(_notification(domain="unknown_domain")) == "#ops-incidents"
@@ -109,32 +116,33 @@ class TestResolveChannel:
 # _countdown_text
 # ---------------------------------------------------------------------------
 
+
 class TestCountdownText:
     def test_none_returns_empty_string(self) -> None:
         assert _countdown_text(None) == ""
 
     def test_future_time_returns_countdown(self) -> None:
-        future = datetime.now(tz=timezone.utc) + timedelta(minutes=5, seconds=30)
+        future = datetime.now(tz=UTC) + timedelta(minutes=5, seconds=30)
         result = _countdown_text(future)
         assert "5m" in result
         assert "30s" in result
         assert "expires in" in result
 
     def test_past_time_returns_expired_message(self) -> None:
-        past = datetime.now(tz=timezone.utc) - timedelta(seconds=1)
+        past = datetime.now(tz=UTC) - timedelta(seconds=1)
         result = _countdown_text(past)
         assert "expired" in result
 
     def test_exactly_zero_returns_expired_message(self) -> None:
         # Simulate now == until (total_seconds rounds to 0)
         with patch("blockkit.datetime") as mock_dt:
-            fixed_now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+            fixed_now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
             mock_dt.now.return_value = fixed_now
             result = _countdown_text(fixed_now)
         assert "expired" in result
 
     def test_large_window_formats_correctly(self) -> None:
-        future = datetime.now(tz=timezone.utc) + timedelta(minutes=15)
+        future = datetime.now(tz=UTC) + timedelta(minutes=15)
         result = _countdown_text(future)
         assert "15m" in result or "14m" in result  # allow for minor timing drift
 
@@ -142,6 +150,7 @@ class TestCountdownText:
 # ---------------------------------------------------------------------------
 # _action_elements
 # ---------------------------------------------------------------------------
+
 
 class TestActionElements:
     def test_tier_less_than_3_produces_info_button(self) -> None:
@@ -202,6 +211,7 @@ class TestActionElements:
 # render_block_kit — structure
 # ---------------------------------------------------------------------------
 
+
 class TestRenderBlockKit:
     def test_returns_dict_with_required_keys(self) -> None:
         payload = render_block_kit(_notification())
@@ -247,7 +257,7 @@ class TestRenderBlockKit:
         assert not any("expires in" in t for t in context_texts)
 
     def test_countdown_context_block_present_when_approval_window_set(self) -> None:
-        window = datetime.now(tz=timezone.utc) + timedelta(minutes=10)
+        window = datetime.now(tz=UTC) + timedelta(minutes=10)
         notif = _notification(approval_window_until=window)
         payload = render_block_kit(notif)
         context_texts = [

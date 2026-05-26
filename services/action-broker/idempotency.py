@@ -6,14 +6,15 @@ Check before execution; record completion with outcome.
 
 LIVE_MODE=False: all operations are no-ops (log only).
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,8 @@ LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
 _COLLECTION = "aop_idempotency_keys"
 
 
-def _make_key(correlation_id: str, action_class: str, target: Dict[str, Any]) -> str:
-    target_hash = hashlib.sha256(
-        json.dumps(target, sort_keys=True).encode()
-    ).hexdigest()[:16]
+def _make_key(correlation_id: str, action_class: str, target: dict[str, Any]) -> str:
+    target_hash = hashlib.sha256(json.dumps(target, sort_keys=True).encode()).hexdigest()[:16]
     raw = f"{correlation_id}:{action_class}:{target_hash}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
@@ -37,8 +36,8 @@ class IdempotencyStore:
         self,
         correlation_id: str,
         action_class: str,
-        target: Dict[str, Any],
-    ) -> Optional[Dict[str, Any]]:
+        target: dict[str, Any],
+    ) -> dict[str, Any] | None:
         """
         Return the previously recorded outcome if this action was already
         executed, or None if it has not.
@@ -59,8 +58,8 @@ class IdempotencyStore:
         self,
         correlation_id: str,
         action_class: str,
-        target: Dict[str, Any],
-        outcome: Dict[str, Any],
+        target: dict[str, Any],
+        outcome: dict[str, Any],
     ) -> None:
         """Record a completed execution so future duplicates are short-circuited."""
         key = _make_key(correlation_id, action_class, target)
@@ -69,7 +68,7 @@ class IdempotencyStore:
             "action_class": action_class,
             "target": target,
             "outcome": outcome,
-            "recorded_at": datetime.now(tz=timezone.utc).isoformat(),
+            "recorded_at": datetime.now(tz=UTC).isoformat(),
         }
 
         if not LIVE_MODE or self._client is None:

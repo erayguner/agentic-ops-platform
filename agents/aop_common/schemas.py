@@ -1,8 +1,10 @@
 """aop_common.schemas — Pydantic v2 models for every AOP schema.
 
-Field names are exactly those specified in INTERFACE-CONTRACT.md §4.
 Snake_case throughout; default factories supply ids and timestamps automatically.
 All models use model_config = ConfigDict(strict=True, populate_by_name=True).
+These models are the source of truth for cross-component field names; the
+matching schemas in `services/slack-notifier/` and `services/action-broker/`
+must stay in lock-step.
 """
 
 from __future__ import annotations
@@ -20,6 +22,7 @@ _CFG = ConfigDict(strict=True, populate_by_name=True)
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
+
 
 def _new_uuid() -> str:
     return str(uuid.uuid4())
@@ -42,6 +45,7 @@ def _prefixed_id(prefix: str) -> str:
 # 4.1 OpsSignal v1
 # --------------------------------------------------------------------------- #
 
+
 class OpsSignal(BaseModel):
     """Normalised operational signal — published to ops.signals."""
 
@@ -61,9 +65,7 @@ class OpsSignal(BaseModel):
             "scheduler, agent_self, or a free-form service name."
         ),
     )
-    source_ref: str = Field(
-        ..., description="URN or URI identifying the source record."
-    )
+    source_ref: str = Field(..., description="URN or URI identifying the source record.")
     environment: Literal["dev", "prod"]
     severity: Literal["info", "low", "medium", "high", "critical"]
     raw: dict[str, Any] = Field(
@@ -79,6 +81,7 @@ class OpsSignal(BaseModel):
 # --------------------------------------------------------------------------- #
 # 4.3 Recommendation v1 (referenced by Finding)
 # --------------------------------------------------------------------------- #
+
 
 class RecommendationTarget(BaseModel):
     """Resource target for an action recommendation."""
@@ -96,14 +99,13 @@ class Recommendation(BaseModel):
 
     model_config = _CFG
 
-    schema_: Literal["ops.recommendation.v1"] = Field(
-        "ops.recommendation.v1", alias="schema"
-    )
+    schema_: Literal["ops.recommendation.v1"] = Field("ops.recommendation.v1", alias="schema")
     recommendation_id: str = Field(default_factory=lambda: _prefixed_id("rec_"))
     action_class: str = Field(
         ...,
         description=(
-            "Canonical action class from INTERFACE-CONTRACT §5. "
+            "Canonical action class string (see "
+            "services/action-broker/policy/action_classes.yaml). "
             "Examples: cloud_run.rollback_to_previous, iam.disable_service_account_key"
         ),
     )
@@ -124,6 +126,7 @@ class Recommendation(BaseModel):
 # 4.2 Finding v1
 # --------------------------------------------------------------------------- #
 
+
 class ModelUsage(BaseModel):
     """Token usage for a model call."""
 
@@ -143,9 +146,7 @@ class Finding(BaseModel):
     finding_id: str = Field(default_factory=lambda: _prefixed_id("fnd_"))
     correlation_id: str = Field(...)
     produced_at: str = Field(default_factory=_now_rfc3339)
-    agent_identity: str = Field(
-        ..., description="SPIFFE URI or SA email of the producing agent."
-    )
+    agent_identity: str = Field(..., description="SPIFFE URI or SA email of the producing agent.")
     domain: Literal["sre", "devsecops", "platform", "finops"]
     summary: str = Field(..., min_length=1)
     cause_hypothesis: str | None = None
@@ -163,14 +164,13 @@ class Finding(BaseModel):
 # 4.4a ActionRequest v1
 # --------------------------------------------------------------------------- #
 
+
 class ActionRequest(BaseModel):
     """Emitted by the Action Broker when a proposal enters the approval queue."""
 
     model_config = _CFG
 
-    schema_: Literal["ops.action_request.v1"] = Field(
-        "ops.action_request.v1", alias="schema"
-    )
+    schema_: Literal["ops.action_request.v1"] = Field("ops.action_request.v1", alias="schema")
     action_id: str = Field(default_factory=lambda: _prefixed_id("act_"))
     recommendation: Recommendation
     requested_by: str = Field(..., description="Agent identity that proposed this action.")
@@ -189,14 +189,13 @@ class ActionRequest(BaseModel):
 # 4.4b ActionApproval v1
 # --------------------------------------------------------------------------- #
 
+
 class ActionApproval(BaseModel):
     """Decision record for an approval request."""
 
     model_config = _CFG
 
-    schema_: Literal["ops.action_approval.v1"] = Field(
-        "ops.action_approval.v1", alias="schema"
-    )
+    schema_: Literal["ops.action_approval.v1"] = Field("ops.action_approval.v1", alias="schema")
     action_id: str = Field(...)
     approval_id: str = Field(default_factory=lambda: _prefixed_id("apv_"))
     decision: Literal["approved", "rejected", "expired"]
@@ -211,14 +210,13 @@ class ActionApproval(BaseModel):
 # 4.4c ActionExecuted v1
 # --------------------------------------------------------------------------- #
 
+
 class ActionExecuted(BaseModel):
     """Emitted by the Action Broker after execution (success, failure, or rollback)."""
 
     model_config = _CFG
 
-    schema_: Literal["ops.action_executed.v1"] = Field(
-        "ops.action_executed.v1", alias="schema"
-    )
+    schema_: Literal["ops.action_executed.v1"] = Field("ops.action_executed.v1", alias="schema")
     action_id: str = Field(...)
     status: Literal["success", "failed", "rolled_back"]
     outcome: dict[str, Any] = Field(default_factory=dict)
@@ -230,6 +228,7 @@ class ActionExecuted(BaseModel):
 # --------------------------------------------------------------------------- #
 # 4.5 OpsNotification v1
 # --------------------------------------------------------------------------- #
+
 
 class AffectedComponent(BaseModel):
     """Resource affected by the operational event."""
@@ -283,14 +282,12 @@ class NotificationAgent(BaseModel):
 class OpsNotification(BaseModel):
     """Notification published to ops.notifications — consumed by Slack-notifier.
 
-    Schema matches Appendix C of DESIGN-REVIEW.md and §4.5 of INTERFACE-CONTRACT.md.
+    Schema matches Appendix C of DESIGN-REVIEW.md.
     """
 
     model_config = _CFG
 
-    schema_: Literal["ops.notification.v1"] = Field(
-        "ops.notification.v1", alias="schema"
-    )
+    schema_: Literal["ops.notification.v1"] = Field("ops.notification.v1", alias="schema")
     notification_id: str = Field(default_factory=lambda: _prefixed_id("ntf_"))
     correlation_id: str = Field(...)
     produced_at: str = Field(default_factory=_now_rfc3339)
@@ -298,13 +295,11 @@ class OpsNotification(BaseModel):
     environment: Literal["dev", "prod"]
     domain: Literal["sre", "devsecops", "platform", "finops", "orchestrator"]
 
-    # Brief's required fields (exact names per INTERFACE-CONTRACT §4.5)
+    # Brief's required fields.
     summary: str = Field(..., min_length=1)
     affected_component: AffectedComponent
     impact: str = Field(..., min_length=1)
-    recommended_actions: list[NotificationRecommendedAction] = Field(
-        default_factory=list
-    )
+    recommended_actions: list[NotificationRecommendedAction] = Field(default_factory=list)
     human_required: bool
     references: NotificationReferences
 
@@ -320,6 +315,7 @@ class OpsNotification(BaseModel):
 # 4.6 AuditRecord v1
 # --------------------------------------------------------------------------- #
 
+
 class PolicyDecision(BaseModel):
     """Policy engine decision recorded in the audit trail."""
 
@@ -333,7 +329,7 @@ class PolicyDecision(BaseModel):
 class AuditRecord(BaseModel):
     """Immutable audit record — published to ops.audit, landed in BigQuery.
 
-    Fields exactly per INTERFACE-CONTRACT.md §4.6 and DESIGN-REVIEW §5.6.
+    Fields per DESIGN-REVIEW §5.6.
     """
 
     model_config = _CFG

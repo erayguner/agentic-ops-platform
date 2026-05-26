@@ -7,13 +7,12 @@ Coverage gaps addressed:
 - _check_bounds() for each bound key (max_instances, min_instances, max_blast_radius)
 - Edge cases: unknown environment, wildcard miss, exact match
 """
+
 import textwrap
 from pathlib import Path
 
 import pytest
-
 from policy import PolicyEngine, _check_bounds
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -63,6 +62,7 @@ def engine(policy_file: Path) -> PolicyEngine:
 # PolicyEngine.load
 # ---------------------------------------------------------------------------
 
+
 class TestPolicyEngineLoad:
     def test_load_valid_file_populates_rules(self, policy_file: Path) -> None:
         eng = PolicyEngine.load(policy_file)
@@ -100,6 +100,7 @@ class TestPolicyEngineLoad:
 # PolicyEngine.decide — routing paths
 # ---------------------------------------------------------------------------
 
+
 class TestPolicyEngineDecide:
     def test_unknown_action_class_returns_default_deny(self, engine: PolicyEngine) -> None:
         decision = engine.decide("unknown.action", "dev", {}, {})
@@ -114,71 +115,47 @@ class TestPolicyEngineDecide:
         assert decision.allowed is False
         assert decision.rule_matched == "default-deny"
 
-    def test_explicitly_denied_rule_returns_deny_with_reason(
-        self, engine: PolicyEngine
-    ) -> None:
+    def test_explicitly_denied_rule_returns_deny_with_reason(self, engine: PolicyEngine) -> None:
         decision = engine.decide("forbidden.action", "prod", {}, {})
         assert decision.allowed is False
         assert decision.deny_reason == "action_not_permitted_in_prod"
         assert decision.rule_matched == "forbidden.action:prod"
 
     def test_approved_rule_within_bounds_returns_allow(self, engine: PolicyEngine) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "dev", {}, {"instances": 5}
-        )
+        decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {"instances": 5})
         assert decision.allowed is True
         assert decision.tier == 2
         assert decision.required_approvers == 0
 
     def test_approved_rule_at_min_bound_returns_allow(self, engine: PolicyEngine) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "dev", {}, {"instances": 0}
-        )
+        decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {"instances": 0})
         assert decision.allowed is True
 
     def test_approved_rule_at_max_bound_returns_allow(self, engine: PolicyEngine) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "dev", {}, {"instances": 20}
-        )
+        decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {"instances": 20})
         assert decision.allowed is True
 
-    def test_exceeds_max_instances_returns_bounds_violation(
-        self, engine: PolicyEngine
-    ) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "dev", {}, {"instances": 21}
-        )
+    def test_exceeds_max_instances_returns_bounds_violation(self, engine: PolicyEngine) -> None:
+        decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {"instances": 21})
         assert decision.allowed is False
         assert "bounds_violation" in (decision.deny_reason or "")
 
-    def test_below_min_instances_prod_returns_bounds_violation(
-        self, engine: PolicyEngine
-    ) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "prod", {}, {"instances": 0}
-        )
+    def test_below_min_instances_prod_returns_bounds_violation(self, engine: PolicyEngine) -> None:
+        decision = engine.decide("cloud_run.scale_within_range", "prod", {}, {"instances": 0})
         assert decision.allowed is False
         assert "bounds_violation" in (decision.deny_reason or "")
 
     def test_rule_matched_includes_action_and_env(self, engine: PolicyEngine) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "dev", {}, {"instances": 1}
-        )
+        decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {"instances": 1})
         assert decision.rule_matched == "cloud_run.scale_within_range:dev"
 
-    def test_tier_3_rule_has_correct_required_approvers(
-        self, engine: PolicyEngine
-    ) -> None:
-        decision = engine.decide(
-            "cloud_run.scale_within_range", "prod", {}, {"instances": 3}
-        )
+    def test_tier_3_rule_has_correct_required_approvers(self, engine: PolicyEngine) -> None:
+        decision = engine.decide("cloud_run.scale_within_range", "prod", {}, {"instances": 3})
         assert decision.allowed is True
         assert decision.tier == 3
         assert decision.required_approvers == 1
 
-    def test_no_bounds_params_do_not_trigger_violation(
-        self, engine: PolicyEngine
-    ) -> None:
+    def test_no_bounds_params_do_not_trigger_violation(self, engine: PolicyEngine) -> None:
         # cloud_run.scale_within_range/dev with no 'instances' key → no bounds check
         decision = engine.decide("cloud_run.scale_within_range", "dev", {}, {})
         assert decision.allowed is True
@@ -187,6 +164,7 @@ class TestPolicyEngineDecide:
 # ---------------------------------------------------------------------------
 # _check_bounds (module-level pure function)
 # ---------------------------------------------------------------------------
+
 
 class TestCheckBounds:
     def test_within_max_instances_returns_none(self) -> None:
@@ -226,9 +204,7 @@ class TestCheckBounds:
 
     def test_min_checked_before_max_does_not_double_fire(self) -> None:
         # params violates min, bounds also has max — only one violation returned
-        result = _check_bounds(
-            {"instances": 0}, {"min_instances": 1, "max_instances": 20}
-        )
+        result = _check_bounds({"instances": 0}, {"min_instances": 1, "max_instances": 20})
         assert result is not None
         # Should mention the min violation
         assert "min=1" in result

@@ -37,7 +37,7 @@ def build_agent_card(settings: AopSettings) -> object:
             "IaC state, resource hygiene, and deployment health. Produces Finding v1."
         ),
         model_id=settings.model_id,
-        mcp_servers=PLATFORM_MCP_ENDPOINTS + [settings.action_broker_mcp_endpoint],
+        mcp_servers=[*PLATFORM_MCP_ENDPOINTS, settings.action_broker_mcp_endpoint],
         skills=[
             AgentSkill(
                 name="investigate_drift",
