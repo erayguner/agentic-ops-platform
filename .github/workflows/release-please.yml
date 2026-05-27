@@ -10,6 +10,13 @@
 #
 # Docs: https://github.com/googleapis/release-please
 # Action ref: https://github.com/googleapis/release-please-action
+#
+# Repo prerequisite (one-time, owner only):
+#   Settings → Actions → General → Workflow permissions →
+#   tick "Allow GitHub Actions to create and approve pull requests".
+# Without it, the default GITHUB_TOKEN can read+write contents but is blocked
+# from opening the release PR and the action fails with
+#   "GitHub Actions is not permitted to create or approve pull requests".
 
 name: release-please
 
