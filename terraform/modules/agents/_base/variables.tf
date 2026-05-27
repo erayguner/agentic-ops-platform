@@ -83,16 +83,24 @@ variable "ops_audit_topic_id" {
   description = "Resource ID of the ops.audit Pub/Sub topic. Every agent SA gets pubsub.publisher on this topic — missing this grant breaks audit emission silently."
 }
 
-variable "extra_pubsub_publish_topic_ids" {
-  type        = list(string)
-  description = "Additional Pub/Sub topic IDs the agent SA should be able to publish to (e.g. ops.notifications, ops.findings)."
-  default     = []
+variable "extra_pubsub_publish_topics" {
+  type        = map(string)
+  description = <<-EOT
+    Additional Pub/Sub topics the agent SA should publish to, keyed by a
+    stable name (e.g. `findings`, `notifications`). Values are topic resource
+    IDs and may be computed at apply time; KEYS must be literal so Terraform
+    can plan the for_each instance map.
+  EOT
+  default     = {}
 }
 
-variable "extra_pubsub_subscribe_topic_ids" {
-  type        = list(string)
-  description = "Pub/Sub topic IDs the agent SA should be able to subscribe to."
-  default     = []
+variable "extra_pubsub_subscribe_topics" {
+  type        = map(string)
+  description = <<-EOT
+    Pub/Sub topics the agent SA should subscribe to, keyed by a stable name.
+    Same shape as `extra_pubsub_publish_topics`.
+  EOT
+  default     = {}
 }
 
 variable "project_iam_roles" {

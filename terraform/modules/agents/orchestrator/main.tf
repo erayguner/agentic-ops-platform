@@ -12,12 +12,12 @@ module "base" {
   package_pickle_gcs_uri  = var.package_pickle_gcs_uri
 
   ops_audit_topic_id = var.ops_audit_topic_id
-  extra_pubsub_publish_topic_ids = [
-    var.ops_notifications_topic_id,
-  ]
-  extra_pubsub_subscribe_topic_ids = [
-    var.ops_signals_topic_id,
-  ]
+  extra_pubsub_publish_topics = {
+    notifications = var.ops_notifications_topic_id
+  }
+  extra_pubsub_subscribe_topics = {
+    signals = var.ops_signals_topic_id
+  }
 
   project_iam_roles = [
     "roles/logging.viewer",

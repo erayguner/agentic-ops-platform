@@ -25,11 +25,14 @@ locals {
     : "Identity for the AOP ${var.agent_slug} reasoning engine. Read-only; write actions go through the Action Broker."
   )
 
-  publish_topic_ids = toset(concat(
-    [var.ops_audit_topic_id],
-    var.extra_pubsub_publish_topic_ids,
-  ))
-  subscribe_topic_ids = toset(var.extra_pubsub_subscribe_topic_ids)
+  # Stable keys → topic resource IDs. Keys are literal strings ("audit",
+  # "findings", "notifications", …) so Terraform can plan the for_each map
+  # even when individual topic IDs are unknown until apply.
+  publish_topics = merge(
+    { audit = var.ops_audit_topic_id },
+    var.extra_pubsub_publish_topics,
+  )
+  subscribe_topics = var.extra_pubsub_subscribe_topics
 
   predefined_roles = toset(var.project_iam_roles)
   custom_roles     = toset(var.custom_project_iam_role_ids)
@@ -71,19 +74,19 @@ resource "google_project_iam_member" "custom" {
 # ---------------------------------------------------------------------------
 
 resource "google_pubsub_topic_iam_member" "publisher" {
-  for_each = local.publish_topic_ids
+  for_each = local.publish_topics
 
   project = var.project_id
-  topic   = each.key
+  topic   = each.value
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.this.email}"
 }
 
 resource "google_pubsub_topic_iam_member" "subscriber" {
-  for_each = local.subscribe_topic_ids
+  for_each = local.subscribe_topics
 
   project = var.project_id
-  topic   = each.key
+  topic   = each.value
   role    = "roles/pubsub.subscriber"
   member  = "serviceAccount:${google_service_account.this.email}"
 }

@@ -26,10 +26,10 @@ module "base" {
   package_pickle_gcs_uri  = var.package_pickle_gcs_uri
 
   ops_audit_topic_id = var.ops_audit_topic_id
-  extra_pubsub_publish_topic_ids = [
-    var.ops_findings_topic_id,
-    var.ops_notifications_topic_id,
-  ]
+  extra_pubsub_publish_topics = {
+    findings      = var.ops_findings_topic_id
+    notifications = var.ops_notifications_topic_id
+  }
 
   project_iam_roles = local.predefined_roles
 
