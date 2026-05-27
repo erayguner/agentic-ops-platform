@@ -1,0 +1,181 @@
+# Terraform CI for the AOP deployment framework.
+#
+# Runs on every PR + push to main + manually. Validates:
+#   1. terraform fmt (recursive)
+#   2. terraform validate on every module + example
+#   3. tflint with the bundled terraform ruleset
+#   4. checkov against the modules (HIGH/CRITICAL only)
+#   5. preflight.sh in framework-only mode (no GCP creds required)
+#   6. terraform test against the native test suite in terraform/tests/
+#
+# Trivy IaC and CodeQL Actions are already covered by:
+#   .github/workflows/trivy.yml   (config + fs scans)
+#   .github/workflows/codeql.yml  (security-and-quality)
+# This workflow stays focused on Terraform-specific correctness so the
+# signals from those scanners are not duplicated here.
+
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "scripts/preflight*.sh"
+      - "scripts/lib/preflight_*.sh"
+      - ".github/workflows/terraform.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "scripts/preflight*.sh"
+      - "scripts/lib/preflight_*.sh"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TF_VERSION: "1.14.0"
+  TFLINT_VERSION: "v0.55.1"
+  CHECKOV_VERSION: "3.2.298"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Fast smoke gates — formatting + the framework-only pre-flight.
+  # ---------------------------------------------------------------------------
+  smoke:
+    name: smoke (fmt + preflight)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt -check -recursive
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4.1.1
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Preflight (framework-only)
+        run: bash scripts/preflight.sh
+
+  # ---------------------------------------------------------------------------
+  # validate — fan out across every module and every example directory.
+  # ---------------------------------------------------------------------------
+  validate:
+    name: validate (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - terraform/modules/foundation
+          - terraform/modules/eventing
+          - terraform/modules/governance
+          - terraform/modules/observability
+          - terraform/modules/action-broker
+          - terraform/modules/slack-notifier
+          - terraform/modules/agent-runtime
+          - terraform/modules/agents/_base
+          - terraform/modules/agents/orchestrator
+          - terraform/modules/agents/sre
+          - terraform/modules/agents/devsecops
+          - terraform/modules/agents/platform
+          - terraform/modules/agents/finops
+          - terraform/modules/aop-platform
+          - terraform/examples/full-dev
+          - terraform/examples/minimal-sre-only
+          - terraform/examples/staging
+          - terraform/examples/prod-locked-down
+          - terraform/examples/downstream-consumer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init (no backend)
+        run: terraform -chdir=${{ matrix.target }} init -backend=false -input=false
+
+      - name: terraform validate
+        run: terraform -chdir=${{ matrix.target }} validate
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4.1.1
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint
+        run: tflint --chdir=${{ matrix.target }} --minimum-failure-severity=error
+
+  # ---------------------------------------------------------------------------
+  # checkov — policy-as-code gate. Soft-fail in PRs; hard-fail on push to main.
+  # ---------------------------------------------------------------------------
+  checkov:
+    name: checkov
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@8c07e78c64ddc2209d8c193a4e321aad67677f8d # v12.999.0
+        with:
+          directory: terraform
+          framework: terraform
+          quiet: true
+          soft_fail: ${{ github.event_name == 'pull_request' }}
+          download_external_modules: false
+          # Skip checks that conflict with the documented framework design.
+          # CKV_GCP_2  — broker uses INTERNAL_LOAD_BALANCER ingress (intentional).
+          # CKV_GCP_49 — Cloud Scheduler is internal-only by design.
+          skip_check: CKV_GCP_2,CKV_GCP_49
+
+  # ---------------------------------------------------------------------------
+  # Terraform native test suite (terraform/tests/*.tftest.hcl).
+  # Run once against the composition module; tests fan-out internally.
+  # ---------------------------------------------------------------------------
+  tftest:
+    name: terraform test
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init
+        run: terraform -chdir=terraform/tests init -backend=false -input=false
+
+      - name: terraform test
+        run: terraform -chdir=terraform/tests test
