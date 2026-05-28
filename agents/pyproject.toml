@@ -29,8 +29,8 @@ authors = [
 ]
 
 dependencies = [
-    # ADK 2.0 GA'd 2026-05-19 — pinned EXACTLY to the 2.0.x line.
-    # 2.0 is a breaking change from 1.x; do not float to 2.1.x without review.
+    # ADK 2.x GA'd 2026-05-19 — pinned to the 2.1.x line (latest stable).
+    # 2.x was a breaking change from 1.x; do not float to 3.x without review.
     "google-adk==2.1.*",
     "pydantic>=2.7",
     "pydantic-settings>=2.5",
