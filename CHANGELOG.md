@@ -5,6 +5,13 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.2.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.2.0...v0.2.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **action-broker:** validate ID token audience in MCP auth ([bb04bd3](https://github.com/erayguner/agentic-ops-platform/commit/bb04bd3840989d3269de87670a3305cd523de966))
+
 ## [0.2.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.1.0...v0.2.0) (2026-05-27)
 
 
