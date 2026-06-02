@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -48,6 +48,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "slack-sdk" },
+    { name = "starlette" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -60,6 +61,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pydantic-settings", specifier = ">=2.5" },
     { name = "slack-sdk", specifier = ">=3.27" },
+    { name = "starlette", specifier = ">=1.0.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.48.0" },
 ]
 

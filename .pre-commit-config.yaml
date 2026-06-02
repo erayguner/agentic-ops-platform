@@ -55,7 +55,7 @@ repos:
   # Configure rules in .gitleaks.toml (allowlist false positives explicitly).
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
+    rev: v8.30.1
     hooks:
       - id: gitleaks
 
@@ -74,7 +74,7 @@ repos:
   # uv — keep each project's uv.lock in lockstep with its pyproject.toml.
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.16
+    rev: 0.11.18
     hooks:
       - id: uv-lock
       - id: uv-export
@@ -88,7 +88,7 @@ repos:
   # tflint catches policy and best-practice issues fmt/validate don't.
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.105.0
+    rev: v1.106.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
