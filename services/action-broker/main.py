@@ -15,6 +15,8 @@ Environment variables:
   LIVE_MODE           (default: false) — when false, executors raise NotImplementedError
   GCP_PROJECT_ID      — target project
   PUBSUB_PUSH_TOKEN   — shared secret on the push subscription URL
+  OIDC_AUDIENCE       — expected `aud` of caller ID tokens (this service's URL).
+                        REQUIRED in LIVE_MODE; tokens are rejected if it is unset.
   PORT                — injected by Cloud Run (default 8080)
 """
 
@@ -43,6 +45,10 @@ logger = logging.getLogger(__name__)
 LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
 GCP_PROJECT_ID = os.environ.get("GCP_PROJECT_ID", "ops-agents-dev")
 PUBSUB_PUSH_TOKEN = os.environ.get("PUBSUB_PUSH_TOKEN", "")
+# Expected audience of caller OIDC ID tokens (this Cloud Run service's URL).
+# Without it, verify_oauth2_token skips the `aud` check and accepts ANY valid
+# Google-signed token (confused-deputy / token-passthrough). Required in LIVE_MODE.
+OIDC_AUDIENCE = os.environ.get("OIDC_AUDIENCE", "")
 
 _state: dict[str, Any] = {}
 
@@ -170,6 +176,11 @@ async def _verify_id_token(request: Request) -> str:
     """
     if not LIVE_MODE:
         return "dry-run@local"
+    if not OIDC_AUDIENCE:
+        # Fail closed: a write-capable broker MUST bind tokens to its own audience.
+        # Verifying without an audience accepts any valid Google-signed ID token.
+        logger.error("OIDC_AUDIENCE is unset; refusing to verify tokens in LIVE_MODE")
+        raise HTTPException(status_code=500, detail="Server misconfigured: OIDC_AUDIENCE unset")
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing Bearer token")
@@ -178,7 +189,9 @@ async def _verify_id_token(request: Request) -> str:
         from google.auth.transport import requests as google_requests  # type: ignore
         from google.oauth2 import id_token as id_token_module  # type: ignore
 
-        info = id_token_module.verify_oauth2_token(token, google_requests.Request())
+        info = id_token_module.verify_oauth2_token(
+            token, google_requests.Request(), audience=OIDC_AUDIENCE
+        )
         return info.get("email", info.get("sub", "unknown"))
     except Exception as exc:
         logger.warning("ID token verification failed: %s", exc)
