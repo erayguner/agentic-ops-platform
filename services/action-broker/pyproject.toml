@@ -24,6 +24,9 @@ authors = [
 dependencies = [
     "fastapi>=0.136.3",
     "uvicorn[standard]>=0.48.0",
+    # Floor the transitive Starlette to the BadHost fix (CVE-2026-48710); fastapi
+    # 0.136.3 already resolves >=1.0.1 — this keeps a future re-lock from regressing it.
+    "starlette>=1.0.1",
     "pydantic>=2.7",
     "pydantic-settings>=2.5",
     "google-cloud-pubsub>=2.21",
