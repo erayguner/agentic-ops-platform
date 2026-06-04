@@ -1,0 +1,71 @@
+# Python — lint and test gate for the agent + service code.
+#
+# Why: the repo had no CI that ran ruff or pytest, so Python regressions (e.g.
+# a redaction bug with failing unit tests) could merge and ship in a release.
+# This workflow runs the same ruff config used by pre-commit and the per-service
+# pytest suites on every push/PR to main.
+#
+# The services are independent uv projects; test dependencies are not declared
+# in their pyproject (they are applications, package = false), so pytest is
+# supplied at run time via `uv run --with`. uv resolves the locked runtime deps
+# and provisions Python 3.13.
+#
+# Pinning: actions pinned to a commit SHA with a version comment (repo
+# convention); ruff pinned to the pre-commit version to avoid local/CI drift.
+#
+# Docs: https://github.com/astral-sh/setup-uv
+
+name: Python
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Ruff (lint + format)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+      # Pinned to the same ruff version as .pre-commit-config.yaml so local and
+      # CI lint verdicts match. Config is the root pyproject.toml [tool.ruff].
+      - name: Ruff lint
+        run: uvx ruff@0.15.14 check .
+
+      - name: Ruff format check
+        run: uvx ruff@0.15.14 format --check .
+
+  test:
+    name: pytest (${{ matrix.component }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component:
+          - services/action-broker
+          - services/slack-notifier
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+      - name: Run tests
+        working-directory: ${{ matrix.component }}
+        run: uv run --python 3.13 --with pytest --with pytest-asyncio pytest -q
