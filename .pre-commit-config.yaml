@@ -52,7 +52,8 @@ repos:
 
   # ────────────────────────────────────────────────────────────────────────────
   # Secret detection — defence in depth at the commit boundary.
-  # Configure rules in .gitleaks.toml (allowlist false positives explicitly).
+  # Runs with gitleaks' built-in default ruleset (no .gitleaks.toml in the repo);
+  # allowlist a confirmed false positive inline with a trailing `# gitleaks:allow`.
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
