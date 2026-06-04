@@ -221,7 +221,7 @@ without requiring runtime probes.
 
 ```hcl
 module "aop" {
-  source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.1.0"
+  source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.3.0"
 
   project_id = "my-org-aop-dev"
   env        = "dev"
@@ -238,7 +238,7 @@ module "aop" {
 }
 ```
 
-Pin a tag (`?ref=v0.1.0`), never a branch. Bump the tag in a PR so reviewers
+Pin a tag (`?ref=v0.3.0`), never a branch. Bump the tag in a PR so reviewers
 can see the diff of the framework's CHANGELOG before adopting new behaviour.
 
 The `terraform/examples/downstream-consumer/` directory contains the full

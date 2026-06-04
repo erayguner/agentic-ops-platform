@@ -24,7 +24,7 @@ terraform plan \
 Terraform requires `source = "..."` to be a literal string, so bumping the
 framework version is a **two-line edit** in this directory:
 
-1. Update `?ref=v0.1.0` → `?ref=v0.2.0` in `main.tf`.
+1. Update `?ref=v0.3.0` → the next release tag in `main.tf`.
 2. Update the default for `aop_framework_version` in `variables.tf` so the
    output stays accurate.
 

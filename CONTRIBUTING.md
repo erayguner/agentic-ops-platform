@@ -247,7 +247,7 @@ Pre-commit is **not optional** for contributors. CI runs the same hooks.
 - Direct writes to Google Cloud APIs from agent code (these **must** go through the Action Broker).
 - Exported service-account keys, anywhere, ever (`google_service_account_key` resources will be rejected).
 - Removal or weakening of `LIVE_MODE` / `LIVE_SLACK_ENABLED` guards.
-- Provider version floats (`>= 7`) instead of pinned (`~> 7.33`).
+- Provider version floats (`>= 7`) instead of pinned (`~> 7.34`).
 - Sensitive identifiers committed to source — even in tests.
 - **Local edits to `docs/AGENT_GOVERNANCE_FRAMEWORK.md`.** The framework is upstream-owned (framework §20.2). Raise the change upstream, then re-vendor the new version into this repo and update the `Conformance:` line in `README.md` plus the `docs/GOVERNANCE-MAPPING.md` attestation in the same PR.
 - **Lowering or removing a §19 compliance attestation** without a corresponding entry in the roadmap (`docs/DESIGN-REVIEW.md` Part 10) explaining the regression and the path back.

@@ -52,12 +52,12 @@ Modules are not applied independently — they are composed by the environment r
 
 ## Provider strategy
 
-- Primary: `hashicorp/google ~> 7.33`
-- Beta: `hashicorp/google-beta ~> 7.33` — used **only** for `context_spec` on `google_vertex_ai_reasoning_engine` (Memory Bank). Every `provider = google-beta` usage is annotated with an inline comment.
+- Primary: `hashicorp/google ~> 7.34`
+- Beta: `hashicorp/google-beta ~> 7.34` — used **only** for `context_spec` on `google_vertex_ai_reasoning_engine` (Memory Bank). Every `provider = google-beta` usage is annotated with an inline comment.
 
 ## Terraform version
 
-`required_version = ">= 1.10"`. The scaffold was validated on Terraform 1.14.0. The DESIGN-REVIEW recommends >= 1.15 in production.
+`required_version = ">= 1.10"`. The scaffold is validated on Terraform 1.15.5 in CI, meeting the DESIGN-REVIEW's >= 1.15 production recommendation.
 
 ## CI expectations
 
