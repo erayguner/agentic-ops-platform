@@ -5,6 +5,23 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.4.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.3.0...v0.4.0) (2026-06-04)
+
+
+### Features
+
+* **governance:** protect audit BigQuery dataset from deletion in prod ([43720f2](https://github.com/erayguner/agentic-ops-platform/commit/43720f24787abfb67b5f214b3a0f5ace48454295))
+
+
+### Bug Fixes
+
+* **slack-notifier:** close secret-redaction gaps ([d6b2bc9](https://github.com/erayguner/agentic-ops-platform/commit/d6b2bc910cb7836024dbbc339948f1422cc30e9c))
+
+
+### Documentation
+
+* correct version and path drift ([20d7132](https://github.com/erayguner/agentic-ops-platform/commit/20d713202f6e22e048bf68dfca4bb444ecf08704))
+
 ## [0.3.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.2.1...v0.3.0) (2026-06-04)
 
 
