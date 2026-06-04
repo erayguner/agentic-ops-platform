@@ -12,6 +12,12 @@ variable "env" {
   }
 }
 
+variable "deletion_policy_prevent" {
+  type        = bool
+  description = "When true, the audit BigQuery dataset is created with deletion_policy = PREVENT so a terraform destroy or resource replacement cannot drop the compliance audit store. Set true in prod (mirrors agent-runtime / ops.audit topic protection)."
+  default     = false
+}
+
 variable "region" {
   type        = string
   description = "Default GCP region."

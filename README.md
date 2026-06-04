@@ -37,7 +37,10 @@ A reference scaffold for a **governed multi-agent DevSecOps / SRE / Platform Eng
 agentic-ops-platform/
 ├── README.md                       ← you are here
 ├── docs/
-│   └── DESIGN-REVIEW.md            ← the design review
+│   ├── DESIGN-REVIEW.md            ← the design review
+│   ├── AGENT_GOVERNANCE_FRAMEWORK.md ← pinned governance framework (v1.1)
+│   ├── GOVERNANCE-MAPPING.md       ← per-control attestation + ASI/NHI crosswalk
+│   └── aibom.yaml                  ← AI Bill of Materials (CycloneDX)
 ├── terraform/
 │   ├── bootstrap/                  ← one-time: state bucket, WIF, runner SA
 │   ├── modules/
@@ -49,13 +52,13 @@ agentic-ops-platform/
 │   │   ├── action-broker/          ← Cloud Run for the Action Broker
 │   │   └── slack-notifier/         ← Cloud Run for the Slack notifier
 │   └── environments/{dev,prod}/    ← per-env root modules
-├── agents/                         ← ADK 2.0 Python agent skeletons
-│   ├── common/                     ← shared schemas, MCP wiring, Slack emitter, policy client
-│   ├── orchestrator/               ← duty-manager agent (A2A hub)
-│   ├── sre/
-│   ├── devsecops/
-│   ├── platform/
-│   ├── finops/
+├── agents/                         ← ADK 2.1 Python agent skeletons
+│   ├── aop_common/                 ← shared schemas, MCP wiring, Slack emitter, policy client
+│   ├── aop_orchestrator/           ← duty-manager agent (A2A hub)
+│   ├── aop_sre/
+│   ├── aop_devsecops/
+│   ├── aop_platform/
+│   ├── aop_finops/
 │   └── deployment/                 ← deploys agents to Agent Engine
 └── services/
     ├── slack-notifier/             ← Cloud Run; OpsNotification → Block Kit; interactivity webhook
@@ -97,7 +100,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full branching strategy, Conv
 ## Status caveats
 
 - **Skeleton, not a working deployment.** Apply-readiness comes after you bind the bootstrap module to your environment variables (project IDs, billing account, the Slack workspace tokens) and after the per-action-class executors are wired to real APIs.
-- **ADK 2.0** went GA 2026-05-19 — pin exactly (`google-adk==2.0.*`).
+- **ADK 2.0** went GA 2026-05-19; the project tracks the 2.1.x line — pin exactly (`google-adk==2.1.*`).
 - **Some Google capabilities used here are Preview** (Agent Identity, Memory Bank Revisions, Gen AI Evaluation Service, Cloud Asset Inventory MCP, Agent Registry MCP). See the design review §2.10 for the maturity snapshot; the scaffold's seams already accept the GA fallback.
 - **No exported service-account keys.** CI must use Workload Identity Federation.
 

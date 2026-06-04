@@ -140,7 +140,7 @@ def deploy(args: argparse.Namespace) -> int:
             f"    remote_agent = vertexai.agent_engines.create(\n"
             f"        agent_engine=agent_instance,\n"
             f"        requirements=[\n"
-            f"            'google-adk==2.0.*',\n"
+            f"            'google-adk==2.1.*',\n"
             f"            'aop-agents @ file:///app',\n"
             f"        ],\n"
             f"        display_name={args.agent!r},\n"

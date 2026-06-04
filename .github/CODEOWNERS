@@ -1,0 +1,18 @@
+# CODEOWNERS — required reviewers for governance-critical surfaces.
+#
+# For this to gate merges, branch protection on `main` must enable
+# "Require review from Code Owners". The prod "2 reviewers" rule documented in
+# CONTRIBUTING.md and terraform/README.md is the branch-protection "Required
+# approvals" count; this file makes the referenced ownership real.
+
+# Default owner for everything in the repo.
+*                                       @erayguner
+
+# Governance-critical surfaces (see CONTRIBUTING.md review policy).
+/terraform/environments/prod/           @erayguner
+/services/action-broker/policy/         @erayguner
+schemas.py                              @erayguner
+/docs/AGENT_GOVERNANCE_FRAMEWORK.md     @erayguner
+/docs/GOVERNANCE-MAPPING.md             @erayguner
+/docs/aibom.yaml                        @erayguner
+/.github/                               @erayguner

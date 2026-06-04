@@ -49,6 +49,7 @@ module "governance" {
   folder_id                     = var.folder_id
   audit_bq_dataset_id           = local.audit_bq_dataset_id
   scc_notification_pubsub_topic = module.eventing.ops_signals_topic_id
+  deletion_policy_prevent       = true # prod: protect audit dataset from accidental destroy
 
   depends_on = [module.foundation, module.eventing]
 }

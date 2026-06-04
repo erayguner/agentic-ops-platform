@@ -67,6 +67,7 @@ uv lock
 | `LIVE_MODE`                | `false`          | When `false`, executors raise `NotImplementedError`; event chains (Pub/Sub, audit, idempotency) log-only   |
 | `GCP_PROJECT_ID`           | `ops-agents-dev` | Target GCP project                                                                                         |
 | `PUBSUB_PUSH_TOKEN`        | `""`             | Shared secret for push subscription URL validation                                                         |
+| `OIDC_AUDIENCE`            | `""`             | Expected `aud` claim for agent OIDC tokens on the MCP path; **required in `LIVE_MODE`** — tokens rejected if unset |
 | `APPROVAL_WINDOW_MINUTES`  | `15`             | Slack approval expiry window                                                                               |
 | `POLICY_FILE`              | `policy/action_classes.yaml` | Path to the policy file (autonomy tiers + bounds per action class × env)                       |
 | `PORT`                     | `8080`           | Injected by Cloud Run                                                                                      |

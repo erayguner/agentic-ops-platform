@@ -12,7 +12,7 @@ the `LIVE_*` env flags are set on the corresponding services.
 
 ```
 agents/
-├── pyproject.toml          ← uv-managed; google-adk==2.0.*; hatchling build backend
+├── pyproject.toml          ← uv-managed; google-adk==2.1.*; hatchling build backend
 ├── uv.lock                 ← committed; regenerate with `uv lock`
 ├── README.md
 ├── aop_common/             ← shared library
@@ -121,8 +121,9 @@ step (see `terraform/modules/agent-runtime/`).
 
 ## Key design decisions
 
-- **`google-adk==2.0.*` pinned exactly.** ADK 2.0 GA'd 2026-05-19; it is a
-  breaking change from 1.x. Floating to 2.1.x without review is unsafe.
+- **`google-adk==2.1.*` pinned exactly.** ADK 2.0 GA'd 2026-05-19 (a breaking
+  change from 1.x); the project tracks the 2.1.x line. Do not float to 3.x
+  without review.
 - **Model id is configuration.** `AOP_MODEL_ID` env var; default
   `gemini-3-pro`. Never hard-coded.
 - **No agent holds write IAM on GCP.** All writes go through the Action
