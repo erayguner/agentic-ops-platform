@@ -5,6 +5,13 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.3.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.2.1...v0.3.0) (2026-06-04)
+
+
+### Features
+
+* **aibom:** add AI Bill of Materials and governance mapping ([b3a6315](https://github.com/erayguner/agentic-ops-platform/commit/b3a6315d0588d2f1f0627fc734bca74616984e83))
+
 ## [0.2.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.2.0...v0.2.1) (2026-06-02)
 
 
