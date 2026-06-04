@@ -319,6 +319,34 @@ resource "google_pubsub_topic_iam_member" "all_agents_audit_publisher" {
 }
 
 # ---------------------------------------------------------------------------
+# Agent runtime identity grants.
+#
+# Each reasoning engine runs as its dedicated per-agent SA (spec.service_account
+# below) instead of the shared default Vertex Reasoning Engine Service Agent, so
+# the scoped MCP / broker / Pub/Sub grants built above actually apply to the
+# runtime identity. That identity needs roles/aiplatform.user to invoke Gemini
+# (no narrower predefined role exists for model inference — see the
+# ReasoningEngine resource docs) and read access to the code-artifact bucket to
+# load the agent. AGENT_IDENTITY (Google-managed) is the forward path but would
+# re-point every SA-scoped binding above; tracked as a follow-up.
+# ---------------------------------------------------------------------------
+resource "google_project_iam_member" "agent_aiplatform_user" {
+  for_each = local.all_agent_sa_emails
+
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${each.value}"
+}
+
+resource "google_storage_bucket_iam_member" "agent_artifact_reader" {
+  for_each = var.agent_artifact_bucket != "" ? local.all_agent_sa_emails : {}
+
+  bucket = var.agent_artifact_bucket
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${each.value}"
+}
+
+# ---------------------------------------------------------------------------
 # Reasoning Engines (Agent Engine deployments) — one per agent
 # ---------------------------------------------------------------------------
 
@@ -328,9 +356,11 @@ resource "google_vertex_ai_reasoning_engine" "orchestrator" {
   region       = var.region
   display_name = local.agents.orchestrator.display_name
   description  = local.agents.orchestrator.description
+  labels       = merge(local.common_labels, { agent = "orchestrator" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.orchestrator.email
     package_spec {
       python_version = "3.12"
       # Actual package URI set at deploy time via CI. Placeholder here.
@@ -347,9 +377,11 @@ resource "google_vertex_ai_reasoning_engine" "sre" {
   region       = var.region
   display_name = local.agents.sre.display_name
   description  = local.agents.sre.description
+  labels       = merge(local.common_labels, { agent = "sre" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.sre.email
     package_spec {
       python_version        = "3.12"
       pickle_object_gcs_uri = "gs://REPLACE_BUCKET/sre/agent.pkl"
@@ -365,9 +397,11 @@ resource "google_vertex_ai_reasoning_engine" "devsecops" {
   region       = var.region
   display_name = local.agents.devsecops.display_name
   description  = local.agents.devsecops.description
+  labels       = merge(local.common_labels, { agent = "devsecops" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.devsecops.email
     package_spec {
       python_version        = "3.12"
       pickle_object_gcs_uri = "gs://REPLACE_BUCKET/devsecops/agent.pkl"
@@ -383,9 +417,11 @@ resource "google_vertex_ai_reasoning_engine" "platform" {
   region       = var.region
   display_name = local.agents.platform.display_name
   description  = local.agents.platform.description
+  labels       = merge(local.common_labels, { agent = "platform" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.platform.email
     package_spec {
       python_version        = "3.12"
       pickle_object_gcs_uri = "gs://REPLACE_BUCKET/platform/agent.pkl"
@@ -401,9 +437,11 @@ resource "google_vertex_ai_reasoning_engine" "finops" {
   region       = var.region
   display_name = local.agents.finops.display_name
   description  = local.agents.finops.description
+  labels       = merge(local.common_labels, { agent = "finops" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.finops.email
     package_spec {
       python_version        = "3.12"
       pickle_object_gcs_uri = "gs://REPLACE_BUCKET/finops/agent.pkl"
@@ -427,17 +465,33 @@ resource "google_vertex_ai_reasoning_engine" "orchestrator_memory" {
   region       = var.region
   display_name = "AOP Orchestrator — Memory Bank (${var.env})"
   description  = "Memory Bank configuration for the Orchestrator agent. Separate resource due to beta provider requirement."
+  labels       = merge(local.common_labels, { agent = "orchestrator", component = "memory-bank" })
 
   spec {
     agent_framework = "google-adk"
+    service_account = google_service_account.orchestrator.email
     package_spec {
       python_version        = "3.12"
       pickle_object_gcs_uri = "gs://REPLACE_BUCKET/orchestrator/agent.pkl"
     }
   }
 
+  # Memory Bank now fully configured (was an empty block). The ttl_config sets a
+  # retention policy on stored memories — OWASP §11.6 "retention policy declared
+  # per memory store" and a mitigation for ASI06 (persistent memory poisoning):
+  # bounded-lifetime memories cannot propagate indefinitely across sessions.
   context_spec {
-    memory_bank_config {}
+    memory_bank_config {
+      generation_config {
+        model = "projects/${var.project_id}/locations/${var.region}/publishers/google/models/${var.memory_generation_model}"
+      }
+      similarity_search_config {
+        embedding_model = "projects/${var.project_id}/locations/${var.region}/publishers/google/models/${var.memory_embedding_model}"
+      }
+      ttl_config {
+        default_ttl = var.memory_default_ttl
+      }
+    }
   }
 
   deletion_policy = local.deletion_policy
