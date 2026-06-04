@@ -176,7 +176,11 @@ class ActionRequest(BaseModel):
     requested_by: str = Field(..., description="Agent identity that proposed this action.")
     idempotency_key: str = Field(
         default_factory=_new_uuid,
-        description="Unique key; the Broker deduplicates on this.",
+        description=(
+            "Unique key for this action attempt, carried for traceability. "
+            "Replay de-duplication is performed by the Broker's IdempotencyStore "
+            "on (correlation_id, action_class, target), not on this field."
+        ),
     )
     approval_window_until: str = Field(
         ..., description="RFC3339 timestamp after which the request expires."
