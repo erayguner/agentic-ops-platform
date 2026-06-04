@@ -7,7 +7,12 @@ the file / module / Terraform resource / service account / Pub/Sub
 topic / policy that implements it in this repository.
 
 > **Conformance:** `AGENT_GOVERNANCE_FRAMEWORK v1.1`.
-> **Last attested:** 2026-05-23 against §19 (minimum compliance checklist).
+> **External-standard crosswalk:** OWASP Top 10 for Agentic Applications
+> (ASI01–ASI10) and OWASP Non-Human Identity Top 10 (2025), per the OWASP
+> *State of Agentic AI Security and Governance* v2.01 (June 2026). See the
+> [ASI / NHI crosswalk](#owasp-top-10-for-agentic-applications-asi01asi10-crosswalk)
+> below.
+> **Last attested:** 2026-06-04 against §19 (minimum compliance checklist).
 > **Status:** Skeleton — see `docs/DESIGN-REVIEW.md` Part 1 for the
 > implementation caveats. Many controls below describe the *intent and
 > surface*; the behind-the-surface logic is stubbed
@@ -30,6 +35,78 @@ If you change a control's implementation, update the row in the same
 PR. The cross-component Pydantic schemas in `agents/aop_common/schemas.py`
 and `services/*/schemas.py` are authoritative for field names; this
 document is the framework-to-code map.
+
+---
+
+## OWASP Top 10 for Agentic Applications (ASI01–ASI10) crosswalk
+
+The internal `AGENT_GOVERNANCE_FRAMEWORK` already cross-references NIST AI RMF,
+the EU AI Act, ISO/IEC 42001, SOC 2, SAIF, and NCSC (framework §2.1). This
+section adds the crosswalk to the **OWASP Top 10 for Agentic Applications**
+(ASI01–ASI10, Dec 2025), the anchor taxonomy of the OWASP *State of Agentic AI
+Security and Governance* v2.01. Each row names the implementing surface, a
+status, and any gap this report surfaces.
+
+Status key: `Implemented` · `Partial` (credible surface, completion tracked) ·
+`Gap` (tracked, not silently deferred).
+
+| ASI | Threat | Status | Implementation & gaps |
+|---|---|---|---|
+| **ASI01** | Agent Goal Hijack (direct/indirect prompt injection) | Partial | Model Armor floor settings in `INSPECT_AND_BLOCK` (`terraform/modules/governance/`); Gemini `safety_settings` per HarmCategory (`aop_common/models.py`); prompt-injection heuristic (`aop_common/policy_client.py:OrgContextClient`); PII/secret redaction (`services/slack-notifier/redaction.py`). Structural mitigation: a hijacked agent cannot write directly — every mutation goes through the Action Broker chokepoint under policy + approval. **Gap:** plan-divergence detection (action sequence vs declared intent). |
+| **ASI02** | Tool Misuse & Exploitation | Implemented (write side) | Single enforcement point (`services/action-broker/broker.py:propose_action`); declarative typed-rule policy (`policy/action_classes.yaml` → `policy.py:PolicyEngine`, fail-closed); registry-led action classes, no substring matching (`executors/__init__.py`); bounds validation (`policy.py:_check_bounds`); tool allow-list ⊆ IAM (`aop_common/mcp_tools.py`). **Gap:** per-principal call/rate budgets (§4.4). |
+| **ASI03** | Identity & Privilege Abuse | Partial | Per-agent service accounts, WIF (no static keys), three custom roles narrower than the closest predefined role, Principal Access Boundary, dataset-scoped FinOps BigQuery, per-agent `run.invoker` allow-list (`terraform/modules/agent-runtime/`, `terraform/modules/action-broker/`). Static-NHI hygiene is strong (see NHI crosswalk). **Gap (v2.01 "Agent Identity"):** runtime identity *attestation*, JIT privilege, identity chaining (RFC 8693 token exchange / confused-deputy binding), and an Agent Naming Service are not yet wired. |
+| **ASI04** | Agentic Supply Chain Vulnerabilities | Partial → strengthened | Build-time SBOM in CycloneDX **and** SPDX with Sigstore-signed SLSA provenance (`.github/workflows/sbom.yml`); curated AI Bill of Materials inventorying models, agents, MCP servers and tool connectors (`docs/aibom.yaml`); Trivy fs+config scans (`.github/workflows/trivy.yml`); dependency + licence review (`dependency-review.yml`); managed Google MCP fleet only (no third-party MCP servers); `uv --frozen` builds; pinned provider versions and SHA-pinned Actions. **Gap:** SLSA Level 3, container-image signing + admission control (no image build/push pipeline in this repo yet), and MCP tool-catalogue drift detection at session start (framework §4.5). |
+| **ASI05** | Unexpected Code Execution (RCE) | Implemented | Code execution uses the provider-managed **Vertex AI Agent Engine Code Execution** sandbox (`terraform/modules/agent-runtime/`) — hermetic, no bespoke sandbox; VPC-SC perimeter with egress denied by default (`terraform/modules/governance/`). Broker executors are typed, narrow operations, not arbitrary code; `terraform.plan` never applies. **Gap:** runtime code-integrity attestation of the agent itself (ties to ASI03 attestation). |
+| **ASI06** | Memory & Context Poisoning | Gap | Conversational memory (Vertex Agent Engine Memory Bank) is **not yet wired** — seam noted in `agents/aop_orchestrator/agent.py`. Untrusted inputs already pass Model Armor + redaction. **Required when memory lands:** retention policy per store, cross-session/tenant isolation, and routing retrieved memory through the same input filters as prompts (framework §11.6). |
+| **ASI07** | Insecure Inter-Agent Communication | Partial | Today the orchestrator coordinates specialists via shared Pydantic envelopes carrying `agent_identity` + `correlation_id` (`aop_common/schemas.py`); there is no untrusted multi-agent traffic. A2A protocol is not yet wired. **Gap:** signed agent cards at `/.well-known/a2a-agent-card.json`, per-hop server-side authorisation, and OTel trace propagation across the A2A boundary (framework §3.3). (The report itself rates ASI07 as research-stage.) |
+| **ASI08** | Cascading Failures | Partial | Single write chokepoint limits blast propagation; dead-letter queues on every `ops.*` topic (`terraform/modules/eventing/`); fail-closed degraded modes (`LIVE_MODE`/`LIVE_SLACK_ENABLED` defaults); idempotency keys (`services/action-broker/idempotency.py`). **Gap:** per-MCP-server circuit breakers and a scheduled reconciliation pass (§13.1/§13.3). |
+| **ASI09** | Human-Agent Trust Exploitation | Implemented | The report warns that chain-of-thought is not faithful and that approval prompts become an attack surface under decision fatigue. AOP relies on **verifiable decision transparency**, not CoT: required `Finding.cause_hypothesis` + `Recommendation.rationale` (Pydantic-required), decision records (`policy.py:Decision`), and contextualised out-of-band Slack approvals that the agent cannot self-grant (`services/slack-notifier/`). Approval fatigue is bounded by **risk-tiered routing** — only tier ≥ 3 actions route to humans (`policy/action_classes.yaml`). |
+| **ASI10** | Rogue Agents | Partial | Per-agent identity + explicit IAM `run.invoker` allow-list; broker ingress `INTERNAL_LOAD_BALANCER` with authentication required (no exposed runtime); VPC-SC perimeter; SCC v2 + Agent Engine Threat Detection sink (`terraform/modules/governance/`). Halt today is the Slack `Reject` on a pending action. **Gap:** session-level kill-switch (deny all in-flight calls for a session in < 1 min) and automated identity offboarding (ties to NHI1). |
+
+**ASI gaps consolidated (newly surfaced by v2.01):** plan-divergence detection
+(ASI01), runtime identity attestation + identity chaining + Agent Naming Service
+(ASI03/ASI05), SLSA L3 + image signing + MCP catalogue-drift detection (ASI04),
+memory controls when Memory Bank lands (ASI06), A2A agent cards + per-hop authz
+(ASI07), per-MCP circuit breakers (ASI08), session-level kill-switch (ASI10).
+These extend the §19 open-gaps list below; none are silently deferred.
+
+---
+
+## OWASP Non-Human Identity (NHI) Top 10 crosswalk
+
+v2.01 elevates Agent Identity vs NHI to "the new control plane" and maps agent
+risks onto the **OWASP Non-Human Identity Top 10 (2025)**. AOP's static-NHI
+hygiene is strong; the dynamic *Agent Identity* layer (attestation, JIT,
+chaining, automated lifecycle) is the forward gap.
+
+| NHI | Risk | Status | Implementation & gaps |
+|---|---|---|---|
+| **NHI1** | Improper Offboarding (ghost agents) | Partial | Per-agent SAs are Terraform-managed and destroyed on decommission (`terraform/modules/agent-runtime/`). **Gap:** automated, ephemeral identity lifecycle — sub-agent identities tied to and revoked at workflow completion (v2.01 "Automated Identity Lifecycle"). |
+| **NHI2** | Secret Leakage | Implemented | Secret Manager references only (`aop_common/config.py` holds paths, not values); `auth_token_wo` write-only attribute on the Slack channel; `gitleaks` pre-commit + `secret-scan.yml`; runtime redaction; no secrets in prompts/logs. |
+| **NHI3** | Vulnerable Third-Party NHI | Implemented | Managed Google MCP fleet only (no third-party MCP servers/skills); now backed by SBOM + signed provenance + AIBOM and Trivy/dependency-review. |
+| **NHI4** | Insecure Authentication | Implemented | WIF / OIDC federation, IAM-bound identities, no exported keys; MCP auth via ADC-derived short-lived bearer tokens (`aop_common/mcp_tools.py`). |
+| **NHI5** | Overprivileged NHI | Implemented (static) | Custom roles narrower than predefined; Principal Access Boundary; dataset-scoped BigQuery; tool allow-list ⊆ IAM. **Gap:** consequence-aware / per-principal budgets at runtime (§4.4). |
+| **NHI6** | Insecure Cloud Deployment Config | Implemented | Ingress `INTERNAL_LOAD_BALANCER`; VPC-SC + egress denylist; Trivy IaC `config` scan + `tflint` (`.github/workflows/`). |
+| **NHI7** | Long-Lived Secrets | Partial | No exported keys; WIF/impersonated credentials per action class (`services/action-broker/impersonation.py`). **Gap:** explicit short-TTL enforcement and ephemeral, just-in-time tokens for the dynamic agent-identity layer. |
+| **NHI8** | Environment Isolation | Implemented | Separate dev/prod Terraform roots, projects, and WIF environment bindings (`terraform/environments/{dev,prod}/`, `terraform/bootstrap/`). |
+| **NHI9** | NHI Reuse | Implemented | Dedicated SA per agent **and** per action class (`sa-action-<class-slug>`); no identity is shared across agents. |
+| **NHI10** | Human Use of NHI (and the reverse) | Implemented | Agents never operate under human identities; the human approver's identity is captured distinctly on delegated actions (`AuditRecord.human_identity`), so logs show both agent and human. |
+
+---
+
+## Runtime governance & regulatory readiness (v2.01 gap register)
+
+v2.01's "From Static Compliance to Runtime Governance" names four capabilities
+and a set of compressed reporting timelines. These are tracked here so they are
+acknowledged gaps, not oversights (framework §17.2 / §20).
+
+| v2.01 capability | Status | Notes |
+|---|---|---|
+| Real-time behavioural / plan-divergence monitoring | Gap | Cloud Monitoring alert policies exist (`terraform/modules/observability/`); z-score/χ² baselines and action-sequence-vs-intent divergence are roadmap (§9.2). |
+| Consequence-aware authorization | Partial | Policy evaluates action class × env × bounds + approver quorum per event; blast-radius bounds exist (`max_blast_radius`). Per-principal budgets and dynamic blast-radius awareness are the gap. |
+| Automated incident classification for compressed timelines (DORA 4 h, NIS2 24 h, NY RAISE 72 h, CA SB 53 15 d) | Gap | SCC findings + threat-detection flow to `ops.signals`; automated severity classification and timeline-aware routing are not yet wired. |
+| Trajectory-level explainability | Partial | Per-step rationale + OTel traces (`agents/pyproject.toml`); full transcript replay tool is roadmap (§9.3). |
+| Kill switch at agent speed | Partial | Slack `Reject` halts a pending action chain; session-level halt (< 1 min) is roadmap (§14.1). |
 
 ---
 
@@ -130,8 +207,8 @@ document is the framework-to-code map.
 |---|---|---|
 | §12.1 threat model | Implemented | Documented in `docs/DESIGN-REVIEW.md` Part 8.1. |
 | §12.2 secret hygiene | Implemented | Secrets in Secret Manager; `auth_token_wo` write-only attribute on the Slack notification channel; pre-commit `gitleaks`. |
-| §12.3 supply chain | Partial | Provider pin `~> 7.33` (`terraform/versions.tf`); container builds via `services/*/Dockerfile` use uv `--frozen`. **Gap:** SLSA provenance and Sigstore signing are roadmap items. |
-| §12.4 signed artifacts | Partial | `auth_token_wo` for the Slack token; signed audit exports are roadmap. |
+| §12.3 supply chain | Partial | Provider pin `~> 7.33` (`terraform/versions.tf`); container builds via `services/*/Dockerfile` use uv `--frozen`; SHA-pinned GitHub Actions. **Build-time SBOM** in CycloneDX + SPDX with **Sigstore-signed SLSA build provenance** (`.github/workflows/sbom.yml`); **AIBOM** runtime-composition inventory (`docs/aibom.yaml`). **Gap:** SLSA Level 3, container-image signing + admission control (no image build/push pipeline in this repo yet), MCP tool-catalogue drift detection at session start. |
+| §12.4 signed artifacts | Partial | `auth_token_wo` for the Slack token; SBOM artifacts carry a Sigstore-backed provenance attestation (`.github/workflows/sbom.yml`). **Gap:** signed audit exports + policy-file signing are roadmap. |
 | §12.5 boundary hardening | Implemented | VPC Service Controls + egress denylist in `terraform/modules/governance/`. |
 | §12.6 managed threat detection | Partial | Security Command Center v2 (`google_scc_v2_source` in `terraform/modules/governance/`); SCC findings flow through `ops.signals`. Agent Engine Threat Detection (Preview) feeds the same sink. **Gap:** alerting on agent-specific patterns is not yet tuned. |
 | §12.7 red-teaming | Gap | Cadence stated in `docs/DESIGN-REVIEW.md` Part 8.7; operationalisation is the deployer's responsibility today. |
@@ -273,9 +350,18 @@ compliance checklist. Each box is one of:
 
 ### Supply chain
 
-- [ ] SLSA ≥ Level 2. **Gap** — Roadmap.
-- [ ] Container images signed (Sigstore / cosign / provider-native).
-      **Gap** — Roadmap.
+- [x] SBOM generated in NTIA-aligned formats (CycloneDX + SPDX).
+      (`.github/workflows/sbom.yml`)
+- [x] AIBOM / formal inventory of AI + agentic components maintained.
+      (`docs/aibom.yaml` — models, agents, MCP servers, action-class tool
+      connectors; validated in CI.)
+- [~] SLSA ≥ Level 2. SBOM artifacts carry a Sigstore-signed (keyless OIDC)
+      build-provenance attestation via `actions/attest-build-provenance`.
+      Extending provenance to container images and reaching **SLSA Level 3**
+      is roadmap.
+- [ ] Container images signed (Sigstore / cosign / provider-native);
+      admission controller verifies before deploy. **Gap** — no image
+      build/push pipeline in this repo yet (images built out-of-band).
 - [x] MCP server binaries pinned. (Google-managed MCP fleet; no
       third-party MCP servers in the scaffold.)
 
@@ -428,7 +514,11 @@ graduation are, in priority order:
 5. **Session-level kill-switch** (§14.1 / §19 Human oversight).
 6. **Memory Bank wiring** (§11.6 / §19 Memory).
 7. **Data lineage** (§11.7 / §19 Data lineage).
-8. **SLSA Level 2 + image signing** (§12.3 / §19 Supply chain).
+8. **SLSA Level 3 + container-image signing/admission + MCP catalogue-drift
+   detection** (§12.3 / ASI04). SBOM (CycloneDX + SPDX), Sigstore-signed build
+   provenance, and the AIBOM inventory now exist; remaining supply-chain work
+   is L3 provenance, image signing at an admission controller, and session-start
+   tool-catalogue diffing.
 9. **Per-incident-class runbooks + forensic export** (§15.2).
 10. **Replay tool** (§9.3 / §19 Observability).
 11. **Agent cards + A2A wiring** (framework §3.3 / Appendix E).

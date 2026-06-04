@@ -1,0 +1,410 @@
+# AI Bill of Materials (AIBOM) — Agentic Operations Platform
+# =============================================================================
+# CycloneDX 1.6 (ML-BOM profile). This is the *curated, design-time* inventory
+# of every AI and agentic component that can influence agent behaviour:
+# foundation models, the agent runtime, agent frameworks, MCP servers (managed
+# + custom), tool connectors (action classes), and the trust boundaries they
+# cross.
+#
+# Why this exists (OWASP State of Agentic AI Security & Governance v2.01,
+# "AI SBOM and Supply Chain Provenance"):
+#   - "Establish a Formal Inventory of AI and Agentic Components ... If it can
+#      influence agent behavior, it must be inventoried."
+#   - "Expand Supply Chain Governance to Runtime Composition" — tool registries,
+#      delegated agents, and external context sources are in supply-chain scope.
+#   - Traditional SBOM "captures what is installed. It does not fully capture
+#      what can be composed or executed dynamically." This file is that second
+#      layer; the dependency-graph SBOM is generated at build time by
+#      .github/workflows/sbom.yml (CycloneDX + SPDX, signed via Sigstore).
+#
+# Maintenance: this is a governance artefact under change management
+# (CONTRIBUTING.md — 2 reviewers). Update it in the same PR as any change that
+# adds/removes a model, agent, MCP server, or action class. The ASI / NHI
+# crosswalk in docs/GOVERNANCE-MAPPING.md references the components named here.
+# =============================================================================
+
+bomFormat: CycloneDX
+specVersion: "1.6"
+version: 1
+# serialNumber is assigned per build by CI when a machine-readable export is
+# produced; the checked-in document is the human-reviewed source of truth.
+serialNumber: "urn:uuid:00000000-0000-0000-0000-aopplatform001"
+
+metadata:
+  timestamp: "2026-06-04T00:00:00Z" # last manual AIBOM review (see GOVERNANCE-MAPPING §19)
+  lifecycles:
+    - phase: design
+    - phase: operations
+  authors:
+    - name: Agentic Operations Platform — Platform Team
+  component:
+    type: application
+    bom-ref: aop:platform
+    name: agentic-ops-platform
+    version: "0.2.1"
+    description: >-
+      Governed multi-agent DevSecOps / SRE / Platform / FinOps framework on
+      Google Cloud. Observe → Recommend → Approve → Act, with a single write
+      surface (the Action Broker) behind a typed-rule policy engine.
+  properties:
+    - name: aop:governance-framework
+      value: "AGENT_GOVERNANCE_FRAMEWORK v1.1"
+    - name: aop:owasp-asi-alignment
+      value: "OWASP Top 10 for Agentic ASI01-ASI10 — see docs/GOVERNANCE-MAPPING.md"
+    - name: aop:owasp-nhi-alignment
+      value: "OWASP Non-Human Identity Top 10 (2025) — see docs/GOVERNANCE-MAPPING.md"
+    - name: aop:maturity
+      value: "L1 (Foundational)"
+
+components:
+  # ---------------------------------------------------------------------------
+  # Foundation models (ML-BOM). Model IDs are configuration, never hard-coded;
+  # source of truth is agents/aop_common/config.py:AopSettings.
+  # ---------------------------------------------------------------------------
+  - type: machine-learning-model
+    bom-ref: model:gemini-3-pro
+    name: gemini-3-pro
+    publisher: Google
+    description: Primary reasoning model for all agents (AopSettings.model_id default).
+    externalReferences:
+      - type: documentation
+        url: https://cloud.google.com/vertex-ai/generative-ai/docs/models
+        comment: Foundation model card reference (boundary-contract requirement §3.2).
+    properties:
+      - name: aop:role
+        value: primary
+      - name: aop:safety-controls
+        value: "Model Armor INSPECT_AND_BLOCK + Gemini safety_settings per HarmCategory"
+
+  - type: machine-learning-model
+    bom-ref: model:gemini-2-pro
+    name: gemini-2-pro
+    publisher: Google
+    description: Fallback model (quota/availability) — AopSettings.model_fallback_list.
+    properties:
+      - name: aop:role
+        value: fallback
+
+  - type: machine-learning-model
+    bom-ref: model:gemini-2-flash
+    name: gemini-2-flash
+    publisher: Google
+    description: Fallback model (quota/availability) — AopSettings.model_fallback_list.
+    properties:
+      - name: aop:role
+        value: fallback
+
+  # ---------------------------------------------------------------------------
+  # Agent runtime + frameworks.
+  # ---------------------------------------------------------------------------
+  - type: platform
+    bom-ref: runtime:vertex-agent-engine
+    name: Vertex AI Agent Engine
+    publisher: Google
+    description: >-
+      Managed agent runtime. Provides per-agent Agent Identity, OTel tracing,
+      Cloud Monitoring/Logging, Code Execution sandbox, and Agent Engine Threat
+      Detection. Provisioned by terraform/modules/agent-runtime.
+    properties:
+      - name: aop:provides
+        value: "per-agent-identity; otel-tracing; code-execution-sandbox; threat-detection"
+
+  - type: framework
+    bom-ref: framework:adk
+    name: google-adk
+    version: "2.0.*"
+    publisher: Google
+    description: Agent Development Kit — agent + McpToolset wiring (aop_common/mcp_tools.py).
+
+  # ---------------------------------------------------------------------------
+  # Agents. Each runs under a dedicated service account
+  # (terraform/modules/agent-runtime). group=agent.
+  # ---------------------------------------------------------------------------
+  - type: application
+    bom-ref: agent:orchestrator
+    group: agent
+    name: aop_orchestrator
+    description: Coordinates specialists; preserves correlation_id across hops.
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-orchestrator
+  - type: application
+    bom-ref: agent:sre
+    group: agent
+    name: aop_sre
+    description: Incident triage and remediation proposals (no direct write IAM).
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-sre
+  - type: application
+    bom-ref: agent:devsecops
+    group: agent
+    name: aop_devsecops
+    description: Posture/finding analysis over SCC, Asset Inventory, logs.
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-devsecops
+  - type: application
+    bom-ref: agent:platform
+    group: agent
+    name: aop_platform
+    description: Platform-engineering analysis over infra inventory.
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-platform
+  - type: application
+    bom-ref: agent:finops
+    group: agent
+    name: aop_finops
+    description: Cost analysis over the (dataset-scoped) billing export.
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-finops
+
+  # ---------------------------------------------------------------------------
+  # Tool connectors — action classes invocable via the Action Broker.
+  # group=action-class. This is the "what can be composed at runtime" surface
+  # the OWASP doc requires in supply-chain scope. Source of truth:
+  # services/action-broker/executors/__init__.py + policy/action_classes.yaml.
+  # tier: 0=observe 1=recommend 2=act-guarded 3=act-slack-approved 4=autonomous.
+  # ---------------------------------------------------------------------------
+  - type: application
+    bom-ref: action:cloud_run.scale_within_range
+    group: action-class
+    name: cloud_run.scale_within_range
+    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:cloud_run.restart_revision
+    group: action-class
+    name: cloud_run.restart_revision
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:cloud_run.rollback_to_previous
+    group: action-class
+    name: cloud_run.rollback_to_previous
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }, { name: aop:required-approvers, value: "2" }]
+  - type: application
+    bom-ref: action:iam.disable_service_account_key
+    group: action-class
+    name: iam.disable_service_account_key
+    description: Custom role aopIamServiceAccountKeyDisableOnly (disable/get/list only).
+    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:secret_manager.disable_version
+    group: action-class
+    name: secret_manager.disable_version
+    description: Custom role aopSecretVersionDisableOnly (versions.disable/get/list only).
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:scc.mute_finding
+    group: action-class
+    name: scc.mute_finding
+    description: Custom role aopSccFindingMuteOnly (findings.setMute/get/list only).
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:workflows.run
+    group: action-class
+    name: workflows.run
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "false" }]
+  - type: application
+    bom-ref: action:terraform.plan
+    group: action-class
+    name: terraform.plan
+    description: Plan only — never apply. Read-equivalent blast radius.
+    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+  - type: application
+    bom-ref: action:cost.shrink_idle_resource
+    group: action-class
+    name: cost.shrink_idle_resource
+    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "false" }, { name: aop:max-blast-radius, value: "2" }]
+  - type: application
+    bom-ref: action:incident.escalate_to_human
+    group: action-class
+    name: incident.escalate_to_human
+    properties: [{ name: aop:max-tier, value: "0" }, { name: aop:reversible, value: "true" }]
+
+services:
+  # ---------------------------------------------------------------------------
+  # Custom MCP servers (built in-house). Single write surface = Action Broker.
+  # ---------------------------------------------------------------------------
+  - bom-ref: mcp:action-broker
+    provider: { name: agentic-ops-platform }
+    name: action-broker
+    description: >-
+      Custom MCP server — the single enforcement point for all write-side tool
+      calls (services/action-broker). Typed-rule policy engine, idempotency,
+      per-action-class impersonated credentials. Cloud Run, IAM-bound, ingress
+      INTERNAL_LOAD_BALANCER, reachable only via per-agent run.invoker allow-list.
+    authenticated: true
+    x-trust-boundary: true
+    data:
+      - flow: bi-directional
+        classification: internal
+  - bom-ref: mcp:org-context
+    provider: { name: agentic-ops-platform }
+    name: org-context
+    description: Custom MCP server — read-only org context (AopSettings.org_context_mcp_endpoint).
+    authenticated: true
+    x-trust-boundary: true
+  - bom-ref: svc:slack-notifier
+    provider: { name: agentic-ops-platform }
+    name: slack-notifier
+    description: >-
+      Out-of-band approval gateway + notification surface (services/slack-notifier).
+      Verifies Slack request signatures; redacts PII on in/out paths.
+    authenticated: true
+    x-trust-boundary: true
+
+  # ---------------------------------------------------------------------------
+  # Managed Google MCP fleet (consumed). Auth is IAM via per-agent identity
+  # (ADC); no exported keys. Model Armor floor settings apply at the fleet
+  # boundary. Source of truth: aop_common/mcp_tools.py. Allow-list per agent is
+  # tighter than IAM. consumers property names the agents allowed to call each.
+  # ---------------------------------------------------------------------------
+  - bom-ref: mcp:logging
+    provider: { name: Google }
+    name: Cloud Logging MCP
+    endpoints: ["https://logging.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "orchestrator,sre,devsecops" }]
+  - bom-ref: mcp:monitoring
+    provider: { name: Google }
+    name: Cloud Monitoring MCP
+    endpoints: ["https://monitoring.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre" }]
+  - bom-ref: mcp:cloudtrace
+    provider: { name: Google }
+    name: Cloud Trace MCP
+    endpoints: ["https://cloudtrace.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre" }]
+  - bom-ref: mcp:errorreporting
+    provider: { name: Google }
+    name: Error Reporting MCP
+    endpoints: ["https://clouderrorreporting.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre" }]
+  - bom-ref: mcp:gke
+    provider: { name: Google }
+    name: GKE MCP
+    endpoints: ["https://container.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre,platform" }]
+  - bom-ref: mcp:cloudrun
+    provider: { name: Google }
+    name: Cloud Run MCP
+    endpoints: ["https://run.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre,platform" }]
+  - bom-ref: mcp:compute
+    provider: { name: Google }
+    name: Compute Engine MCP
+    endpoints: ["https://compute.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "devsecops,platform" }]
+  - bom-ref: mcp:resourcemanager
+    provider: { name: Google }
+    name: Resource Manager MCP
+    endpoints: ["https://cloudresourcemanager.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "orchestrator,devsecops,platform" }]
+  - bom-ref: mcp:assetinventory
+    provider: { name: Google }
+    name: Cloud Asset Inventory MCP
+    endpoints: ["https://cloudasset.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties:
+      - { name: aop:consumers, value: "devsecops,platform" }
+      - { name: aop:release-stage, value: "preview" }
+  - bom-ref: mcp:secops
+    provider: { name: Google }
+    name: SecOps (Chronicle) MCP
+    endpoints: ["https://chronicle.{region}.rep.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "devsecops" }]
+  - bom-ref: mcp:pubsub
+    provider: { name: Google }
+    name: Pub/Sub MCP
+    endpoints: ["https://pubsub.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "orchestrator" }]
+  - bom-ref: mcp:bigquery
+    provider: { name: Google }
+    name: BigQuery MCP
+    endpoints: ["https://bigquery.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "finops" }]
+  - bom-ref: mcp:networkintelligence
+    provider: { name: Google }
+    name: Network Management MCP
+    endpoints: ["https://networkmanagement.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre" }]
+  - bom-ref: mcp:agentregistry
+    provider: { name: Google }
+    name: Agent Registry MCP
+    endpoints: ["https://agentregistry.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties:
+      - { name: aop:consumers, value: "none-yet" }
+      - { name: aop:release-stage, value: "preview" }
+      - { name: aop:note, value: "Candidate Agent Naming Service surface (OWASP Agent Identity)." }
+  - bom-ref: mcp:geminicloudassist
+    provider: { name: Google }
+    name: Gemini Cloud Assist MCP
+    endpoints: ["https://geminicloudassist.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties:
+      - { name: aop:consumers, value: "sre,finops" }
+      - { name: aop:release-stage, value: "preview" }
+  - bom-ref: mcp:recommender
+    provider: { name: Google }
+    name: Recommender MCP
+    endpoints: ["https://recommender.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "finops" }]
+  - bom-ref: mcp:developerknowledge
+    provider: { name: Google }
+    name: Developer Knowledge MCP
+    endpoints: ["https://developerknowledge.googleapis.com/mcp"]
+    authenticated: true
+    x-trust-boundary: true
+    properties: [{ name: aop:consumers, value: "sre,devsecops,platform,finops" }]
+
+externalReferences:
+  - type: other
+    url: ./GOVERNANCE-MAPPING.md
+    comment: Per-control attestation incl. the ASI01-ASI10 and NHI Top 10 crosswalk.
+  - type: other
+    url: ./AGENT_GOVERNANCE_FRAMEWORK.md
+    comment: Pinned governance framework (v1.1) this platform conforms to.
+  - type: build-system
+    url: ../.github/workflows/sbom.yml
+    comment: Generates the build-time dependency SBOM (CycloneDX + SPDX) and signs it via Sigstore.
