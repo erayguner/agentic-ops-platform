@@ -5,6 +5,14 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.5.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.4.0...v0.5.0) (2026-06-04)
+
+
+### Features
+
+* **agent-runtime:** adopt Agent Engine features — memory retention, per-agent identity, labels ([8136190](https://github.com/erayguner/agentic-ops-platform/commit/8136190115f04f6643168b40cce1193a11cbaa77))
+* **agent-runtime:** adopt Agent Engine provider features (memory retention, per-agent identity, labels) ([793d528](https://github.com/erayguner/agentic-ops-platform/commit/793d5282930ea0ee2752dae8d874f6575b9e14a5))
+
 ## [0.4.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.3.0...v0.4.0) (2026-06-04)
 
 
