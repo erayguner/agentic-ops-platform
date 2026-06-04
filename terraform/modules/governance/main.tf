@@ -23,6 +23,11 @@ resource "google_bigquery_dataset" "audit_logs" {
   location    = "EU"
   description = "Immutable AOP audit log export from Cloud Logging"
 
+  # Prevent `terraform destroy`/replacement from dropping the audit store
+  # (compliance evidence) when enabled. Mirrors agent-runtime's deletion policy
+  # and the ops.audit topic protection in the prod root.
+  deletion_policy = var.deletion_policy_prevent ? "PREVENT" : "DELETE"
+
   default_table_expiration_ms = null # retention managed by table-level policies
 
   labels = local.common_labels
