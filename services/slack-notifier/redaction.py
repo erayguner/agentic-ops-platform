@@ -26,10 +26,13 @@ _PATTERNS: list[tuple[str, str]] = [
     ),
     # Bearer / OAuth2 tokens (Authorization header style, also raw)
     (r"(?i)(bearer\s+)[A-Za-z0-9\-_=+/.]{20,}", r"\1[REDACTED:BEARER_TOKEN]"),
-    (r"ya29\.[A-Za-z0-9\-_]{10,}", "[REDACTED:GCLOUD_TOKEN]"),
-    # API keys (common patterns: AIza..., GOCSPX-, sk-...)
-    (r"AIza[A-Za-z0-9\-_]{35}", "[REDACTED:GOOGLE_API_KEY]"),
-    (r"GOCSPX-[A-Za-z0-9\-_]{28}", "[REDACTED:OAUTH_SECRET]"),
+    # GCloud access tokens — segments are dot-separated (e.g. ya29.c.Ab...), so
+    # the body must allow '.' or the match stops at the first segment boundary.
+    (r"ya29\.[A-Za-z0-9._\-]{10,}", "[REDACTED:GCLOUD_TOKEN]"),
+    # API keys (common patterns: AIza..., GOCSPX-, sk-...). Use open-ended
+    # length floors — exact counts miss real keys whose length varies slightly.
+    (r"AIza[A-Za-z0-9\-_]{30,}", "[REDACTED:GOOGLE_API_KEY]"),
+    (r"GOCSPX-[A-Za-z0-9\-_]{20,}", "[REDACTED:OAUTH_SECRET]"),
     (r"sk-[A-Za-z0-9]{20,}", "[REDACTED:SK_TOKEN]"),
     # Slack tokens
     (r"xox[bpars]-[0-9A-Za-z\-]{20,}", "[REDACTED:SLACK_TOKEN]"),
@@ -37,12 +40,21 @@ _PATTERNS: list[tuple[str, str]] = [
     (r"\b[0-9a-fA-F]{32,}\b", "[REDACTED:HEX_SECRET]"),
     # Email addresses — suppress if they look like SA emails embedded in payloads
     (r"[a-z0-9\-]+@[a-z0-9\-]+\.iam\.gserviceaccount\.com", "[REDACTED:SA_EMAIL]"),
-    # Password fields in JSON-like text
+    # Password fields in JSON-like text. The (?!\[REDACTED) guard stops this
+    # generic rule from overwriting a more specific label already substituted by
+    # an earlier pattern (e.g. "token = [REDACTED:SLACK_TOKEN]").
     (
-        r'(?i)"?(password|passwd|secret|credential|token)"?\s*[:=]\s*"?[^\s",]{6,}"?',
+        r'(?i)"?(password|passwd|secret|credential|token)"?\s*[:=]\s*"?(?!\[REDACTED)[^\s",]{6,}"?',
         r'"\1": "[REDACTED]"',
     ),
 ]
+
+# Keys whose string value should be redacted regardless of the value's shape —
+# a value like "hunter2" under a "password" key carries no token signature for
+# the value-level patterns to catch, so we redact based on the key name.
+_SENSITIVE_KEY = re.compile(
+    r"(?i)\b(pass(word|wd)?|secret|credential|token|api[_-]?key|private[_-]?key|auth)\b"
+)
 
 _COMPILED: list[tuple[re.Pattern[str], str]] = [(re.compile(p), repl) for p, repl in _PATTERNS]
 
@@ -55,11 +67,27 @@ def redact(text: str) -> str:
 
 
 def redact_dict(obj: Any) -> Any:
-    """Recursively redact string values inside a nested dict / list structure."""
+    """Recursively redact secrets inside a nested dict / list structure.
+
+    String values are passed through the pattern catalogue. Additionally, a
+    string value under a sensitive key (e.g. ``password``, ``token``) is
+    redacted by key name when the value itself carries no detectable token
+    signature — but only after the value patterns run, so a recognisable token
+    keeps its specific label (e.g. ``[REDACTED:SLACK_TOKEN]``).
+    """
     if isinstance(obj, str):
         return redact(obj)
     if isinstance(obj, dict):
-        return {k: redact_dict(v) for k, v in obj.items()}
+        out: dict[Any, Any] = {}
+        for k, v in obj.items():
+            if isinstance(v, str):
+                redacted = redact(v)
+                if redacted == v and isinstance(k, str) and _SENSITIVE_KEY.search(k):
+                    redacted = "[REDACTED]"
+                out[k] = redacted
+            else:
+                out[k] = redact_dict(v)
+        return out
     if isinstance(obj, list):
         return [redact_dict(item) for item in obj]
     return obj
