@@ -125,7 +125,9 @@ class TestCountdownText:
         future = datetime.now(tz=UTC) + timedelta(minutes=5, seconds=30)
         result = _countdown_text(future)
         assert "5m" in result
-        assert "30s" in result
+        # Sub-second elapses between computing `future` and reading the clock
+        # inside _countdown_text, so the truncated remainder is 30s or 29s.
+        assert "30s" in result or "29s" in result
         assert "expires in" in result
 
     def test_past_time_returns_expired_message(self) -> None:
