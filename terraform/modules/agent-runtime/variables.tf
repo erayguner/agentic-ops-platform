@@ -106,3 +106,45 @@ variable "labels" {
   description = "Additional labels to merge with the standard AOP label set."
   default     = {}
 }
+
+# ---------------------------------------------------------------------------
+# Memory Bank (orchestrator context_spec) — OWASP §11.6 / ASI06.
+# ---------------------------------------------------------------------------
+
+variable "memory_generation_model" {
+  type        = string
+  description = "Short model id the orchestrator Memory Bank uses to generate memories (resolved to a Vertex publisher path). A low-cost model (e.g. gemini-2.5-flash) is recommended."
+  default     = "gemini-2.5-flash"
+}
+
+variable "memory_embedding_model" {
+  type        = string
+  description = "Short embedding model id the Memory Bank uses for similarity search over stored memories (resolved to a Vertex publisher path)."
+  default     = "text-embedding-005"
+}
+
+variable "memory_default_ttl" {
+  type        = string
+  description = "Retention policy for Memory Bank entries (OWASP §11.6: 'retention policy declared per memory store'). Expired memories are purged. Duration string in seconds, e.g. 2592000s = 30 days."
+  default     = "2592000s"
+  validation {
+    condition     = can(regex("^[0-9]+s$", var.memory_default_ttl))
+    error_message = "memory_default_ttl must be a duration in seconds, e.g. '2592000s'."
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Agent runtime identity — code-artifact bucket for the per-agent SA.
+# ---------------------------------------------------------------------------
+
+variable "agent_artifact_bucket" {
+  type        = string
+  description = <<-EOT
+    Cloud Storage bucket NAME (no gs:// prefix) holding the agents' deployed
+    code artifacts. When set, each per-agent SA receives roles/storage.objectViewer
+    scoped to THIS BUCKET ONLY, so the Agent Engine runtime can load its code
+    under its own least-privilege identity. When empty (skeleton default), no
+    storage grant is added — set this for a live deployment.
+  EOT
+  default     = ""
+}
