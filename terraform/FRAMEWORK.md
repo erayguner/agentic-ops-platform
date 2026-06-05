@@ -221,7 +221,7 @@ without requiring runtime probes.
 
 ```hcl
 module "aop" {
-  source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.5.1" # x-release-please-version
+  source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.5.2" # x-release-please-version
 
   project_id = "my-org-aop-dev"
   env        = "dev"
