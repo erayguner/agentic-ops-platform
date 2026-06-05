@@ -32,7 +32,7 @@ def build_agent_card(settings: AopSettings) -> object:
     try:
         from google.adk.a2a import AgentCard, AgentSkill  # type: ignore[import-untyped]
     except ImportError as exc:
-        raise ImportError("google-adk>=2.0 required") from exc
+        raise ImportError("google-adk>=2.1 required") from exc
 
     secops_ep = SECOPS_MCP_TEMPLATE.format(region=settings.region)
     return AgentCard(
