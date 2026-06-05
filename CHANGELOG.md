@@ -5,6 +5,14 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.5.2](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.1...v0.5.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* **terraform:** remediate checkov 3.2.531 findings (44 -&gt; 0) ([17f2fdf](https://github.com/erayguner/agentic-ops-platform/commit/17f2fdf9ab29ef8b15799d897168f188e67ca5dc))
+* **terraform:** remediate checkov 3.2.531 findings (44 → 0) ([6d41ee7](https://github.com/erayguner/agentic-ops-platform/commit/6d41ee7a4d1ade846002223fb8343aae54c9771f))
+
 ## [0.5.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.0...v0.5.1) (2026-06-05)
 
 
