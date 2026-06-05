@@ -199,6 +199,7 @@ resource "google_project_iam_member" "workflows_run_invoker" {
 # secrets metadata (NOT the payload) and on Secret Manager IAM. Document as
 # acceptable; revisit if a narrower predefined role appears upstream.
 resource "google_project_iam_member" "terraform_plan_viewer" {
+  # checkov:skip=CKV_GCP_117: terraform plan needs broad read across all resource types; roles/viewer is read-only (no mutations), impersonation- and broker-gated, and no narrower predefined role covers arbitrary plan reads.
   project = var.project_id
   role    = "roles/viewer"
   member  = "serviceAccount:${google_service_account.action_terraform_plan.email}"

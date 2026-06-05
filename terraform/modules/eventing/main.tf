@@ -222,6 +222,8 @@ resource "google_pubsub_topic" "ops_audit_dlq" {
 # ---------------------------------------------------------------------------
 
 resource "google_bigquery_table" "audit_events" {
+  # checkov:skip=CKV_GCP_121: deletion protection is environment-driven via var.deletion_policy_prevent (true in prod); dev intentionally allows teardown.
+  # checkov:skip=CKV_GCP_80: CMEK is a documented roadmap hardening for the audit pipeline; Google-managed encryption (AES-256, always-on) is the scaffold baseline. See docs/GOVERNANCE-MAPPING.md §12.
   project    = var.project_id
   dataset_id = var.audit_bq_dataset_id
   table_id   = var.audit_bq_table_id

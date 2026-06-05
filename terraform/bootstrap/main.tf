@@ -93,12 +93,16 @@ data "google_project" "project" {
 # ---------------------------------------------------------------------------
 
 resource "google_storage_bucket" "tfstate" {
+  # checkov:skip=CKV_GCP_62: access logging is redundant with Cloud Audit Logs Data Access logging for this single-purpose Terraform state store.
   for_each = toset(var.envs)
 
   project       = var.project_id
   name          = local.state_buckets[each.key]
   location      = "EU"
   force_destroy = false
+
+  # State holds resource metadata and secret references — never public.
+  public_access_prevention = "enforced"
 
   versioning {
     enabled = true
@@ -134,6 +138,7 @@ resource "google_iam_workload_identity_pool" "ci" {
 }
 
 resource "google_iam_workload_identity_pool_provider" "github" {
+  # checkov:skip=CKV_GCP_125: trust is fenced by assertion.repository (this org/repo) + ref/event_name/environment in attribute_condition below (GitHub's recommended pattern); CKV_GCP_125 only recognises an assertion.sub claim:value constraint, which is equivalent-or-weaker here.
   project                            = var.project_id
   workload_identity_pool_id          = google_iam_workload_identity_pool.ci.workload_identity_pool_id
   workload_identity_pool_provider_id = "github-actions"

@@ -212,6 +212,7 @@ acknowledged gaps, not oversights (framework §17.2 / §20).
 | §12.5 boundary hardening | Implemented | VPC Service Controls + egress denylist in `terraform/modules/governance/`. |
 | §12.6 managed threat detection | Partial | Security Command Center v2 (`google_scc_v2_source` in `terraform/modules/governance/`); SCC findings flow through `ops.signals`. Agent Engine Threat Detection (Preview) feeds the same sink. **Gap:** alerting on agent-specific patterns is not yet tuned. |
 | §12.7 red-teaming | Gap | Cadence stated in `docs/DESIGN-REVIEW.md` Part 8.7; operationalisation is the deployer's responsibility today. |
+| §12.8 encryption at rest | Partial | All data is encrypted at rest by default with Google-managed AES-256 keys. State buckets additionally use **CMEK** + enforced `public_access_prevention` (`terraform/bootstrap/`). **CMEK for the data plane** (Pub/Sub topics, BigQuery audit dataset + table, Artifact Registry) is a **documented roadmap hardening**, accepted at the scaffold tier via per-resource `checkov:skip` (CKV_GCP_80/81/83/84) — the audit pipeline (`ops.audit`, `audit_events`, `audit_logs`) is the priority surface when CMEK is wired. Other accepted checkov skips are self-documented inline: CKV_GCP_62 (state-bucket access logging redundant with Cloud Audit Data-Access logs), CKV_GCP_117 (`terraform.plan` read-only `roles/viewer`), CKV_GCP_121 (BQ deletion protection is env-driven), CKV_GCP_125 (WIF trust fenced by `assertion.repository`+ref+env). |
 
 ## §13 — Resilience
 
