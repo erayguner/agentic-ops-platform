@@ -4,7 +4,7 @@
 # example stays validate-ready in CI. When you copy this file into your own
 # downstream repository, swap the source for the git URL form (see README):
 #
-#   source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.3.0"
+#   source = "git::https://github.com/erayguner/agentic-ops-platform.git//terraform/modules/aop-platform?ref=v0.5.0" # x-release-please-version
 #
 # Terraform requires `source` to be a string literal — bumping the version is
 # a one-line edit. The `aop_framework_version` variable below is exposed only

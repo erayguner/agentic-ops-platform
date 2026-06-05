@@ -16,7 +16,22 @@ always real regardless of LIVE_MODE.
 from __future__ import annotations
 
 import importlib
+from dataclasses import dataclass
 from types import ModuleType
+
+
+@dataclass
+class Outcome:
+    """Result returned by every executor's execute()/rollback().
+
+    Defined once here and imported by each executor (previously duplicated
+    verbatim in all 10 executor modules).
+    """
+
+    status: str
+    detail: str
+    resource_refs: list[str]
+
 
 # ---------------------------------------------------------------------------
 # Canonical mapping (see ../policy/action_classes.yaml for the policy view).

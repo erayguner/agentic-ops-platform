@@ -8,7 +8,10 @@
   "draft": false,
   "prerelease": false,
   "extra-files": [
-    "terraform/FRAMEWORK.md"
+    "terraform/FRAMEWORK.md",
+    "terraform/modules/aop-platform/README.md",
+    "terraform/examples/downstream-consumer/main.tf",
+    "terraform/examples/downstream-consumer/variables.tf"
   ],
   "changelog-sections": [
     { "type": "feat",     "section": "Features",          "hidden": false },

@@ -31,7 +31,7 @@ version: 1
 serialNumber: "urn:uuid:00000000-0000-0000-0000-aopplatform001"
 
 metadata:
-  timestamp: "2026-06-04T00:00:00Z" # last manual AIBOM review (see GOVERNANCE-MAPPING §19)
+  timestamp: "2026-06-05T00:00:00Z" # last manual AIBOM review (see GOVERNANCE-MAPPING §19)
   lifecycles:
     - phase: design
     - phase: operations
@@ -41,7 +41,7 @@ metadata:
     type: application
     bom-ref: aop:platform
     name: agentic-ops-platform
-    version: "0.2.1"
+    version: "0.5.0"
     description: >-
       Governed multi-agent DevSecOps / SRE / Platform / FinOps framework on
       Google Cloud. Observe → Recommend → Approve → Act, with a single write
@@ -112,7 +112,7 @@ components:
   - type: framework
     bom-ref: framework:adk
     name: google-adk
-    version: "2.0.*"
+    version: "2.1.*"
     publisher: Google
     description: Agent Development Kit — agent + McpToolset wiring (aop_common/mcp_tools.py).
 

@@ -11,18 +11,12 @@ from __future__ import annotations
 
 import logging
 import os
-from dataclasses import dataclass
 from typing import Any
+
+from executors import Outcome
 
 logger = logging.getLogger(__name__)
 LIVE_MODE = os.environ.get("LIVE_MODE", "false").lower() == "true"
-
-
-@dataclass
-class Outcome:
-    status: str
-    detail: str
-    resource_refs: list[str]
 
 
 def validate(params: dict[str, Any]) -> None:

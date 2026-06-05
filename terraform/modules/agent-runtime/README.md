@@ -4,10 +4,10 @@ Provisions the five AOP agents on Vertex AI Agent Engine (reasoning engines) plu
 
 ## Resources created
 
-- **5 service accounts** — `sa-orchestrator`, `sa-sre`, `sa-devsecops`, `sa-platform`, `sa-finops`.
-- **IAM bindings** — read-only grants per DESIGN-REVIEW §5.3. No write IAM on any agent SA.
-- **5 reasoning engines** — one per agent. `agent_framework = "google-adk"`; `deletion_policy` driven by `deletion_policy_prevent` variable (defaults `PREVENT` in prod).
-- **Memory Bank skeleton** — one `google_vertex_ai_reasoning_engine` using `provider = google-beta` for the `context_spec` block. Annotated with an inline comment explaining the beta requirement and a TODO for when the field graduates to GA.
+- **5 service accounts** — `sa-orchestrator`, `sa-sre`, `sa-devsecops`, `sa-platform`, `sa-finops`. Each is bound to its reasoning engine via `spec.service_account`, so the runtime executes under the scoped per-agent identity rather than the shared default Vertex service agent.
+- **IAM bindings** — read-only observability/inventory grants per DESIGN-REVIEW §5.3, plus `roles/aiplatform.user` per agent (required for Gemini inference) and, when `agent_artifact_bucket` is set, bucket-scoped `roles/storage.objectViewer` for loading agent code. No write IAM on GCP resources.
+- **5 reasoning engines** — one per agent. `agent_framework = "google-adk"`; per-agent `service_account` + `labels`; `deletion_policy` driven by `deletion_policy_prevent` (defaults `PREVENT` in prod).
+- **Memory Bank** — one `google_vertex_ai_reasoning_engine` (`provider = google-beta` for the `context_spec` block) configured with generation + embedding models and a retention `ttl_config` (`memory_default_ttl`, default 30d). The beta-provider requirement is annotated inline in `main.tf`.
 
 ## Beta provider usage
 
@@ -28,6 +28,15 @@ The `context_spec` block on `google_vertex_ai_reasoning_engine` is only availabl
 | ops_signals_topic_id | string | — | yes |
 | ops_findings_topic_id | string | — | yes |
 | ops_notifications_topic_id | string | — | yes |
+| ops_audit_topic_id | string | — | yes |
+| audit_bq_dataset_id | string | audit_logs | no |
+| billing_export_bq_dataset_id | string | "" | no |
+| billing_export_bq_project_id | string | "" | no |
+| memory_generation_model | string | gemini-2.5-flash | no |
+| memory_embedding_model | string | text-embedding-005 | no |
+| memory_default_ttl | string | 2592000s (30d) | no |
+| agent_artifact_bucket | string | "" | no |
+| labels | map(string) | {} | no |
 | container_image_* | string | placeholder | no |
 
 ## Outputs

@@ -11,7 +11,7 @@ This is a SKELETON — it prints the would-deploy statement and shows the
 ADK deployment call shape without invoking it.
 
 ADK 2.0 API — confirm vertexai.agent_engines.create() / .deploy() signature
-against adk.dev/2.0/ release notes and the google-adk 2.0.x changelog.
+against adk.dev/2.0/ release notes and the google-adk 2.1.x changelog.
 """
 
 from __future__ import annotations
