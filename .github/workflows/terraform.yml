@@ -43,10 +43,12 @@ concurrency:
 env:
   TF_VERSION: "1.15.5"
   TFLINT_VERSION: "v0.63.0"
-  # checkov pinned at 3.2.298 intentionally: newer releases (3.2.5xx) add
-  # CSEK/encryption policies that surface ~44 pre-existing findings on this
-  # framework's intentional design. Bumping requires triaging those first.
-  CHECKOV_VERSION: "3.2.298"
+  # checkov pinned to a validated version. The CSEK/encryption + design findings
+  # the 3.2.5xx line surfaces are now handled: a real fix (public_access_prevention)
+  # plus per-resource inline `checkov:skip` justifications, and one global CMEK
+  # skip for the Pub/Sub topics (see skip_check below). Re-triage findings before
+  # bumping further.
+  CHECKOV_VERSION: "3.2.531"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -154,10 +156,15 @@ jobs:
           quiet: true
           soft_fail: ${{ github.event_name == 'pull_request' }}
           download_external_modules: false
-          # Skip checks that conflict with the documented framework design.
+          # Global skips for checks that conflict with the documented design.
+          # Resource-specific accepted risks use inline `checkov:skip` comments
+          # instead (bootstrap / eventing / governance / foundation / action-broker).
           # CKV_GCP_2  — broker uses INTERNAL_LOAD_BALANCER ingress (intentional).
           # CKV_GCP_49 — Cloud Scheduler is internal-only by design.
-          skip_check: CKV_GCP_2,CKV_GCP_49
+          # CKV_GCP_83 — CMEK on the 14 Pub/Sub topics is a documented roadmap
+          #              hardening; Google-managed encryption is the baseline.
+          #              Global (not 14 inline skips). See GOVERNANCE-MAPPING §12.
+          skip_check: CKV_GCP_2,CKV_GCP_49,CKV_GCP_83
 
   # ---------------------------------------------------------------------------
   # Terraform native test suite (terraform/tests/*.tftest.hcl).

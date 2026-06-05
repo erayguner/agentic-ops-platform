@@ -40,6 +40,7 @@ resource "google_essential_contacts_contact" "technical" {
 # ---------------------------------------------------------------------------
 
 resource "google_artifact_registry_repository" "aop_containers" {
+  # checkov:skip=CKV_GCP_84: CMEK is a documented roadmap hardening; Google-managed encryption (AES-256, always-on) is the scaffold baseline. See docs/GOVERNANCE-MAPPING.md §12.
   project       = var.project_id
   location      = var.region
   repository_id = var.artifact_registry_repo

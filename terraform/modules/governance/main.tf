@@ -18,6 +18,7 @@ locals {
 # ---------------------------------------------------------------------------
 
 resource "google_bigquery_dataset" "audit_logs" {
+  # checkov:skip=CKV_GCP_81: CMEK is a documented roadmap hardening for the audit pipeline; Google-managed encryption (AES-256, always-on) is the scaffold baseline. See docs/GOVERNANCE-MAPPING.md §12.
   project     = var.project_id
   dataset_id  = var.audit_bq_dataset_id
   location    = "EU"
