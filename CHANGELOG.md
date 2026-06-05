@@ -5,6 +5,18 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.5.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.0...v0.5.1) (2026-06-05)
+
+
+### Refactoring
+
+* **action-broker:** hoist duplicated Outcome dataclass to the package ([edf81d7](https://github.com/erayguner/agentic-ops-platform/commit/edf81d7b5bf26bb7ddfe100062048536d0166590))
+
+
+### Documentation
+
+* refresh agent-runtime README and AIBOM for v0.5.0 ([0dc164e](https://github.com/erayguner/agentic-ops-platform/commit/0dc164e1fa40f2a5701dcbc333196a4f983412f9))
+
 ## [0.5.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.4.0...v0.5.0) (2026-06-04)
 
 

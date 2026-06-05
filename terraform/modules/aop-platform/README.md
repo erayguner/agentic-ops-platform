@@ -34,7 +34,7 @@ opt-in via the `enabled_agents` map.
 
 ```hcl
 module "aop" {
-  source = "github.com/erayguner/agentic-ops-platform//terraform/modules/aop-platform?ref=v0.5.0" # x-release-please-version
+  source = "github.com/erayguner/agentic-ops-platform//terraform/modules/aop-platform?ref=v0.5.1" # x-release-please-version
 
   project_id = "ops-agents-dev"
   env        = "dev"
