@@ -235,6 +235,124 @@ resource "google_logging_metric" "action_rollback_count" {
 }
 
 # ---------------------------------------------------------------------------
+# Log-based metric 4 — Alert dwell time (Zero Trust "Measure what matters")
+# Distribution of seconds between anomaly occurrence and first-pass triage,
+# extracted from the TriageDisposition emitted by aop_common/triage.py.
+# Dwell time is the leading detection-speed indicator; target < 1h for critical.
+# ---------------------------------------------------------------------------
+
+resource "google_logging_metric" "alert_dwell_seconds" {
+  project     = var.project_id
+  name        = "aop_alert_dwell_seconds"
+  description = "Seconds from anomaly occurrence to first-pass triage (dwell time), from ops.triage_disposition.v1."
+  filter      = "resource.type=\"aiplatform.googleapis.com/ReasoningEngine\" AND jsonPayload.schema=\"ops.triage_disposition.v1\""
+
+  metric_descriptor {
+    metric_kind  = "DELTA"
+    value_type   = "DISTRIBUTION"
+    unit         = "s"
+    display_name = "AOP alert dwell time"
+    labels {
+      key         = "severity"
+      value_type  = "STRING"
+      description = "Signal severity (info..critical)."
+    }
+    labels {
+      key         = "disposition"
+      value_type  = "STRING"
+      description = "Triage disposition (auto_close, investigate, escalate, suppress_duplicate)."
+    }
+  }
+
+  value_extractor = "EXTRACT(jsonPayload.dwell_seconds)"
+
+  label_extractors = {
+    severity    = "EXTRACT(jsonPayload.severity)"
+    disposition = "EXTRACT(jsonPayload.disposition)"
+  }
+
+  bucket_options {
+    exponential_buckets {
+      num_finite_buckets = 64
+      growth_factor      = 1.4
+      scale              = 1.0
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Log-based metric 5 — Triage coverage (count of triaged signals by route)
+# coverage = sum(routed_to_human="true") / sum(all) — the fraction of alerts
+# routed for human investigation rather than auto-closed/suppressed.
+# ---------------------------------------------------------------------------
+
+resource "google_logging_metric" "alert_triage_total" {
+  project     = var.project_id
+  name        = "aop_alert_triage_total"
+  description = "Count of first-pass triage dispositions, labelled by route — the coverage denominator/numerator."
+  filter      = "resource.type=\"aiplatform.googleapis.com/ReasoningEngine\" AND jsonPayload.schema=\"ops.triage_disposition.v1\""
+
+  metric_descriptor {
+    metric_kind  = "DELTA"
+    value_type   = "INT64"
+    unit         = "1"
+    display_name = "AOP triage dispositions"
+    labels {
+      key         = "disposition"
+      value_type  = "STRING"
+      description = "Triage disposition."
+    }
+    labels {
+      key         = "routed_to_human"
+      value_type  = "STRING"
+      description = "Whether the alert was routed for human investigation (coverage numerator)."
+    }
+  }
+
+  label_extractors = {
+    disposition     = "EXTRACT(jsonPayload.disposition)"
+    routed_to_human = "EXTRACT(jsonPayload.routed_to_human)"
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Alert policy 4 — Detection dwell p95 > 1 h for critical signals
+# "Target detection within an hour for critical systems." Fires when the 95th
+# percentile dwell time for critical-severity signals exceeds one hour.
+# ---------------------------------------------------------------------------
+
+resource "google_monitoring_alert_policy" "detection_dwell_p95" {
+  project      = var.project_id
+  display_name = "AOP — Detection dwell p95 > 1h (critical)"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Critical-severity dwell p95 exceeds 3600 s"
+    condition_threshold {
+      filter          = "metric.type = \"logging.googleapis.com/user/aop_alert_dwell_seconds\" AND metric.labels.severity = \"critical\""
+      duration        = "0s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 3600
+      aggregations {
+        alignment_period   = "3600s"
+        per_series_aligner = "ALIGN_PERCENTILE_95"
+      }
+    }
+  }
+
+  notification_channels = [
+    google_monitoring_notification_channel.slack_primary.id,
+    google_monitoring_notification_channel.pubsub_redundant.id,
+  ]
+
+  alert_strategy {
+    auto_close = "86400s"
+  }
+
+  user_labels = local.common_labels
+}
+
+# ---------------------------------------------------------------------------
 # Uptime check — action-broker
 # ---------------------------------------------------------------------------
 
@@ -436,6 +554,57 @@ resource "google_monitoring_dashboard" "ops_platform_overview" {
                 plotType = "LINE"
               }]
               yAxis = { label = "rollbacks", scale = "LINEAR" }
+            }
+          }
+        },
+        {
+          yPos   = 8
+          width  = 6
+          height = 4
+          widget = {
+            title = "Alert dwell p95 by severity (s)"
+            xyChart = {
+              dataSets = [{
+                timeSeriesQuery = {
+                  timeSeriesFilter = {
+                    filter = "metric.type=\"logging.googleapis.com/user/aop_alert_dwell_seconds\""
+                    aggregation = {
+                      alignmentPeriod    = "3600s"
+                      perSeriesAligner   = "ALIGN_PERCENTILE_95"
+                      crossSeriesReducer = "REDUCE_MAX"
+                      groupByFields      = ["metric.labels.severity"]
+                    }
+                  }
+                }
+                plotType = "LINE"
+              }]
+              yAxis = { label = "seconds", scale = "LINEAR" }
+            }
+          }
+        },
+        {
+          xPos   = 6
+          yPos   = 8
+          width  = 6
+          height = 4
+          widget = {
+            title = "Triage coverage — routed vs total (delta/hr)"
+            xyChart = {
+              dataSets = [{
+                timeSeriesQuery = {
+                  timeSeriesFilter = {
+                    filter = "metric.type=\"logging.googleapis.com/user/aop_alert_triage_total\""
+                    aggregation = {
+                      alignmentPeriod    = "3600s"
+                      perSeriesAligner   = "ALIGN_DELTA"
+                      crossSeriesReducer = "REDUCE_SUM"
+                      groupByFields      = ["metric.labels.routed_to_human"]
+                    }
+                  }
+                }
+                plotType = "STACKED_BAR"
+              }]
+              yAxis = { label = "dispositions", scale = "LINEAR" }
             }
           }
         }

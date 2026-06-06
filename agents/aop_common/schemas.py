@@ -367,3 +367,51 @@ class AuditRecord(BaseModel):
         if isinstance(v, datetime):
             return v.isoformat()
         return str(v)
+
+
+# --------------------------------------------------------------------------- #
+# 4.7 TriageDisposition v1
+# --------------------------------------------------------------------------- #
+
+
+class TriageDisposition(BaseModel):
+    """First-pass triage verdict for an OpsSignal — published to ops.audit.
+
+    The "model at the front of the alert queue": every inbound signal gets an
+    automated first-pass disposition before a human sees it, carrying the two
+    metrics the Zero Trust brief says to instrument first — *dwell time*
+    (anomaly occurrence -> awareness) and *coverage* (whether the alert is
+    routed for investigation). The structured emission is what the
+    `aop_alert_dwell_seconds` / `aop_alert_triage_total` log-based metrics in
+    `terraform/modules/observability/` extract.
+    """
+
+    model_config = _CFG
+
+    schema_: Literal["ops.triage_disposition.v1"] = Field(
+        "ops.triage_disposition.v1", alias="schema"
+    )
+    triage_id: str = Field(default_factory=lambda: _prefixed_id("trg_"))
+    signal_id: str = Field(...)
+    correlation_id: str = Field(...)
+    environment: Literal["dev", "prod"]
+    severity: Literal["info", "low", "medium", "high", "critical"]
+
+    detected_at: str = Field(..., description="When the anomaly/signal occurred (RFC3339).")
+    triaged_at: str = Field(default_factory=_now_rfc3339)
+    dwell_seconds: float = Field(
+        ..., ge=0.0, description="triaged_at - detected_at; the leading dwell-time indicator."
+    )
+
+    disposition: Literal["auto_close", "investigate", "escalate", "suppress_duplicate"]
+    routed_to_human: bool = Field(
+        ...,
+        description="True iff the alert is routed for human investigation (coverage numerator).",
+    )
+    recommended_domain: Literal["sre", "devsecops", "platform", "finops"] | None = None
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    rationale: str = Field(
+        ..., min_length=1, description="Why this disposition — decision transparency."
+    )
+    evidence_refs: list[str] = Field(default_factory=list)
+    model: ModelUsage | None = None

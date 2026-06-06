@@ -69,3 +69,25 @@ jobs:
       - name: Run tests
         working-directory: ${{ matrix.component }}
         run: uv run --python 3.13 --with pytest --with pytest-asyncio pytest -q
+
+  test-agents-common:
+    name: pytest (agents/aop_common)
+    runs-on: ubuntu-latest
+    # aop_common.{memory,triage,schemas} depend only on pydantic, so these run
+    # without resolving the heavy google-adk agent lock. conftest.py puts the
+    # agents/ dir on sys.path. Keep this job's deps minimal and pydantic-only.
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+
+      - name: Run aop_common tests
+        run: >-
+          uvx --python 3.13
+          --with 'pydantic>=2.7'
+          --with 'pydantic-settings>=2.5'
+          --with pytest
+          --with pytest-asyncio
+          pytest agents/tests -q

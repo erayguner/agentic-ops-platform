@@ -12,6 +12,10 @@ topic / policy that implements it in this repository.
 > *State of Agentic AI Security and Governance* v2.01 (June 2026). See the
 > [ASI / NHI crosswalk](#owasp-top-10-for-agentic-applications-asi01asi10-crosswalk)
 > below.
+> **Zero Trust crosswalk:** Anthropic *Zero Trust for AI Agents* (2026) — see the
+> [capability-tier crosswalk](#zero-trust-for-ai-agents-crosswalk-anthropic-2026)
+> below and the defensive-operations runbook
+> [`DEFENSIVE-OPERATIONS.md`](./DEFENSIVE-OPERATIONS.md).
 > **Last attested:** 2026-06-04 against §19 (minimum compliance checklist).
 > **Status:** Skeleton — see `docs/DESIGN-REVIEW.md` Part 1 for the
 > implementation caveats. Many controls below describe the *intent and
@@ -107,6 +111,58 @@ acknowledged gaps, not oversights (framework §17.2 / §20).
 | Automated incident classification for compressed timelines (DORA 4 h, NIS2 24 h, NY RAISE 72 h, CA SB 53 15 d) | Gap | SCC findings + threat-detection flow to `ops.signals`; automated severity classification and timeline-aware routing are not yet wired. |
 | Trajectory-level explainability | Partial | Per-step rationale + OTel traces (`agents/pyproject.toml`); full transcript replay tool is roadmap (§9.3). |
 | Kill switch at agent speed | Partial | Slack `Reject` halts a pending action chain; session-level halt (< 1 min) is roadmap (§14.1). |
+
+---
+
+## Zero Trust for AI Agents crosswalk (Anthropic, 2026)
+
+This section maps AOP to Anthropic's **Zero Trust for AI Agents** brief (2026).
+It is **complementary** to the ASI / NHI crosswalks above, not a replacement:
+ASI/NHI are *threat* taxonomies; this is the brief's *capability-tier* lens
+(**Foundation → Enterprise → Advanced**) plus its central design heuristic.
+
+### The "impossible vs tedious" design test
+
+The brief asks one question of every control: *does this make the attack
+impossible, or just tedious?* Friction-only controls (extra hops, rate limits,
+approval delays) degrade against an adversary with unlimited patience and
+near-zero per-attempt cost. AOP adopts this as a **standing design-review
+question** (also enforced in [`DESIGN-REVIEW.md`](./DESIGN-REVIEW.md) and the
+PR template). Honest self-assessment of AOP's controls under this test:
+
+- **Impossibility (capability removed):** no exportable SA keys (WIF);
+  specialist agents *cannot* write — every mutation goes through the Action
+  Broker chokepoint; egress denied by default (VPC-SC); managed Google MCP fleet
+  only (no third-party servers).
+- **Friction (buys time, not impossibility):** the 15-minute approval window,
+  `max_blast_radius` / instance bounds, and policy denial rate. These are
+  valuable but are *not* counted as hard barriers — where feasible we prefer a
+  control that removes a capability over one that throttles it.
+
+### Capability-tier self-assessment
+
+Status key as elsewhere: `Implemented` · `Partial` · `Gap`. The **AOP tier** is
+the brief's tier this domain currently meets; the **Advanced gap** column names
+what the next tier would add.
+
+| Brief domain | AOP tier | Status | Implementing surface · Advanced gap |
+|---|---|---|---|
+| Agent identity & authentication | Enterprise | Implemented | Per-agent SAs + WIF (no static keys); per-action-class short-lived impersonation (`services/action-broker/impersonation.py`). **Advanced gap:** hardware-attested identity + RFC 8693 chaining (ASI03). |
+| Access control & least agency | Enterprise | Implemented | Custom roles ⊂ predefined; Principal Access Boundary; deny-by-default policy engine; `max_blast_radius` bounds. **Advanced gap:** JIT auto-expiry on task completion, per-principal budgets, continuous ABAC. |
+| Resource boundaries / isolation | Enterprise | Partial | **Identity-based isolation is the primary control** (per-agent identity + `run.invoker` allow-list), which matches the brief's own guidance that network segmentation is a backstop; managed sandbox; VPC-SC. **Advanced gap:** confidential computing, VPC-SC enforced (not dry-run). |
+| Observability & auditing | Enterprise | Implemented | OTel + immutable BigQuery + `correlation_id`; **now + dwell-time/coverage metrics and first-pass triage** (`agents/aop_common/triage.py`, `terraform/modules/observability/` `aop_alert_dwell_seconds` / `aop_alert_triage_total` / `detection_dwell_p95`). **Advanced gap:** hash-chained/signed audit, z-score baselines, replay. |
+| Input validation & output controls | Enterprise | Implemented | Model Armor `INSPECT_AND_BLOCK` (PI & jailbreak); redaction; structured Pydantic outputs; **now + retrieved-memory re-filtering/spotlighting** (`agents/aop_common/memory.py`). *Constitutional classifiers are Claude-specific — n/a on the Gemini/Model-Armor stack; the equivalent floor filter is in place.* |
+| Integrity & recovery | Enterprise | Partial | Version-controlled policy/config; Sigstore-signed SBOM; auto-rollback on post-condition failure. **Advanced gap:** SLSA L3, image signing + Binary Authorization, signed policy files. |
+| AI governance policies | Enterprise | Implemented | Policy-as-code (`action_classes.yaml` + `terraform/modules/governance/`); tiered autonomy; named operator roles. **Advanced gap:** policy-compliance metrics emitted from the deploy pipeline. |
+| Supply chain (Phase 2) | Enterprise | Partial | CycloneDX + SPDX SBOM, Sigstore provenance, AI-BOM, OpenSSF Scorecard, Trivy + Checkov. **Advanced gap:** SLSA L3, image admission control, dependency-tree redundancy + reachability audit. |
+| Memory safeguards (Phase 7) | Enterprise | Partial | **App-layer guard implemented** (`agents/aop_common/memory.py`: cross-session/tenant isolation, content-hash integrity, TTL-at-recall, untrusted re-filtering) + Memory Bank TTL. **Gap:** wire the guard into the Memory Bank store/recall transport. |
+| Defensive operations (Part V) | Enterprise | Partial | **Now documented** ([`DEFENSIVE-OPERATIONS.md`](./DEFENSIVE-OPERATIONS.md)): model-at-front-of-queue triage, dwell/coverage targets, MITRE ATT&CK coverage map, 5-incident tabletop, emergency-change procedures. **Advanced gap:** session-level kill-switch *implementation* (design only) and agentic-SOAR auto-response. |
+
+**Tier summary.** AOP is broadly at the brief's **Enterprise** tier with named
+**Advanced** gaps. This is a *different scale* from the framework's own maturity
+levels (§18), where AOP remains **L1**: L2 graduation is gated by the §19 open
+gaps (eval harness, per-principal budgets, hash-chained audit) which the brief's
+tiering does not measure. Both scales agree on the forward work.
 
 ---
 
@@ -335,9 +391,19 @@ compliance checklist. Each box is one of:
 - [x] Retention policy declared per memory store.
       (`context_spec.memory_bank_config.ttl_config.default_ttl` via
       `var.memory_default_ttl` in `terraform/modules/agent-runtime/`.)
-- [ ] User-scoped deletion procedure tested. **Gap** — app-layer.
-- [ ] Cross-tenant retrieval denied by construction. **Gap**.
-- [ ] Retrieved memory passes through input filters. **Gap**.
+      TTL is now also enforced at *retrieval* time
+      (`aop_common/memory.py:MemoryRecord.is_expired`,`prepare_recall`).
+- [~] User-scoped deletion procedure tested. App-layer scope binding
+      (`aop_common/memory.py:MemoryScope`) identifies a tenant's records
+      by construction; the Memory Bank delete transport + procedure test
+      remain roadmap.
+- [~] Cross-tenant retrieval denied by construction.
+      (`aop_common/memory.py:assert_scope_access` + `prepare_recall`,
+      unit-tested.) **Gap:** wire the guard into the live recall path.
+- [~] Retrieved memory passes through input filters.
+      (`aop_common/memory.py:sanitize_retrieved`/`prepare_recall` —
+      spotlighting + injection screen, unit-tested.) **Gap:** wire into
+      the live recall path.
 
 ### Data lineage and DLP
 
@@ -434,6 +500,11 @@ compliance checklist. Each box is one of:
 - [~] Call-rate + tool-distribution + token anomaly detectors live.
       Cloud Monitoring alerts in place; z-score / χ² baselines are
       roadmap.
+- [x] First-pass triage + dwell-time / coverage instrumented.
+      (`aop_common/triage.py`; `aop_alert_dwell_seconds`,
+      `aop_alert_triage_total`, and the `detection_dwell_p95` alert in
+      `terraform/modules/observability/`. The triage model classifier is
+      a skeleton; dwell/coverage stamping and emission are live.)
 - [ ] Replay tool available. **Gap** — Roadmap.
 
 ### Content filters
@@ -449,7 +520,8 @@ compliance checklist. Each box is one of:
 ### Human oversight
 
 - [~] Kill-switch halts a session in < 1 minute. Slack `Reject`
-      halts the action chain; full session-level halt is roadmap.
+      halts the action chain; session-level halt is *designed* in
+      `docs/DEFENSIVE-OPERATIONS.md` §4; implementation is roadmap.
 - [x] Override API emits audit event.
       (`services/slack-notifier/interactivity.py` → `ops.audit`)
 - [x] Alerts are contextualised (who / what / why / next /
@@ -470,11 +542,14 @@ compliance checklist. Each box is one of:
 ### Incident response
 
 - [~] Runbook per incident class. Per-action-class runbooks exist
-      (`services/action-broker/executors/*.py`); per-incident-class
-      runbooks are roadmap.
+      (`services/action-broker/executors/*.py`); the defensive-operations
+      runbook (`docs/DEFENSIVE-OPERATIONS.md`) now covers triage, the
+      MITRE ATT&CK coverage map, and emergency-change procedures;
+      per-incident-class detail is still expanding.
 - [ ] Forensic export procedure documented. **Gap** — Roadmap.
-- [ ] Quarterly DR / kill-switch exercise. **Gap** — operationalised
-      by deployer.
+- [~] Quarterly DR / kill-switch exercise. Exercise script (five
+      simultaneous incidents) documented in `docs/DEFENSIVE-OPERATIONS.md`
+      §5; execution cadence operationalised by deployer.
 
 ---
 
@@ -512,18 +587,28 @@ graduation are, in priority order:
 1. **Per-principal budgets** (§4.4 / §19 Governor).
 2. **Regression eval harness** (§16.3 / §19 Evaluation).
 3. **Hash-chained audit + signed exports** (§8.2 / §19 Audit).
-4. **Anomaly detectors (z-score / χ²)** (§9.2 / §19 Observability).
-5. **Session-level kill-switch** (§14.1 / §19 Human oversight).
-6. **Memory Bank app-layer controls** (§11.6 / §19 Memory). Memory Bank is now
-   wired in Terraform with a retention TTL; user-scoped deletion, cross-session
-   isolation, and re-filtering retrieved memory remain app-layer work.
+4. **Anomaly detectors (z-score / χ²)** (§9.2 / §19 Observability). First-pass
+   triage and dwell-time/coverage instrumentation now exist
+   (`aop_common/triage.py`, `terraform/modules/observability/`); statistical
+   (z-score / χ²) baselines remain.
+5. **Session-level kill-switch** (§14.1 / §19 Human oversight). Design specified
+   in `docs/DEFENSIVE-OPERATIONS.md` §4; implementation remains.
+6. **Memory Bank app-layer controls** (§11.6 / §19 Memory). The app-layer guard
+   is now implemented and unit-tested (`aop_common/memory.py`: cross-session /
+   tenant isolation, content-hash integrity, TTL-at-recall, untrusted
+   re-filtering). Remaining work is wiring the guard into the live Memory Bank
+   store/recall transport.
 7. **Data lineage** (§11.7 / §19 Data lineage).
 8. **SLSA Level 3 + container-image signing/admission + MCP catalogue-drift
    detection** (§12.3 / ASI04). SBOM (CycloneDX + SPDX), Sigstore-signed build
    provenance, and the AIBOM inventory now exist; remaining supply-chain work
    is L3 provenance, image signing at an admission controller, and session-start
    tool-catalogue diffing.
-9. **Per-incident-class runbooks + forensic export** (§15.2).
+9. **Per-incident-class runbooks + forensic export** (§15.2). The
+   defensive-operations runbook (`docs/DEFENSIVE-OPERATIONS.md`) now covers
+   triage, the MITRE ATT&CK coverage map, the multi-incident tabletop, and
+   emergency-change procedures; per-incident-class detail and the forensic
+   export procedure remain.
 10. **Replay tool** (§9.3 / §19 Observability).
 11. **Agent cards + A2A wiring** (framework §3.3 / Appendix E).
 
