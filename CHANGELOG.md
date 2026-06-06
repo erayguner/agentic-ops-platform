@@ -5,6 +5,13 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.6.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.2...v0.6.0) (2026-06-06)
+
+
+### Features
+
+* implement first-pass triage and dwell time metrics ([212f2af](https://github.com/erayguner/agentic-ops-platform/commit/212f2af883dd047640424f4693e76d652a6e6ca2))
+
 ## [0.5.2](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.1...v0.5.2) (2026-06-05)
 
 
