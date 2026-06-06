@@ -66,6 +66,38 @@ variable "notifier_url" {
   default     = "https://slack-notifier-placeholder.example.com"
 }
 
+variable "enable_slo" {
+  type        = bool
+  description = <<-EOT
+    Create the action-broker availability SLO. The current good_total_ratio SLI
+    over the uptime check_passed (GAUGE BOOL) metric is rejected by the API
+    (invalid ALIGN_DELTA aligner) and needs reworking. Default true.
+  EOT
+  default     = true
+}
+
+variable "enable_agent_engine_alerts" {
+  type        = bool
+  description = <<-EOT
+    Create the alert policies that watch Vertex AI Agent Engine (ReasoningEngine)
+    system metrics (agent-down, decision-latency). Those metric types only exist
+    once an agent is deployed and emitting, so creating the alerts beforehand
+    404s. Set false until agents are running. Default true.
+  EOT
+  default     = true
+}
+
+variable "enable_slack_notification_channel" {
+  type        = bool
+  description = <<-EOT
+    Create the native Slack monitoring notification channel. It is verified
+    against the live Slack token at creation, so set false for validation or
+    token-less deploys. When false, alert policies deliver via the Pub/Sub
+    channel only. Default true.
+  EOT
+  default     = true
+}
+
 variable "labels" {
   type        = map(string)
   description = "Additional labels to merge with the standard AOP label set."

@@ -8,6 +8,14 @@ locals {
     },
     var.labels,
   )
+
+  # Alert delivery channels: the Pub/Sub channel is always present; the native
+  # Slack channel is added only when enabled (it requires a live Slack token,
+  # which a validation/no-token deploy will not have).
+  alert_notification_channels = compact(concat(
+    var.enable_slack_notification_channel ? [google_monitoring_notification_channel.slack_primary[0].id] : [],
+    [google_monitoring_notification_channel.pubsub_redundant.id],
+  ))
 }
 
 # ---------------------------------------------------------------------------
@@ -16,6 +24,11 @@ locals {
 # ---------------------------------------------------------------------------
 
 resource "google_monitoring_notification_channel" "slack_primary" {
+  # Native Slack channels are verified against the live token at create time;
+  # gate off for token-less / validation deploys. Alerts still deliver via the
+  # Pub/Sub channel. Default true preserves the full posture in real envs.
+  count = var.enable_slack_notification_channel ? 1 : 0
+
   project      = var.project_id
   display_name = "AOP Slack — ${var.slack_channel_incidents}"
   type         = "slack"
@@ -59,6 +72,11 @@ resource "google_monitoring_notification_channel" "pubsub_redundant" {
 # ---------------------------------------------------------------------------
 
 resource "google_monitoring_alert_policy" "agent_down" {
+  # References the aiplatform ReasoningEngine system metric, which only exists
+  # once an agent (reasoning engine) is deployed and emitting. Gate off when no
+  # agents are running, else alert creation 404s on the missing metric type.
+  count = var.enable_agent_engine_alerts ? 1 : 0
+
   project      = var.project_id
   display_name = "AOP — Agent down"
   combiner     = "OR"
@@ -77,10 +95,7 @@ resource "google_monitoring_alert_policy" "agent_down" {
     }
   }
 
-  notification_channels = [
-    google_monitoring_notification_channel.slack_primary.id,
-    google_monitoring_notification_channel.pubsub_redundant.id,
-  ]
+  notification_channels = local.alert_notification_channels
 
   alert_strategy {
     auto_close = "1800s"
@@ -94,6 +109,9 @@ resource "google_monitoring_alert_policy" "agent_down" {
 # ---------------------------------------------------------------------------
 
 resource "google_monitoring_alert_policy" "decision_latency_p95" {
+  # References the aiplatform ReasoningEngine system metric (see agent_down).
+  count = var.enable_agent_engine_alerts ? 1 : 0
+
   project      = var.project_id
   display_name = "AOP — Decision latency p95 > 60 s"
   combiner     = "OR"
@@ -113,9 +131,7 @@ resource "google_monitoring_alert_policy" "decision_latency_p95" {
     }
   }
 
-  notification_channels = [
-    google_monitoring_notification_channel.slack_primary.id,
-  ]
+  notification_channels = local.alert_notification_channels
 
   alert_strategy {
     auto_close = "3600s"
@@ -137,7 +153,7 @@ resource "google_monitoring_alert_policy" "action_rollback_rate" {
   conditions {
     display_name = "Action rollback log-based metric exceeds 5% threshold"
     condition_threshold {
-      filter          = "metric.type = \"logging.googleapis.com/user/aop_action_rollback_count\""
+      filter          = "metric.type = \"logging.googleapis.com/user/aop_action_rollback_count\" AND resource.type = \"cloud_run_revision\""
       duration        = "600s"
       comparison      = "COMPARISON_GT"
       threshold_value = 5
@@ -148,16 +164,19 @@ resource "google_monitoring_alert_policy" "action_rollback_rate" {
     }
   }
 
-  notification_channels = [
-    google_monitoring_notification_channel.slack_primary.id,
-    google_monitoring_notification_channel.pubsub_redundant.id,
-  ]
+  notification_channels = local.alert_notification_channels
 
   alert_strategy {
     auto_close = "604800s" # 7 days
   }
 
   user_labels = local.common_labels
+
+  # The condition filter references this log-based metric by type (not a
+  # resource reference), so Terraform cannot infer the dependency. Make it
+  # explicit: the metric must be created before this policy and destroyed
+  # after it (else metric deletion fails: "still used in an alerting policy").
+  depends_on = [google_logging_metric.action_rollback_count]
 }
 
 # ---------------------------------------------------------------------------
@@ -172,7 +191,7 @@ resource "google_logging_metric" "token_spend" {
 
   metric_descriptor {
     metric_kind  = "DELTA"
-    value_type   = "INT64"
+    value_type   = "DISTRIBUTION" # a value_extractor is only valid on DISTRIBUTION metrics
     unit         = "1"
     display_name = "AOP token spend"
     labels {
@@ -187,6 +206,14 @@ resource "google_logging_metric" "token_spend" {
   }
 
   value_extractor = "EXTRACT(jsonPayload.model.tokens_in)"
+
+  bucket_options {
+    exponential_buckets {
+      num_finite_buckets = 64
+      growth_factor      = 2.0
+      scale              = 1.0
+    }
+  }
 }
 
 # ---------------------------------------------------------------------------
@@ -329,7 +356,7 @@ resource "google_monitoring_alert_policy" "detection_dwell_p95" {
   conditions {
     display_name = "Critical-severity dwell p95 exceeds 3600 s"
     condition_threshold {
-      filter          = "metric.type = \"logging.googleapis.com/user/aop_alert_dwell_seconds\" AND metric.labels.severity = \"critical\""
+      filter          = "metric.type = \"logging.googleapis.com/user/aop_alert_dwell_seconds\" AND resource.type = \"aiplatform.googleapis.com/ReasoningEngine\" AND metric.labels.severity = \"critical\""
       duration        = "0s"
       comparison      = "COMPARISON_GT"
       threshold_value = 3600
@@ -340,16 +367,17 @@ resource "google_monitoring_alert_policy" "detection_dwell_p95" {
     }
   }
 
-  notification_channels = [
-    google_monitoring_notification_channel.slack_primary.id,
-    google_monitoring_notification_channel.pubsub_redundant.id,
-  ]
+  notification_channels = local.alert_notification_channels
 
   alert_strategy {
     auto_close = "86400s"
   }
 
   user_labels = local.common_labels
+
+  # Explicit dependency on the referenced log-based metric (filter uses it by
+  # type) so create/destroy ordering is correct.
+  depends_on = [google_logging_metric.alert_dwell_seconds]
 }
 
 # ---------------------------------------------------------------------------
@@ -378,7 +406,7 @@ resource "google_monitoring_uptime_check_config" "action_broker" {
     }
   }
 
-  selected_regions = ["EUROPE"]
+  selected_regions = ["USA", "EUROPE", "ASIA_PACIFIC"]
 }
 
 # ---------------------------------------------------------------------------
@@ -407,7 +435,7 @@ resource "google_monitoring_uptime_check_config" "slack_notifier" {
     }
   }
 
-  selected_regions = ["EUROPE"]
+  selected_regions = ["USA", "EUROPE", "ASIA_PACIFIC"]
 }
 
 # ---------------------------------------------------------------------------
@@ -428,6 +456,11 @@ resource "google_monitoring_custom_service" "action_broker" {
 # ---------------------------------------------------------------------------
 
 resource "google_monitoring_slo" "broker_availability" {
+  # The good_total_ratio SLI below aggregates uptime_check/check_passed, a
+  # GAUGE BOOL metric, which the API rejects with an ALIGN_DELTA aligner error.
+  # A correct uptime-based availability SLO needs a reworked SLI; gate until then.
+  count = var.enable_slo ? 1 : 0
+
   project      = var.project_id
   service      = google_monitoring_custom_service.action_broker.service_id
   slo_id       = "aop-broker-availability"

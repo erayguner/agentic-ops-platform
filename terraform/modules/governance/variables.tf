@@ -18,6 +18,12 @@ variable "deletion_policy_prevent" {
   default     = false
 }
 
+variable "delete_contents_on_destroy" {
+  type        = bool
+  description = "When true, terraform destroy drops the audit dataset even if it contains tables auto-created by the log sink (which Terraform does not manage). Dev/test only; false in prod."
+  default     = false
+}
+
 variable "region" {
   type        = string
   description = "Default GCP region."
@@ -50,7 +56,41 @@ variable "audit_bq_table_id" {
 
 variable "scc_notification_pubsub_topic" {
   type        = string
-  description = "Full Pub/Sub topic resource name for SCC notifications (e.g. projects/<id>/topics/ops.signals)."
+  description = "Full Pub/Sub topic resource name for SCC notifications (e.g. projects/<id>/topics/ops.signals). Only used when enable_scc = true."
+  default     = ""
+}
+
+variable "enable_org_policies" {
+  type        = bool
+  description = <<-EOT
+    Create the project-scoped Org Policy constraints (disable SA key creation,
+    EU resource-location restriction). Requires the project to belong to a GCP
+    organization AND orgpolicy.googleapis.com enabled — standalone projects with
+    no org cannot set org policies. Default false (safe for no-org projects).
+  EOT
+  default     = false
+}
+
+variable "enable_scc" {
+  type        = bool
+  description = <<-EOT
+    Create the project-scoped Security Command Center notification config and
+    BigQuery export. SCC (all tiers, including free Standard) is activated at the
+    organization level; standalone projects with no org cannot use it. Default
+    false. Requires scc_notification_pubsub_topic when true.
+  EOT
+  default     = false
+}
+
+variable "enable_model_armor" {
+  type        = bool
+  description = <<-EOT
+    Create the Model Armor floor setting + default template (prompt-injection,
+    RAI, malicious-URI, sensitive-data screening). Requires modelarmor.googleapis.com
+    and a supported model_armor_location. Default true (security baseline); set
+    false to skip when no agent traffic is screened yet or for a minimal-risk apply.
+  EOT
+  default     = true
 }
 
 variable "model_armor_location" {

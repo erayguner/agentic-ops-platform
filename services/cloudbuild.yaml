@@ -1,0 +1,19 @@
+# Shared Cloud Build config for AOP service container images.
+#
+# The service Dockerfiles use BuildKit features (`# syntax=docker/dockerfile`
+# and `RUN --mount=type=cache`). The `gcloud builds submit --tag` shortcut uses
+# a legacy non-BuildKit Docker builder and fails with
+# "the --mount option requires BuildKit". Building explicitly with
+# DOCKER_BUILDKIT=1 here keeps the optimized Dockerfiles unchanged.
+#
+# Invoke per service:
+#   gcloud builds submit services/<svc> \
+#     --config=services/cloudbuild.yaml \
+#     --substitutions=_IMAGE=<region>-docker.pkg.dev/<project>/aop-containers/<svc>:latest \
+#     --region=europe-west2
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    env: ['DOCKER_BUILDKIT=1']
+    args: ['build', '-t', '${_IMAGE}', '.']
+images:
+  - '${_IMAGE}'

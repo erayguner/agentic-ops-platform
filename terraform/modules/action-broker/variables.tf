@@ -44,6 +44,12 @@ variable "ops_audit_topic_id" {
   description = "Resource ID of the ops.audit Pub/Sub topic (broker emits audit records)."
 }
 
+variable "deletion_protection" {
+  type        = bool
+  description = "Cloud Run deletion protection. Provider default is true (blocks terraform destroy); set false in dev/test for clean teardown, true in prod."
+  default     = false
+}
+
 variable "min_instance_count" {
   type        = number
   description = "Minimum Cloud Run instances (0 = scale-to-zero in dev)."

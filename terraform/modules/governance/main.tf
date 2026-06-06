@@ -29,6 +29,11 @@ resource "google_bigquery_dataset" "audit_logs" {
   # and the ops.audit topic protection in the prod root.
   deletion_policy = var.deletion_policy_prevent ? "PREVENT" : "DELETE"
 
+  # The _AllLogs sink auto-creates per-log-type tables in this dataset that
+  # Terraform does not manage; without this, `terraform destroy` of the dataset
+  # fails ("dataset still contains tables"). Dev/test only; keep false in prod.
+  delete_contents_on_destroy = var.delete_contents_on_destroy
+
   default_table_expiration_ms = null # retention managed by table-level policies
 
   labels = local.common_labels
@@ -68,6 +73,8 @@ resource "google_bigquery_dataset_iam_member" "audit_sink_writer" {
 # ---------------------------------------------------------------------------
 
 resource "google_model_armor_floorsetting" "project" {
+  count = var.enable_model_armor ? 1 : 0
+
   parent   = "projects/${var.project_id}"
   location = var.model_armor_location
 
@@ -118,6 +125,8 @@ resource "google_model_armor_floorsetting" "project" {
 # ---------------------------------------------------------------------------
 
 resource "google_model_armor_template" "aop_default" {
+  count = var.enable_model_armor ? 1 : 0
+
   project     = var.project_id
   location    = var.model_armor_location
   template_id = "aop-default-v1"
@@ -157,6 +166,8 @@ resource "google_model_armor_template" "aop_default" {
 # ---------------------------------------------------------------------------
 
 resource "google_scc_project_notification_config" "aop" {
+  count = var.enable_scc ? 1 : 0
+
   project      = var.project_id
   config_id    = "aop-scc-notify"
   description  = "AOP: route SCC findings to ops.signals Pub/Sub topic"
@@ -172,6 +183,8 @@ resource "google_scc_project_notification_config" "aop" {
 # ---------------------------------------------------------------------------
 
 resource "google_scc_project_scc_big_query_export" "aop" {
+  count = var.enable_scc ? 1 : 0
+
   project             = var.project_id
   big_query_export_id = "aop-scc-bq-export"
   description         = "Export all SCC findings to BigQuery for AOP analytics and compliance."
@@ -196,6 +209,8 @@ resource "google_scc_project_scc_big_query_export" "aop" {
 
 # Disable SA key creation — prevents re-introduction of long-lived credentials.
 resource "google_org_policy_policy" "disable_sa_key_creation" {
+  count = var.enable_org_policies ? 1 : 0
+
   name   = "projects/${var.project_id}/policies/iam.disableServiceAccountKeyCreation"
   parent = "projects/${var.project_id}"
 
@@ -208,6 +223,8 @@ resource "google_org_policy_policy" "disable_sa_key_creation" {
 
 # Restrict resource locations to EU — data-residency baseline.
 resource "google_org_policy_policy" "resource_locations" {
+  count = var.enable_org_policies ? 1 : 0
+
   name   = "projects/${var.project_id}/policies/gcp.resourceLocations"
   parent = "projects/${var.project_id}"
 

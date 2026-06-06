@@ -14,25 +14,23 @@ locals {
 # Essential Contacts
 # ---------------------------------------------------------------------------
 
-resource "google_essential_contacts_contact" "security" {
-  parent                              = "projects/${var.project_id}"
-  email                               = var.essential_contacts_email
-  language_tag                        = var.essential_contacts_language
-  notification_category_subscriptions = ["SECURITY"]
+# The Essential Contacts API keys a contact by email and rejects a second
+# contact with the same address (409 CONTACT_ALREADY_EXISTS). The previous
+# design created three contacts that all shared var.essential_contacts_email,
+# which fails whenever the same address covers multiple categories (the common
+# case). Consolidate to ONE contact subscribed to all relevant categories.
+moved {
+  from = google_essential_contacts_contact.security
+  to   = google_essential_contacts_contact.primary
 }
 
-resource "google_essential_contacts_contact" "billing" {
+resource "google_essential_contacts_contact" "primary" {
   parent                              = "projects/${var.project_id}"
   email                               = var.essential_contacts_email
   language_tag                        = var.essential_contacts_language
-  notification_category_subscriptions = ["BILLING"]
-}
+  notification_category_subscriptions = ["SECURITY", "TECHNICAL", "BILLING"]
 
-resource "google_essential_contacts_contact" "technical" {
-  parent                              = "projects/${var.project_id}"
-  email                               = var.essential_contacts_email
-  language_tag                        = var.essential_contacts_language
-  notification_category_subscriptions = ["TECHNICAL"]
+  depends_on = [google_project_service.apis]
 }
 
 # ---------------------------------------------------------------------------
@@ -48,6 +46,10 @@ resource "google_artifact_registry_repository" "aop_containers" {
   format        = "DOCKER"
 
   labels = local.common_labels
+
+  # Wait for artifactregistry.googleapis.com before creating the repo (avoids
+  # the "API has not been used in project before" first-apply race).
+  depends_on = [google_project_service.apis]
 }
 
 # ---------------------------------------------------------------------------
@@ -59,6 +61,10 @@ resource "google_compute_network" "aop_vpc" {
   name                    = var.vpc_name
   auto_create_subnetworks = false
   description             = "AOP baseline custom-mode VPC"
+
+  # Wait for compute.googleapis.com before creating network resources (subnet
+  # and firewalls reference this network, so they inherit the ordering).
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_compute_subnetwork" "aop_subnet_ew2" {
@@ -137,6 +143,7 @@ locals {
     "bigquery.googleapis.com",
     "securitycenter.googleapis.com",
     "modelarmor.googleapis.com",
+    "cloudbuild.googleapis.com",
   ]
 }
 

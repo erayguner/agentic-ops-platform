@@ -335,6 +335,11 @@ resource "google_cloud_run_v2_service" "action_broker" {
   name     = "action-broker"
   location = var.region
 
+  # google_cloud_run_v2_service defaults deletion_protection=true in provider
+  # v7, which blocks `terraform destroy`. Make it explicit and parameterised:
+  # default false for dev/test (clean teardown); prod sets true.
+  deletion_protection = var.deletion_protection
+
   template {
     service_account = google_service_account.action_broker.email
 

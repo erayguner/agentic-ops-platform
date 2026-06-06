@@ -58,6 +58,24 @@ variable "slack_channel_platform" {
   default     = "#ops-platform"
 }
 
+variable "deletion_protection" {
+  type        = bool
+  description = "Cloud Run deletion protection. Provider default is true (blocks terraform destroy); set false in dev/test for clean teardown, true in prod."
+  default     = false
+}
+
+variable "seed_placeholder_secret_versions" {
+  type        = bool
+  description = "When true, seed a placeholder version for slack-oauth-token and slack-signing-secret so the Cloud Run revision can deploy without out-of-band secrets. Non-prod only; LIVE_SLACK_ENABLED must be false."
+  default     = false
+}
+
+variable "placeholder_secret_value" {
+  type        = string
+  description = "Non-secret placeholder written to the seeded secret versions when seed_placeholder_secret_versions = true."
+  default     = "REPLACE_VIA_CI-not-a-real-secret"
+}
+
 variable "min_instance_count" {
   type        = number
   description = "Minimum Cloud Run instances."

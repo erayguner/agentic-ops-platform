@@ -254,7 +254,33 @@ resource "google_bigquery_table" "audit_events" {
   labels = local.common_labels
 }
 
+# A BigQuery subscription requires the Pub/Sub service agent to hold BigQuery
+# write (+ metadata) access on the destination; Pub/Sub validates this at
+# create time and returns 403 "caller does not have permission" otherwise.
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
+resource "google_bigquery_dataset_iam_member" "pubsub_audit_data_editor" {
+  count = var.enable_bq_audit_subscription ? 1 : 0
+
+  project    = var.project_id
+  dataset_id = var.audit_bq_dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "pubsub_audit_metadata_viewer" {
+  count = var.enable_bq_audit_subscription ? 1 : 0
+
+  project = var.project_id
+  role    = "roles/bigquery.metadataViewer"
+  member  = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
 resource "google_pubsub_subscription" "ops_audit_bq" {
+  count = var.enable_bq_audit_subscription ? 1 : 0
+
   project = var.project_id
   name    = "ops.audit.bq-sub"
   topic   = google_pubsub_topic.ops_audit.name
@@ -272,7 +298,11 @@ resource "google_pubsub_subscription" "ops_audit_bq" {
 
   labels = local.common_labels
 
-  depends_on = [google_bigquery_table.audit_events]
+  depends_on = [
+    google_bigquery_table.audit_events,
+    google_bigquery_dataset_iam_member.pubsub_audit_data_editor,
+    google_project_iam_member.pubsub_audit_metadata_viewer,
+  ]
 }
 
 # ---------------------------------------------------------------------------
@@ -285,6 +315,13 @@ resource "google_pubsub_subscription" "ops_audit_bq" {
 # ---------------------------------------------------------------------------
 
 resource "google_eventarc_trigger" "audit_logs_to_signals" {
+  # Requires a Cloud Run service named "orchestrator" to exist as the event
+  # destination. The scaffold's orchestrator is a Vertex AI reasoning engine,
+  # not a Cloud Run service, so this trigger cannot be created on a clean
+  # first apply. Gate it off (default on preserves legacy dev/prod intent);
+  # wire it up once an orchestrator ingest endpoint exists.
+  count = var.enable_eventarc_triggers ? 1 : 0
+
   project         = var.project_id
   name            = "aop-audit-logs-to-signals"
   location        = var.region
@@ -323,6 +360,13 @@ resource "google_eventarc_trigger" "audit_logs_to_signals" {
 # ---------------------------------------------------------------------------
 
 resource "google_eventarc_trigger" "notifications_to_slack_notifier" {
+  # Destination is the slack-notifier Cloud Run service, which is deployed
+  # AFTER eventing in the dependency graph (no Terraform edge couples them,
+  # since the destination is referenced by service name string). Gate off to
+  # keep eventing's first apply clean; create on a follow-up apply once the
+  # notifier service exists.
+  count = var.enable_eventarc_triggers ? 1 : 0
+
   project         = var.project_id
   name            = "aop-notifications-to-slack-notifier"
   location        = var.region
