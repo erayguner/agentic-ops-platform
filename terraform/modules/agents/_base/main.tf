@@ -69,6 +69,16 @@ resource "google_project_iam_member" "custom" {
   member  = "serviceAccount:${google_service_account.this.email}"
 }
 
+# Read-only Google Cloud MCP access. roles/mcp.toolUser only permits invoking the
+# MCP tool surface; the data each agent can read is bounded by the viewer roles
+# passed via var.project_iam_roles (least privilege). Writes go via the Action
+# Broker. See docs/deployment/MCP-SERVERS.md.
+resource "google_project_iam_member" "mcp_tool_user" {
+  project = var.project_id
+  role    = "roles/mcp.toolUser"
+  member  = "serviceAccount:${google_service_account.this.email}"
+}
+
 # ---------------------------------------------------------------------------
 # Pub/Sub publisher bindings — audit topic is required; others are optional.
 # ---------------------------------------------------------------------------

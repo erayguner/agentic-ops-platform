@@ -41,11 +41,21 @@ DEVELOPER_KNOWLEDGE_MCP = (
     "https://developerknowledge.googleapis.com/mcp"  # GA — Google developer documentation lookup
 )
 
-# Per-agent allow-lists (DESIGN-REVIEW §4.2).
+# Per-agent allow-lists — curated to the purpose-fit, READ-ONLY set for the AOP
+# architecture (Cloud Run + Pub/Sub + BigQuery + observability; no GKE/Compute).
+# Policy (full rationale in docs/deployment/MCP-SERVERS.md):
+#   * Read-only only. Each agent SA holds viewer roles + roles/mcp.toolUser;
+#     every mutation/remediation goes through the Action Broker (decision/
+#     execution separation) — never a direct MCP write.
+#   * Excluded: GKE/Compute (not in the stack), Resource Manager (overlaps Asset
+#     Inventory), SecOps/Chronicle (not used here), and Preview/unverified
+#     servers (Gemini Cloud Assist, Developer Knowledge, Agent Registry,
+#     Recommender) to avoid broad/ambiguous surface.
+#   * Deferred: BigQuery + Pub/Sub MCP. FinOps billing-BigQuery (read-only) is
+#     the first planned addition — see MCP-SERVERS.md.
 ORCHESTRATOR_MCP_ENDPOINTS: list[str] = [
     LOGGING_MCP,
-    PUBSUB_MCP,
-    RESOURCE_MANAGER_MCP,
+    MONITORING_MCP,
 ]
 
 SRE_MCP_ENDPOINTS: list[str] = [
@@ -53,36 +63,25 @@ SRE_MCP_ENDPOINTS: list[str] = [
     MONITORING_MCP,
     TRACE_MCP,
     ERROR_REPORTING_MCP,
-    GKE_MCP,
     CLOUD_RUN_MCP,
     NETWORK_INTELLIGENCE_MCP,
-    GEMINI_CLOUD_ASSIST_MCP,
-    DEVELOPER_KNOWLEDGE_MCP,
 ]
 
 DEVSECOPS_MCP_ENDPOINTS: list[str] = [
     LOGGING_MCP,
+    MONITORING_MCP,
     ASSET_INVENTORY_MCP,
-    RESOURCE_MANAGER_MCP,
-    COMPUTE_MCP,
-    DEVELOPER_KNOWLEDGE_MCP,
-    # SecOps endpoint is region-parameterised; resolved at runtime via build_mcp_toolsets
 ]
 
 PLATFORM_MCP_ENDPOINTS: list[str] = [
+    LOGGING_MCP,
+    MONITORING_MCP,
     ASSET_INVENTORY_MCP,
-    RESOURCE_MANAGER_MCP,
-    GKE_MCP,
     CLOUD_RUN_MCP,
-    COMPUTE_MCP,
-    DEVELOPER_KNOWLEDGE_MCP,
 ]
 
 FINOPS_MCP_ENDPOINTS: list[str] = [
-    BIGQUERY_MCP,
-    RECOMMENDER_MCP,
-    GEMINI_CLOUD_ASSIST_MCP,
-    DEVELOPER_KNOWLEDGE_MCP,
+    MONITORING_MCP,
 ]
 
 

@@ -347,6 +347,61 @@ resource "google_storage_bucket_iam_member" "agent_artifact_reader" {
 }
 
 # ---------------------------------------------------------------------------
+# Google Cloud MCP access (read-only) — see docs/deployment/MCP-SERVERS.md.
+#
+# roles/mcp.toolUser lets each agent SA invoke the managed Google Cloud MCP
+# servers wired per-agent in agents/aop_common/mcp_tools.py. It only permits
+# using the MCP tool surface; the *data* an agent can read is still bounded by
+# its viewer roles below (least privilege). No write roles are granted here —
+# every mutation/remediation goes through the Action Broker.
+# ---------------------------------------------------------------------------
+resource "google_project_iam_member" "agent_mcp_tool_user" {
+  for_each = local.all_agent_sa_emails
+
+  project = var.project_id
+  role    = "roles/mcp.toolUser"
+  member  = "serviceAccount:${each.value}"
+}
+
+# Additional viewer roles so each agent's MCP allow-list resolves to real read
+# access (orchestrator + SRE already hold logging/monitoring viewer above).
+resource "google_project_iam_member" "sre_networkmanagement_viewer" {
+  project = var.project_id
+  role    = "roles/networkmanagement.viewer" # Network Intelligence MCP
+  member  = "serviceAccount:${google_service_account.sre.email}"
+}
+
+resource "google_project_iam_member" "devsecops_monitoring_viewer" {
+  project = var.project_id
+  role    = "roles/monitoring.viewer" # Monitoring MCP
+  member  = "serviceAccount:${google_service_account.devsecops.email}"
+}
+
+resource "google_project_iam_member" "platform_logging_viewer" {
+  project = var.project_id
+  role    = "roles/logging.viewer" # Logging MCP
+  member  = "serviceAccount:${google_service_account.platform.email}"
+}
+
+resource "google_project_iam_member" "platform_monitoring_viewer" {
+  project = var.project_id
+  role    = "roles/monitoring.viewer" # Monitoring MCP
+  member  = "serviceAccount:${google_service_account.platform.email}"
+}
+
+resource "google_project_iam_member" "platform_run_viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer" # Cloud Run MCP (read-only inspection)
+  member  = "serviceAccount:${google_service_account.platform.email}"
+}
+
+resource "google_project_iam_member" "finops_monitoring_viewer" {
+  project = var.project_id
+  role    = "roles/monitoring.viewer" # Monitoring MCP
+  member  = "serviceAccount:${google_service_account.finops.email}"
+}
+
+# ---------------------------------------------------------------------------
 # Reasoning Engines (Agent Engine deployments) — one per agent
 # ---------------------------------------------------------------------------
 

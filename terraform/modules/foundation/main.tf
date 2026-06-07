@@ -144,6 +144,12 @@ locals {
     "securitycenter.googleapis.com",
     "modelarmor.googleapis.com",
     "cloudbuild.googleapis.com",
+    # Backing APIs for the read-only Google Cloud MCP servers the agents consume
+    # (observability / diagnostics / RCA / inspection). See docs/deployment/MCP-SERVERS.md.
+    "cloudtrace.googleapis.com",
+    "clouderrorreporting.googleapis.com",
+    "cloudasset.googleapis.com",
+    "networkmanagement.googleapis.com",
   ]
 }
 
