@@ -79,7 +79,7 @@ module "eventing" {
   region                       = var.region
   audit_bq_dataset_id          = local.audit_bq_dataset_id
   enable_eventarc_triggers     = false
-  enable_bq_audit_subscription = false # ops.audit AVRO schema vs audit_events BQ table schema diverge (see DEPLOYMENT-LOG F13)
+  enable_bq_audit_subscription = true # F13 fixed: ops.audit AVRO ↔ audit_events BQ schema reconciled
 
   depends_on = [module.foundation, module.governance]
 }
@@ -145,7 +145,7 @@ module "observability" {
   slack_channel_security            = var.slack_channel_security
   enable_slack_notification_channel = false
   enable_agent_engine_alerts        = false # no reasoning engines deployed (see DEPLOYMENT-LOG F14)
-  enable_slo                        = false # uptime-based SLI needs rework (see DEPLOYMENT-LOG F15)
+  enable_slo                        = false # F15: SLI reworked to valid request-based, but an SLO needs existing metric data; a fresh never-invoked (internal) service has none → create as a 2nd-day apply
 
   depends_on = [module.slack_notifier, module.action_broker]
 }

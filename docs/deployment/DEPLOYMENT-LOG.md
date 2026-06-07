@@ -220,3 +220,64 @@ no-org project. The 18 findings above were fixed (or gated with rationale) so
 future deploys are repeatable, auditable, cost-aware, secure, and cleanly
 removable with no hidden manual steps beyond the two documented gcloud items
 (image build; residual cleanup).
+
+---
+
+## 11. Follow-up — un-gating, dev/prod wiring, agent research (branch `feat/aop-ungate-and-roots`)
+
+Re-verified by a **second full deploy → destroy cycle** with the fixed items enabled.
+
+### B — fixing the gated items
+- **B1 ops.audit → BigQuery subscription — FIXED & VERIFIED.** Reconciled the
+  `audit_events` BQ table to the `ops.audit` AVRO schema: `evidence_refs` →
+  `STRING REPEATED`; `policy_decision`/`model`/`outcome` → `STRING` (they are
+  JSON-encoded strings in AVRO). Re-deployed with `enable_bq_audit_subscription
+  = true`: the subscription created and targets `audit_logs.audit_events`.
+  Requires the Pub/Sub service-agent BigQuery IAM from F13.
+- **Other observability — FIXED & VERIFIED.** token_spend DISTRIBUTION, uptime
+  ≥3 regions, alert `resource.type` filters, and the alert→metric `depends_on`
+  all created on re-deploy. Note: alerts/SLOs referencing **just-created**
+  log-metric labels need a **2nd apply** (GCP metric-descriptor propagation,
+  "up to 10 min" — eventual consistency, not a config error).
+- **B2 SLO — SLI reworked (valid), but creation is inherently a 2nd-day op.**
+  Replaced the broken `windows_based` good_total_ratio (invalid `ALIGN_DELTA` on
+  the GAUGE BOOL `check_passed`) with a `request_based` good/total ratio over
+  `uptime_check/check_passed{checked="true"}`. The definition is valid, but an
+  SLO can only be created once the referenced metric **has time-series data** —
+  a fresh, never-invoked, scale-to-zero service has none (and the broker is
+  `INTERNAL_LOAD_BALANCER`, so a public uptime check can't reach it). Keep the
+  improved SLI; create the SLO **after the service has metric history**, ideally
+  re-based on Cloud Run request metrics. `enable_slo` default stays true; set
+  **false** in the fresh sandbox deploy.
+- **B3 Eventarc triggers — NOT fixed (architectural).** The
+  `audit_logs→orchestrator` trigger needs a Cloud Run **orchestrator ingest
+  endpoint that the architecture lacks** (orchestrator is a reasoning engine);
+  the `notifications→slack-notifier` trigger must be created **after**
+  slack-notifier. Both remain gated; wiring them is a 2nd-day apply once an
+  orchestrator HTTP endpoint exists.
+
+### C — dev/prod roots wired
+`environments/dev` and `prod` now set the new flags explicitly:
+`deletion_protection` (true prod / false dev), `enable_eventarc_triggers=false`
+(no orchestrator endpoint), governance `enable_org_policies`/`enable_scc =
+var.org_id != ""` (prod) or `false` (dev), `enable_model_armor` (true prod /
+false dev), dev `seed_placeholder_secret_versions=true`. All three roots
+`validate`. dev/prod still use the legacy `agent-runtime` (reasoning engines
+need real pickles — addressed by D).
+
+### D — agent packaging + Agent Engine (researched; CHECKPOINT before any deploy)
+- `agents/deployment/deploy.py` is a **dry-run-only skeleton** (non-dry-run
+  raises `NotImplementedError`); it shows the intended
+  `vertexai.agent_engines.create()` call. The 5 agents are ADK 2.1 stubs with
+  `build_<agent>(settings)` builders.
+- **Region:** Agent Engine is region-limited and **europe-west2 is very likely
+  unsupported** (as of Feb 2026 only Gemini 2.5 Flash is GA there). Deploying
+  agents needs us-central1 / europe-west1 / an EU multi-region — a region change
+  from the platform's europe-west2 default, or a split-region design.
+- **Path:** (a) SDK — wire `deploy.py` to `agent_engines.create()` (builds +
+  uploads a package, creates the reasoning engine); or (b) Terraform — pre-build
+  each agent pickle to GCS and set `google_vertex_ai_reasoning_engine.
+  package_pickle_gcs_uri` (the `agents/_base` module already supports this).
+- **Risk/cost:** Preview API (provider drift), real Gemini token cost once
+  running, stub agents (limited function). Billable + uncertain → **go/no-go
+  checkpoint required before deploying.**

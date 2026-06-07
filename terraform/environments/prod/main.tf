@@ -26,11 +26,12 @@ module "foundation" {
 module "eventing" {
   source = "../../modules/eventing"
 
-  project_id              = var.project_id
-  env                     = local.env
-  region                  = var.region
-  audit_bq_dataset_id     = local.audit_bq_dataset_id
-  deletion_policy_prevent = true # prod: protect ops.audit topic from accidental destroy
+  project_id               = var.project_id
+  env                      = local.env
+  region                   = var.region
+  audit_bq_dataset_id      = local.audit_bq_dataset_id
+  deletion_policy_prevent  = true  # prod: protect ops.audit topic from accidental destroy
+  enable_eventarc_triggers = false # no orchestrator Cloud Run ingest endpoint yet (see docs/deployment)
 
   depends_on = [module.foundation]
 }
@@ -49,7 +50,10 @@ module "governance" {
   folder_id                     = var.folder_id
   audit_bq_dataset_id           = local.audit_bq_dataset_id
   scc_notification_pubsub_topic = module.eventing.ops_signals_topic_id
-  deletion_policy_prevent       = true # prod: protect audit dataset from accidental destroy
+  deletion_policy_prevent       = true             # prod: protect audit dataset from accidental destroy
+  enable_org_policies           = var.org_id != "" # org-scoped; activate only when an organization exists
+  enable_scc                    = var.org_id != "" # SCC is organization-level
+  enable_model_armor            = true             # prod security baseline
 
   depends_on = [module.foundation, module.eventing]
 }
@@ -71,7 +75,8 @@ module "slack_notifier" {
   slack_channel_security        = var.slack_channel_security
   slack_channel_finops          = var.slack_channel_finops
   slack_channel_platform        = var.slack_channel_platform
-  min_instance_count            = 1 # prod: always warm
+  min_instance_count            = 1    # prod: always warm
+  deletion_protection           = true # prod: protect Cloud Run service from accidental destroy
 
   depends_on = [module.eventing]
 }
@@ -91,7 +96,8 @@ module "action_broker" {
   ops_actions_requested_topic_id = module.eventing.ops_actions_requested_topic_id
   ops_actions_executed_topic_id  = module.eventing.ops_actions_executed_topic_id
   ops_audit_topic_id             = module.eventing.ops_audit_topic_id
-  min_instance_count             = 1 # prod: keep warm
+  min_instance_count             = 1    # prod: keep warm
+  deletion_protection            = true # prod: protect Cloud Run service from accidental destroy
 
   depends_on = [module.eventing]
 }
