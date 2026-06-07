@@ -2,8 +2,8 @@
 
 LlmAgent with:
 - Structured output schema: Finding v1
-- MCP toolsets: SecOps (Chronicle), Cloud Asset Inventory, Resource Manager,
-  Cloud Logging, Compute, Action Broker (custom)
+- MCP toolsets: Cloud Logging, Cloud Monitoring, Cloud Asset Inventory,
+  Action Broker (custom)
 - System prompt from devsecops.prompts
 
 ADK 2.0 API — confirm LlmAgent constructor against adk.dev/2.0/ release notes
@@ -16,7 +16,6 @@ import logging
 from aop_common.config import AopSettings
 from aop_common.mcp_tools import (
     DEVSECOPS_MCP_ENDPOINTS,
-    SECOPS_MCP_TEMPLATE,
     build_mcp_toolsets,
 )
 from aop_common.models import ModelFactory
@@ -34,7 +33,6 @@ def build_agent_card(settings: AopSettings) -> object:
     except ImportError as exc:
         raise ImportError("google-adk>=2.1 required") from exc
 
-    secops_ep = SECOPS_MCP_TEMPLATE.format(region=settings.region)
     return AgentCard(
         name="devsecops-agent",
         description=(
@@ -42,14 +40,14 @@ def build_agent_card(settings: AopSettings) -> object:
             "vulnerability signals, and policy violations. Produces Finding v1."
         ),
         model_id=settings.model_id,
-        mcp_servers=[*DEVSECOPS_MCP_ENDPOINTS, secops_ep, settings.action_broker_mcp_endpoint],
+        mcp_servers=[*DEVSECOPS_MCP_ENDPOINTS, settings.action_broker_mcp_endpoint],
         skills=[
             AgentSkill(
                 name="investigate_security",
                 description=(
-                    "Receive an OpsSignal, query SecOps/Chronicle, Asset Inventory, "
-                    "and audit logs; produce a structured Finding with risk assessment "
-                    "and typed recommendations."
+                    "Receive an OpsSignal, query Cloud Asset Inventory and audit logs; "
+                    "produce a structured Finding with risk assessment and typed "
+                    "recommendations."
                 ),
             ),
         ],
@@ -59,11 +57,8 @@ def build_agent_card(settings: AopSettings) -> object:
 def build_devsecops_agent(settings: AopSettings) -> object:
     """Construct and return the ADK 2.0 DevSecOps LlmAgent.
 
-    The SecOps MCP endpoint is region-parameterised:
-        https://chronicle.<region>.rep.googleapis.com/mcp
-
-    The allow-list also includes Cloud Asset Inventory (Preview) behind a
-    feature flag — falls back to BigQuery-exported asset data if unavailable.
+    The allow-list includes Cloud Asset Inventory (Preview); a deployment may
+    fall back to BigQuery-exported asset data if it is unavailable.
 
     Returns:
         An ADK 2.0 LlmAgent instance.
@@ -74,16 +69,15 @@ def build_devsecops_agent(settings: AopSettings) -> object:
     ADK 2.0 API — confirm LlmAgent constructor signature against adk.dev/2.0/ release notes
     """
     ModelFactory.from_settings(settings)
-    secops_ep = SECOPS_MCP_TEMPLATE.format(region=settings.region)
     toolsets = build_mcp_toolsets(
-        [*DEVSECOPS_MCP_ENDPOINTS, secops_ep],
+        DEVSECOPS_MCP_ENDPOINTS,
         region=settings.region,
         extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
     )
     build_agent_card(settings)
 
     logger.info(
-        "build_devsecops_agent: model=%s endpoint_count=%d secops_region=%s",
+        "build_devsecops_agent: model=%s endpoint_count=%d region=%s",
         settings.model_id,
         len(toolsets),
         settings.region,
