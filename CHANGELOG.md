@@ -5,6 +5,14 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.7.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.7.0...v0.7.1) (2026-06-07)
+
+
+### Documentation
+
+* **deployment:** add deploy-validation retrospective / lessons learned ([8494ae9](https://github.com/erayguner/agentic-ops-platform/commit/8494ae9510c6786c8a2ad7958ec25010ab234463))
+* **deployment:** deploy-validation retrospective / lessons learned ([8b148b6](https://github.com/erayguner/agentic-ops-platform/commit/8b148b6071411b49c85f5ed618aa78effe3ade07))
+
 ## [0.7.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.6.0...v0.7.0) (2026-06-07)
 
 
