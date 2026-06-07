@@ -258,6 +258,10 @@ resource "google_bigquery_table" "audit_events" {
 # write (+ metadata) access on the destination; Pub/Sub validates this at
 # create time and returns 403 "caller does not have permission" otherwise.
 data "google_project" "this" {
+  # Gated with the subscription it serves: a data source is read at plan time
+  # (it needs live API access), so it must not exist when the BQ subscription is
+  # off — e.g. in credential-less `terraform test` plan runs.
+  count      = var.enable_bq_audit_subscription ? 1 : 0
   project_id = var.project_id
 }
 
@@ -267,7 +271,7 @@ resource "google_bigquery_dataset_iam_member" "pubsub_audit_data_editor" {
   project    = var.project_id
   dataset_id = var.audit_bq_dataset_id
   role       = "roles/bigquery.dataEditor"
-  member     = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+  member     = "serviceAccount:service-${data.google_project.this[0].number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
 resource "google_project_iam_member" "pubsub_audit_metadata_viewer" {
@@ -275,7 +279,7 @@ resource "google_project_iam_member" "pubsub_audit_metadata_viewer" {
 
   project = var.project_id
   role    = "roles/bigquery.metadataViewer"
-  member  = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+  member  = "serviceAccount:service-${data.google_project.this[0].number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
 
 resource "google_pubsub_subscription" "ops_audit_bq" {

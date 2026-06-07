@@ -92,6 +92,9 @@ run "eventing_plans_clean" {
     env                 = "dev"
     region              = "europe-west2"
     audit_bq_dataset_id = "audit_logs"
+    # plan-only/no-creds: the BQ subscription's data.google_project read needs
+    # live API access, so disable it here (covered by the live deploy instead).
+    enable_bq_audit_subscription = false
   }
 }
 
@@ -105,10 +108,11 @@ run "eventing_accepts_staging" {
   }
 
   variables {
-    project_id          = "ops-agents-stg"
-    env                 = "staging"
-    region              = "europe-west2"
-    audit_bq_dataset_id = "audit_logs"
+    project_id                   = "ops-agents-stg"
+    env                          = "staging"
+    region                       = "europe-west2"
+    audit_bq_dataset_id          = "audit_logs"
+    enable_bq_audit_subscription = false
   }
 }
 
