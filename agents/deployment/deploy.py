@@ -88,14 +88,18 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Deploy AOP agents to Vertex AI Agent Engine (dry-run by default).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("--agent", choices=list(AGENT_REGISTRY), required=True, help="Agent to deploy.")
+    parser.add_argument(
+        "--agent", choices=list(AGENT_REGISTRY), required=True, help="Agent to deploy."
+    )
     parser.add_argument("--project", required=True, help="Target GCP project id.")
     parser.add_argument(
         "--region",
         default="us-central1",
         help="GCP region for Agent Engine (must support it; NOT europe-west2).",
     )
-    parser.add_argument("--env", choices=["dev", "prod"], default="dev", help="Deployment environment.")
+    parser.add_argument(
+        "--env", choices=["dev", "prod"], default="dev", help="Deployment environment."
+    )
     parser.add_argument(
         "--execute",
         action="store_true",
@@ -113,7 +117,9 @@ def _reasoning_engine_resource_name(project: str, region: str, agent: str) -> st
     return f"projects/{project}/locations/{region}/reasoningEngines/{agent}-agent"
 
 
-def _print_plan(args: argparse.Namespace, spec: dict[str, str], resource_name: str, sa_email: str) -> None:
+def _print_plan(
+    args: argparse.Namespace, spec: dict[str, str], resource_name: str, sa_email: str
+) -> None:
     print(f"[AOP Deploy] agent={args.agent!r} env={args.env!r} region={args.region!r}")
     print(f"  description : {spec['description']}")
     print(f"  builder     : {spec['builder']}")
