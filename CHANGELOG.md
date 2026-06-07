@@ -5,6 +5,22 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.7.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.6.0...v0.7.0) (2026-06-07)
+
+
+### Features
+
+* **agents:** wire agent_engines.create() deploy path + agent-deploy runbook ([e7a3eb5](https://github.com/erayguner/agentic-ops-platform/commit/e7a3eb553ac4c2bd5ca725e3d12e44e5f4992330))
+* **terraform:** deploy/destroy validation root + module hardening for clean lifecycle ([e2ac0e1](https://github.com/erayguner/agentic-ops-platform/commit/e2ac0e18165236697c51c241f0fbc4a070540263))
+* **terraform:** deploy/destroy validation root + module hardening for clean lifecycle ([c559f3f](https://github.com/erayguner/agentic-ops-platform/commit/c559f3feeb53ed5df482bf262b7a7a1fd5d33c7a))
+
+
+### Bug Fixes
+
+* **eventing:** gate google_project data source so terraform test (plan, no creds) passes ([2de6a39](https://github.com/erayguner/agentic-ops-platform/commit/2de6a397ae1698611ee2c7376cf119869907cd78))
+* **terraform:** reconcile audit BQ schema, rework SLO SLI, wire dev/prod gating ([b460c46](https://github.com/erayguner/agentic-ops-platform/commit/b460c46adc933a250a9285602954995b243fc898))
+* **terraform:** un-gate audit BQ subscription, rework SLO SLI, wire dev/prod gating ([a8e87ae](https://github.com/erayguner/agentic-ops-platform/commit/a8e87aecb77f199343d6cf96aaa78cbf9b1c46fe))
+
 ## [0.6.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.5.2...v0.6.0) (2026-06-06)
 
 
