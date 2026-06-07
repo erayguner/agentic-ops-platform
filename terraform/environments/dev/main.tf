@@ -31,10 +31,11 @@ module "foundation" {
 module "eventing" {
   source = "../../modules/eventing"
 
-  project_id          = var.project_id
-  env                 = local.env
-  region              = var.region
-  audit_bq_dataset_id = local.audit_bq_dataset_id
+  project_id               = var.project_id
+  env                      = local.env
+  region                   = var.region
+  audit_bq_dataset_id      = local.audit_bq_dataset_id
+  enable_eventarc_triggers = false # no orchestrator Cloud Run ingest endpoint yet (see docs/deployment)
   # slack_notifier_url not passed here to avoid the cycle
   # eventing → slack_notifier → eventing (via Eventarc trigger destination).
   # The Eventarc trigger references the service name directly (not the URL)
@@ -60,6 +61,9 @@ module "governance" {
   folder_id                     = var.folder_id
   audit_bq_dataset_id           = local.audit_bq_dataset_id
   scc_notification_pubsub_topic = module.eventing.ops_signals_topic_id
+  enable_org_policies           = false # no organization on the dev project
+  enable_scc                    = false # SCC is organization-level
+  enable_model_armor            = false # enable once there is agent traffic to screen
 
   depends_on = [module.foundation, module.eventing]
 }
@@ -71,16 +75,18 @@ module "governance" {
 module "slack_notifier" {
   source = "../../modules/slack-notifier"
 
-  project_id                    = var.project_id
-  env                           = local.env
-  region                        = var.region
-  container_image               = var.container_image_slack_notifier
-  ops_notifications_topic_id    = module.eventing.ops_notifications_topic_id
-  ops_actions_approved_topic_id = module.eventing.ops_actions_approved_topic_id
-  slack_channel_incidents       = var.slack_channel_incidents
-  slack_channel_security        = var.slack_channel_security
-  slack_channel_finops          = var.slack_channel_finops
-  slack_channel_platform        = var.slack_channel_platform
+  project_id                       = var.project_id
+  env                              = local.env
+  region                           = var.region
+  container_image                  = var.container_image_slack_notifier
+  ops_notifications_topic_id       = module.eventing.ops_notifications_topic_id
+  ops_actions_approved_topic_id    = module.eventing.ops_actions_approved_topic_id
+  slack_channel_incidents          = var.slack_channel_incidents
+  slack_channel_security           = var.slack_channel_security
+  slack_channel_finops             = var.slack_channel_finops
+  slack_channel_platform           = var.slack_channel_platform
+  deletion_protection              = false # dev: allow clean destroy
+  seed_placeholder_secret_versions = true  # dev: deploy without real Slack tokens
 
   depends_on = [module.eventing]
 }
@@ -100,7 +106,8 @@ module "action_broker" {
   ops_actions_requested_topic_id = module.eventing.ops_actions_requested_topic_id
   ops_actions_executed_topic_id  = module.eventing.ops_actions_executed_topic_id
   ops_audit_topic_id             = module.eventing.ops_audit_topic_id
-  min_instance_count             = 0 # dev: scale to zero
+  min_instance_count             = 0     # dev: scale to zero
+  deletion_protection            = false # dev: allow clean destroy
 
   depends_on = [module.eventing]
 }

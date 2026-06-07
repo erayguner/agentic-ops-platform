@@ -469,16 +469,14 @@ resource "google_monitoring_slo" "broker_availability" {
 
   rolling_period_days = 30
 
-  windows_based_sli {
-    window_period = "3600s"
-    good_total_ratio_threshold {
-      threshold = 0.995
-      performance {
-        good_total_ratio {
-          good_service_filter  = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.labels.check_id=\"${google_monitoring_uptime_check_config.action_broker.uptime_check_id}\""
-          total_service_filter = "metric.type=\"monitoring.googleapis.com/uptime_check/request_count\" AND resource.type=\"uptime_url\" AND metric.labels.check_id=\"${google_monitoring_uptime_check_config.action_broker.uptime_check_id}\""
-        }
-      }
+  # Request-based good/total ratio over the uptime check_passed metric. The good
+  # stream is check_passed{checked="true"}; the total is all check_passed points.
+  # (The previous windows_based good_total_ratio over check_passed — a GAUGE BOOL
+  # metric — was rejected with an invalid ALIGN_DELTA aligner.)
+  request_based_sli {
+    good_total_ratio {
+      good_service_filter  = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.\"check_id\"=\"${google_monitoring_uptime_check_config.action_broker.uptime_check_id}\" AND metric.label.\"checked\"=\"true\""
+      total_service_filter = "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.\"check_id\"=\"${google_monitoring_uptime_check_config.action_broker.uptime_check_id}\""
     }
   }
 }

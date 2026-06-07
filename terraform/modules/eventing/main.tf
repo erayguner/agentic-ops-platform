@@ -245,10 +245,14 @@ resource "google_bigquery_table" "audit_events" {
     { name = "environment", type = "STRING", mode = "REQUIRED" },
     { name = "domain", type = "STRING", mode = "REQUIRED" },
     { name = "action_class", type = "STRING", mode = "NULLABLE" },
-    { name = "policy_decision", type = "JSON", mode = "NULLABLE" },
-    { name = "evidence_refs", type = "JSON", mode = "NULLABLE" },
-    { name = "model", type = "JSON", mode = "NULLABLE" },
-    { name = "outcome", type = "JSON", mode = "NULLABLE" },
+    # The ops.audit AVRO schema carries these as JSON-encoded strings and
+    # evidence_refs as array<string>. With use_topic_schema=true the BQ column
+    # types/modes must match the AVRO field types, so model/policy_decision/
+    # outcome are STRING (the JSON text) and evidence_refs is REPEATED STRING.
+    { name = "policy_decision", type = "STRING", mode = "NULLABLE" },
+    { name = "evidence_refs", type = "STRING", mode = "REPEATED" },
+    { name = "model", type = "STRING", mode = "NULLABLE" },
+    { name = "outcome", type = "STRING", mode = "NULLABLE" },
   ])
 
   labels = local.common_labels

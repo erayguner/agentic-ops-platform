@@ -12,6 +12,7 @@ deploy/destroy lifecycle run on **`agentic-ops-platform`** (europe-west2).
 | [`REQUIRED-APIS.md`](./REQUIRED-APIS.md) | Every required GCP API and where it is enabled in Terraform |
 | [`COST-ESTIMATE.md`](./COST-ESTIMATE.md) | Monthly cost by scenario, unit prices, free tier, sources |
 | [`GCLOUD-COMMANDS.md`](./GCLOUD-COMMANDS.md) | Every non-Terraform/gcloud step: reason, command, expected result, reversal |
+| [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md) | One-step-away procedure to deploy the agent tier (Agent Engine) once the agents are built out |
 
 ## What gets deployed
 
