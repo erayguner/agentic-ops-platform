@@ -32,5 +32,5 @@ variable "essential_contacts_email" {
 # with what their CI validates against. Use a tag (vX.Y.Z) — never a branch.
 variable "aop_framework_version" {
   type    = string
-  default = "v0.7.1" # x-release-please-version
+  default = "v0.8.0" # x-release-please-version
 }
