@@ -5,6 +5,13 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.8.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.7.1...v0.8.0) (2026-06-07)
+
+
+### Features
+
+* **agents:** read-only Google Cloud MCP servers for the agents (least-privilege) ([c164173](https://github.com/erayguner/agentic-ops-platform/commit/c164173186449c984b3b01ead2656467989f035a))
+
 ## [0.7.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.7.0...v0.7.1) (2026-06-07)
 
 
