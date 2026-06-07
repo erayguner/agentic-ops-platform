@@ -49,6 +49,28 @@ resource "google_secret_manager_secret" "slack_signing_secret" {
 }
 
 # ---------------------------------------------------------------------------
+# Placeholder secret versions (non-prod only).
+# Cloud Run sources these secrets at version="latest"; a revision will NOT
+# deploy unless at least one version exists. In dev/test (LIVE_SLACK_ENABLED=
+# false) the values are never used to call Slack, so we seed an obvious
+# non-secret placeholder to make the service deployable end-to-end via
+# Terraform alone. Real values are injected out-of-band (CI / manual) as a new
+# version and supersede these. Leave false in prod.
+# ---------------------------------------------------------------------------
+
+resource "google_secret_manager_secret_version" "slack_oauth_token_placeholder" {
+  count       = var.seed_placeholder_secret_versions ? 1 : 0
+  secret      = google_secret_manager_secret.slack_oauth_token.id
+  secret_data = var.placeholder_secret_value
+}
+
+resource "google_secret_manager_secret_version" "slack_signing_secret_placeholder" {
+  count       = var.seed_placeholder_secret_versions ? 1 : 0
+  secret      = google_secret_manager_secret.slack_signing_secret.id
+  secret_data = var.placeholder_secret_value
+}
+
+# ---------------------------------------------------------------------------
 # IAM — notifier SA reads Slack secrets
 # ---------------------------------------------------------------------------
 
@@ -113,6 +135,11 @@ resource "google_cloud_run_v2_service" "slack_notifier" {
   project  = var.project_id
   name     = "slack-notifier"
   location = var.region
+
+  # google_cloud_run_v2_service defaults deletion_protection=true in provider
+  # v7, which blocks `terraform destroy`. Make it explicit and parameterised:
+  # default false for dev/test (clean teardown); prod sets true.
+  deletion_protection = var.deletion_protection
 
   template {
     service_account = google_service_account.slack_notifier.email

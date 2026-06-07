@@ -1,6 +1,6 @@
 output "slack_notification_channel_id" {
-  description = "Resource ID of the primary Slack notification channel."
-  value       = google_monitoring_notification_channel.slack_primary.id
+  description = "Resource ID of the primary Slack notification channel (null when enable_slack_notification_channel = false)."
+  value       = one(google_monitoring_notification_channel.slack_primary[*].id)
 }
 
 output "pubsub_notification_channel_id" {
@@ -9,13 +9,13 @@ output "pubsub_notification_channel_id" {
 }
 
 output "alert_agent_down_id" {
-  description = "Resource name of the 'Agent down' alert policy."
-  value       = google_monitoring_alert_policy.agent_down.name
+  description = "Resource name of the 'Agent down' alert policy (null when enable_agent_engine_alerts = false)."
+  value       = one(google_monitoring_alert_policy.agent_down[*].name)
 }
 
 output "alert_decision_latency_id" {
-  description = "Resource name of the 'Decision latency p95' alert policy."
-  value       = google_monitoring_alert_policy.decision_latency_p95.name
+  description = "Resource name of the 'Decision latency p95' alert policy (null when enable_agent_engine_alerts = false)."
+  value       = one(google_monitoring_alert_policy.decision_latency_p95[*].name)
 }
 
 output "alert_rollback_rate_id" {
