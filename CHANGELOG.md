@@ -5,6 +5,20 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.8.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.0...v0.8.1) (2026-06-08)
+
+
+### Build
+
+* **deps:** bump the python-runtime group across 3 directories with 5 updates ([1189548](https://github.com/erayguner/agentic-ops-platform/commit/118954838bb4a2bc413ce7c96d9a767c282a4f7e))
+* **deps:** bump the python-runtime group across 3 directories with 5 updates ([63a55b6](https://github.com/erayguner/agentic-ops-platform/commit/63a55b6039cac58623c05dea2b5472b3b6294d55))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([bb56da9](https://github.com/erayguner/agentic-ops-platform/commit/bb56da933fc0c61e891458388c07931e131f2221))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([20ed273](https://github.com/erayguner/agentic-ops-platform/commit/20ed273eac5308c6d19002dc066e2b25cc03404d))
+* **deps:** update uvicorn[standard] requirement ([4c76711](https://github.com/erayguner/agentic-ops-platform/commit/4c767111962011b57ad6831b392e630275fa6001))
+* **deps:** update uvicorn[standard] requirement ([e1bdecb](https://github.com/erayguner/agentic-ops-platform/commit/e1bdecbf6c054ee52471e176e4ef2ed7f287d711))
+* **deps:** update uvicorn[standard] requirement from &gt;=0.48.0 to &gt;=0.49.0 in /services/action-broker ([ac342f0](https://github.com/erayguner/agentic-ops-platform/commit/ac342f057d9aedcb4e8bad6c5b866851107eec6d))
+* **deps:** update uvicorn[standard] requirement from &gt;=0.48.0 to &gt;=0.49.0 in /services/slack-notifier ([c3e906a](https://github.com/erayguner/agentic-ops-platform/commit/c3e906a7d21abe308c9b9a09324ef8fe8130a2dc))
+
 ## [0.8.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.7.1...v0.8.0) (2026-06-07)
 
 ### Features
