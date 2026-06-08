@@ -14,33 +14,33 @@ were partially fetch-truncated during research.
 The supporting platform with agents gated (what this validation deploys) is
 essentially free-tier.
 
-| Scenario | ≈ USD/mo | Driver |
-|----------|---------|--------|
-| **Infrastructure only** (agents gated, Cloud Run scale-to-zero) — *this deploy* | **$1–3** | KMS keys ($0.18, only with bootstrap), Secret Manager (~$0.12–0.30), Artifact Registry/GCS (~$0.06). No Gemini cost. |
-| **Dev, agents active, light** (5 agents × ~50 calls/day, Gemini 2.5 Flash) | **~$58** ($65 w/ Model Armor) | ~95% Gemini Flash tokens ($55.50); Agent Engine compute within free tier |
-| **Prod posture** (Cloud Run min-instances=1, heavier) | **~$175–185** | tokens + $6.48 Cloud Run idle + log retention |
-| **Heavy** | **~$690** | Gemini 2.5 Pro (4× Flash) + custom-metric ingestion (~$90) + Model Armor |
+| Scenario                                                                        | ≈ USD/mo                      | Driver                                                                                                               |
+| ------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Infrastructure only** (agents gated, Cloud Run scale-to-zero) — _this deploy_ | **$1–3**                      | KMS keys ($0.18, only with bootstrap), Secret Manager (~$0.12–0.30), Artifact Registry/GCS (~$0.06). No Gemini cost. |
+| **Dev, agents active, light** (5 agents × ~50 calls/day, Gemini 2.5 Flash)      | **~$58** ($65 w/ Model Armor) | ~95% Gemini Flash tokens ($55.50); Agent Engine compute within free tier                                             |
+| **Prod posture** (Cloud Run min-instances=1, heavier)                           | **~$175–185**                 | tokens + $6.48 Cloud Run idle + log retention                                                                        |
+| **Heavy**                                                                       | **~$690**                     | Gemini 2.5 Pro (4× Flash) + custom-metric ingestion (~$90) + Model Armor                                             |
 
 ## Unit prices (selected; full set researched)
 
-| Service | Dimension | Unit (USD) | Free tier |
-|---------|-----------|-----------|-----------|
-| Vertex AI Agent Engine | vCPU-hr / GiB-hr | $0.0864 / $0.0090 | 50 vCPU-hr + 100 GiB-hr/mo |
-| Gemini 2.5 Flash | in / out per 1M tok | $0.30 / $2.50 | none (Vertex) |
-| Gemini 2.5 Pro | in / out per 1M tok | $1.25 / $10.00 | none |
-| Cloud Run (Tier 1) | vCPU-s / GiB-s / req | $0.000024 / $0.0000025 / $0.40-1M | 180k vCPU-s, 360k GiB-s, 2M req |
-| Cloud Run min-instances=1 (idle, CPU-throttled) | per 512 MiB svc | ~$3.24/mo | — |
-| Pub/Sub | per TiB | $40 | first 10 GiB/mo |
-| Cloud KMS | active key version | $0.06/mo | — |
-| Artifact Registry | storage | $0.10/GB-mo | 0.5 GB |
-| Cloud Logging | ingestion | $0.50/GiB | 50 GiB/mo |
-| BigQuery | storage / query | $0.02/GB-mo / $6.25/TiB | 10 GB + 1 TiB/mo |
-| Cloud Monitoring | custom metric ingest / uptime | $0.258/MiB / $0.30-1k | system metrics free; 1M uptime/mo; dashboards/alerts/Slack free |
-| Secret Manager | active version / access | $0.06/mo / $0.03-10k | 6 versions + 10k ops/mo |
-| Cloud Build | default pool | $0.006/build-min | 120 build-min/day |
-| GCS (EU multi-region) | storage | $0.026/GB-mo | — |
-| Model Armor | per 1M tokens | $0.10 | 2M tokens/mo |
-| Security Command Center | n/a | **org-only — excluded** | — |
+| Service                                         | Dimension                     | Unit (USD)                        | Free tier                                                       |
+| ----------------------------------------------- | ----------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| Vertex AI Agent Engine                          | vCPU-hr / GiB-hr              | $0.0864 / $0.0090                 | 50 vCPU-hr + 100 GiB-hr/mo                                      |
+| Gemini 2.5 Flash                                | in / out per 1M tok           | $0.30 / $2.50                     | none (Vertex)                                                   |
+| Gemini 2.5 Pro                                  | in / out per 1M tok           | $1.25 / $10.00                    | none                                                            |
+| Cloud Run (Tier 1)                              | vCPU-s / GiB-s / req          | $0.000024 / $0.0000025 / $0.40-1M | 180k vCPU-s, 360k GiB-s, 2M req                                 |
+| Cloud Run min-instances=1 (idle, CPU-throttled) | per 512 MiB svc               | ~$3.24/mo                         | —                                                               |
+| Pub/Sub                                         | per TiB                       | $40                               | first 10 GiB/mo                                                 |
+| Cloud KMS                                       | active key version            | $0.06/mo                          | —                                                               |
+| Artifact Registry                               | storage                       | $0.10/GB-mo                       | 0.5 GB                                                          |
+| Cloud Logging                                   | ingestion                     | $0.50/GiB                         | 50 GiB/mo                                                       |
+| BigQuery                                        | storage / query               | $0.02/GB-mo / $6.25/TiB           | 10 GB + 1 TiB/mo                                                |
+| Cloud Monitoring                                | custom metric ingest / uptime | $0.258/MiB / $0.30-1k             | system metrics free; 1M uptime/mo; dashboards/alerts/Slack free |
+| Secret Manager                                  | active version / access       | $0.06/mo / $0.03-10k              | 6 versions + 10k ops/mo                                         |
+| Cloud Build                                     | default pool                  | $0.006/build-min                  | 120 build-min/day                                               |
+| GCS (EU multi-region)                           | storage                       | $0.026/GB-mo                      | —                                                               |
+| Model Armor                                     | per 1M tokens                 | $0.10                             | 2M tokens/mo                                                    |
+| Security Command Center                         | n/a                           | **org-only — excluded**           | —                                                               |
 
 Sources: cloud.google.com/{vertex-ai,run,pubsub,kms,artifact-registry,
 stackdriver,bigquery,secret-manager,build,storage}/pricing;

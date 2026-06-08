@@ -57,19 +57,19 @@ This project follows **trunk-based development with short-lived feature branches
 
 `<type>` matches the Conventional Commits type set:
 
-| Prefix       | Use for                                       |
-| ------------ | --------------------------------------------- |
-| `feat/`      | New capability                                |
-| `fix/`       | Bug fix                                       |
-| `docs/`      | Documentation only                            |
-| `refactor/`  | Code change with no behaviour change          |
-| `perf/`      | Performance improvement                       |
-| `test/`      | Adding or fixing tests only                   |
-| `build/`     | Build system, packaging, Dockerfiles, uv      |
-| `ci/`        | CI configuration / pre-commit                 |
-| `chore/`     | Maintenance, dependency bumps                 |
-| `security/`  | Security fix                                  |
-| `revert/`    | Reverting a previous change                   |
+| Prefix      | Use for                                  |
+| ----------- | ---------------------------------------- |
+| `feat/`     | New capability                           |
+| `fix/`      | Bug fix                                  |
+| `docs/`     | Documentation only                       |
+| `refactor/` | Code change with no behaviour change     |
+| `perf/`     | Performance improvement                  |
+| `test/`     | Adding or fixing tests only              |
+| `build/`    | Build system, packaging, Dockerfiles, uv |
+| `ci/`       | CI configuration / pre-commit            |
+| `chore/`    | Maintenance, dependency bumps            |
+| `security/` | Security fix                             |
+| `revert/`   | Reverting a previous change              |
 
 Examples:
 
@@ -97,7 +97,7 @@ Every commit message follows the [Conventional Commits 1.0.0](https://www.conven
   `slack-notifier`, `action-broker`, `terraform`, `eventing`, `governance`,
   `observability`, `agent-runtime`, `docs`, `contract`, `ci`, `deps`.
 - **`<subject>`** — imperative mood, < 72 chars, no trailing period. "Add" not "Added", "Fix" not "Fixed".
-- **`<body>`** — optional. Wrap at 72 columns. Explain *why*, not *how*.
+- **`<body>`** — optional. Wrap at 72 columns. Explain _why_, not _how_.
 - **`<footer>`** — optional. `BREAKING CHANGE: <description>` for breaking changes. Issue references like `Closes #123`.
 
 #### Examples

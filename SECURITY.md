@@ -18,6 +18,7 @@ controls live in:
 **Do not open a public GitHub issue for security vulnerabilities.** Report them privately via GitHub's [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability) on this repository.
 
 You should expect:
+
 - Acknowledgement of receipt within **5 business days**.
 - A more substantive response within **10 business days**.
 - A coordinated disclosure window of 30–90 days depending on severity and remediation complexity.

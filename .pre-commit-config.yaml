@@ -98,7 +98,7 @@ repos:
       - id: terraform_tflint
         args: [--args=--minimum-failure-severity=warning]
       - id: terraform_trivy
-        args: [--args=--severity=HIGH,CRITICAL]
+        args: [--args=--severity=HIGH, CRITICAL]
 
   # ────────────────────────────────────────────────────────────────────────────
   # Shell scripts
@@ -127,10 +127,10 @@ repos:
     hooks:
       - id: markdownlint
         args:
-          - --disable=MD013  # line length — design review has long lines
-          - --disable=MD033  # inline HTML — used for ASCII diagrams
-          - --disable=MD034  # bare URLs — explicit in some references
-          - --disable=MD041  # first line H1 — issue templates use frontmatter
+          - --disable=MD013 # line length — design review has long lines
+          - --disable=MD033 # inline HTML — used for ASCII diagrams
+          - --disable=MD034 # bare URLs — explicit in some references
+          - --disable=MD041 # first line H1 — issue templates use frontmatter
 
   # ────────────────────────────────────────────────────────────────────────────
   # Conventional Commits — enforce commit-message format
@@ -160,5 +160,5 @@ ci:
     - terraform_tflint
     - terraform_trivy
     - hadolint-docker
-    - gitleaks   # Run as a dedicated GitHub Actions workflow instead, with the full secret list.
+    - gitleaks # Run as a dedicated GitHub Actions workflow instead, with the full secret list.
   submodules: false

@@ -28,22 +28,22 @@ module "governance" {
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| env | string | — | yes |
-| scc_notification_pubsub_topic | string | — | yes |
-| org_id | string | "" | no |
-| folder_id | string | "" | no |
-| audit_bq_dataset_id | string | audit_logs | no |
-| model_armor_location | string | global | no |
+| Name                          | Type   | Default    | Required |
+| ----------------------------- | ------ | ---------- | -------- |
+| project_id                    | string | —          | yes      |
+| env                           | string | —          | yes      |
+| scc_notification_pubsub_topic | string | —          | yes      |
+| org_id                        | string | ""         | no       |
+| folder_id                     | string | ""         | no       |
+| audit_bq_dataset_id           | string | audit_logs | no       |
+| model_armor_location          | string | global     | no       |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| audit_bq_dataset_id | BQ dataset ID |
-| audit_log_sink_writer_identity | Log sink SA |
-| model_armor_template_id | Model Armor template ID |
-| scc_source_id | SCC source name |
-| auditor_role_id | Custom Auditor role ID |
+| Name                           | Description             |
+| ------------------------------ | ----------------------- |
+| audit_bq_dataset_id            | BQ dataset ID           |
+| audit_log_sink_writer_identity | Log sink SA             |
+| model_armor_template_id        | Model Armor template ID |
+| scc_source_id                  | SCC source name         |
+| auditor_role_id                | Custom Auditor role ID  |

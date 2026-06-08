@@ -19,25 +19,25 @@ The `context_spec` block on `google_vertex_ai_reasoning_engine` is only availabl
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| env | string | — | yes |
-| region | string | europe-west2 | no |
-| deletion_policy_prevent | bool | false | no |
-| ops_signals_topic_id | string | — | yes |
-| ops_findings_topic_id | string | — | yes |
-| ops_notifications_topic_id | string | — | yes |
-| ops_audit_topic_id | string | — | yes |
-| audit_bq_dataset_id | string | audit_logs | no |
-| billing_export_bq_dataset_id | string | "" | no |
-| billing_export_bq_project_id | string | "" | no |
-| memory_generation_model | string | gemini-2.5-flash | no |
-| memory_embedding_model | string | text-embedding-005 | no |
-| memory_default_ttl | string | 2592000s (30d) | no |
-| agent_artifact_bucket | string | "" | no |
-| labels | map(string) | {} | no |
-| container_image_* | string | placeholder | no |
+| Name                         | Type        | Default            | Required |
+| ---------------------------- | ----------- | ------------------ | -------- |
+| project_id                   | string      | —                  | yes      |
+| env                          | string      | —                  | yes      |
+| region                       | string      | europe-west2       | no       |
+| deletion_policy_prevent      | bool        | false              | no       |
+| ops_signals_topic_id         | string      | —                  | yes      |
+| ops_findings_topic_id        | string      | —                  | yes      |
+| ops_notifications_topic_id   | string      | —                  | yes      |
+| ops_audit_topic_id           | string      | —                  | yes      |
+| audit_bq_dataset_id          | string      | audit_logs         | no       |
+| billing_export_bq_dataset_id | string      | ""                 | no       |
+| billing_export_bq_project_id | string      | ""                 | no       |
+| memory_generation_model      | string      | gemini-2.5-flash   | no       |
+| memory_embedding_model       | string      | text-embedding-005 | no       |
+| memory_default_ttl           | string      | 2592000s (30d)     | no       |
+| agent_artifact_bucket        | string      | ""                 | no       |
+| labels                       | map(string) | {}                 | no       |
+| container*image*\*           | string      | placeholder        | no       |
 
 ## Outputs
 

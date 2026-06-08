@@ -34,16 +34,16 @@ module "observability" {
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| env | string | — | yes |
-| slack_auth_token | string (sensitive) | placeholder | yes |
-| slack_workspace_id | string | placeholder | yes |
-| ops_notifications_topic_id | string | — | yes |
-| broker_url | string | placeholder | no |
-| notifier_url | string | placeholder | no |
-| slack_channel_incidents | string | #ops-incidents | no |
+| Name                       | Type               | Default        | Required |
+| -------------------------- | ------------------ | -------------- | -------- |
+| project_id                 | string             | —              | yes      |
+| env                        | string             | —              | yes      |
+| slack_auth_token           | string (sensitive) | placeholder    | yes      |
+| slack_workspace_id         | string             | placeholder    | yes      |
+| ops_notifications_topic_id | string             | —              | yes      |
+| broker_url                 | string             | placeholder    | no       |
+| notifier_url               | string             | placeholder    | no       |
+| slack_channel_incidents    | string             | #ops-incidents | no       |
 
 ## Outputs
 

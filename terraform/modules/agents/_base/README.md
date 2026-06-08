@@ -1,4 +1,4 @@
-# module/agents/_base
+# module/agents/\_base
 
 Shared base module for AOP agents. Provisions the resources that are identical
 across every agent type:
@@ -18,24 +18,24 @@ with their domain-specific IAM allow-list. Most consumers should not call
 
 ## Inputs
 
-| Name | Required | Notes |
-|------|----------|-------|
-| `project_id` | yes | |
-| `region` | yes | |
-| `env` | yes | `dev` / `staging` / `prod` |
-| `agent_slug` | yes | lowercase, becomes `sa-<slug>` |
-| `agent_display_name` | yes | shown on Reasoning Engine |
-| `agent_description` | yes | shown on Reasoning Engine and SA |
-| `ops_audit_topic_id` | yes | publisher binding is non-negotiable |
-| `project_iam_roles` | no | validated to refuse `owner`/`editor` |
-| `custom_project_iam_role_ids` | no | full role IDs |
-| `extra_pubsub_publish_topic_ids` | no | additional publisher topics |
-| `extra_pubsub_subscribe_topic_ids` | no | subscriber topics |
-| `schedule` | no | Cloud Scheduler config (cron + HTTPS target) |
-| `enable_memory_bank` | no | creates a second Reasoning Engine on beta provider |
-| `deletion_policy_prevent` | no | `true` in prod |
-| `package_pickle_gcs_uri` | no | placeholder fails the `check` block when left default |
-| `labels` | no | merged into the canonical AOP label set |
+| Name                               | Required | Notes                                                 |
+| ---------------------------------- | -------- | ----------------------------------------------------- |
+| `project_id`                       | yes      |                                                       |
+| `region`                           | yes      |                                                       |
+| `env`                              | yes      | `dev` / `staging` / `prod`                            |
+| `agent_slug`                       | yes      | lowercase, becomes `sa-<slug>`                        |
+| `agent_display_name`               | yes      | shown on Reasoning Engine                             |
+| `agent_description`                | yes      | shown on Reasoning Engine and SA                      |
+| `ops_audit_topic_id`               | yes      | publisher binding is non-negotiable                   |
+| `project_iam_roles`                | no       | validated to refuse `owner`/`editor`                  |
+| `custom_project_iam_role_ids`      | no       | full role IDs                                         |
+| `extra_pubsub_publish_topic_ids`   | no       | additional publisher topics                           |
+| `extra_pubsub_subscribe_topic_ids` | no       | subscriber topics                                     |
+| `schedule`                         | no       | Cloud Scheduler config (cron + HTTPS target)          |
+| `enable_memory_bank`               | no       | creates a second Reasoning Engine on beta provider    |
+| `deletion_policy_prevent`          | no       | `true` in prod                                        |
+| `package_pickle_gcs_uri`           | no       | placeholder fails the `check` block when left default |
+| `labels`                           | no       | merged into the canonical AOP label set               |
 
 ## Outputs
 

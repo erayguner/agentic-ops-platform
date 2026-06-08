@@ -30,13 +30,13 @@ terraform apply -var-file=terraform.tfvars
 
 ## Prod vs dev differences
 
-| Aspect | Prod |
-|--------|------|
-| `deletion_policy_prevent` | true — reasoning engines cannot be destroyed |
-| `min_instance_count` (broker, notifier) | 1 — always warm |
-| Container images | SHA-pinned tags only (never `:latest`) |
-| `eventing.deletion_policy_prevent` | true — protects `ops.audit` topic |
-| Two-approver apply | enforced via CODEOWNERS + branch protection |
+| Aspect                                  | Prod                                         |
+| --------------------------------------- | -------------------------------------------- |
+| `deletion_policy_prevent`               | true — reasoning engines cannot be destroyed |
+| `min_instance_count` (broker, notifier) | 1 — always warm                              |
+| Container images                        | SHA-pinned tags only (never `:latest`)       |
+| `eventing.deletion_policy_prevent`      | true — protects `ops.audit` topic            |
+| Two-approver apply                      | enforced via CODEOWNERS + branch protection  |
 
 ## Emergency break-glass
 

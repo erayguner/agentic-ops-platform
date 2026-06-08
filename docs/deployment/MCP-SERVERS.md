@@ -13,23 +13,23 @@ Action Broker.**
   (`https://<service>.googleapis.com/mcp`, Streamable HTTP, Bearer token from the
   agent's ADC). Wiring: [`agents/aop_common/mcp_tools.py`](../../agents/aop_common/mcp_tools.py).
 - **Read-only by construction.** An agent SA holds `roles/mcp.toolUser` (permits
-  *invoking* the MCP tool surface) plus only **viewer** product roles. Even if a
+  _invoking_ the MCP tool surface) plus only **viewer** product roles. Even if a
   server exposes a write tool, IAM denies it.
-- **Decision/execution separation.** Agents *decide*; only the **Action Broker**
-  *writes*. No agent has a write/admin role; remediation is proposed to the
+- **Decision/execution separation.** Agents _decide_; only the **Action Broker**
+  _writes_. No agent has a write/admin role; remediation is proposed to the
   broker, which executes under its approval tiers (HITL for Tier 3/4).
 
 ## Enabled servers (purpose-fit, read-only)
 
-| Server | Endpoint | Purpose | Permitted actions | Backing API | Required role |
-|--------|----------|---------|-------------------|-------------|---------------|
-| Cloud Logging | `logging.googleapis.com/mcp` | Read logs for diagnostics / RCA | read-only (list/query entries) | `logging.googleapis.com` | `roles/logging.viewer` (DevSecOps: `logging.privateLogViewer`) |
-| Cloud Monitoring | `monitoring.googleapis.com/mcp` | Read metrics, alerts, uptime, SLOs | read-only (query time series) | `monitoring.googleapis.com` | `roles/monitoring.viewer` |
-| Cloud Trace | `cloudtrace.googleapis.com/mcp` | Latency / span RCA | read-only (read traces) | `cloudtrace.googleapis.com` | `roles/cloudtrace.user` (read) |
-| Error Reporting | `clouderrorreporting.googleapis.com/mcp` | Service error triage | read-only (list error groups) | `clouderrorreporting.googleapis.com` | `roles/errorreporting.viewer` |
-| Cloud Run | `run.googleapis.com/mcp` | Inspect services/revisions | **read-only** (describe/list) | `run.googleapis.com` | `roles/run.viewer` |
-| Cloud Asset Inventory *(Preview)* | `cloudasset.googleapis.com/mcp` | Resource inventory / drift / RCA | read-only (search/list/history) | `cloudasset.googleapis.com` | `roles/cloudasset.viewer` |
-| Network Intelligence Center | `networkmanagement.googleapis.com/mcp` | Connectivity/network diagnostics | read-only diagnostics (connectivity tests) | `networkmanagement.googleapis.com` | `roles/networkmanagement.viewer` |
+| Server                            | Endpoint                                 | Purpose                            | Permitted actions                          | Backing API                          | Required role                                                  |
+| --------------------------------- | ---------------------------------------- | ---------------------------------- | ------------------------------------------ | ------------------------------------ | -------------------------------------------------------------- |
+| Cloud Logging                     | `logging.googleapis.com/mcp`             | Read logs for diagnostics / RCA    | read-only (list/query entries)             | `logging.googleapis.com`             | `roles/logging.viewer` (DevSecOps: `logging.privateLogViewer`) |
+| Cloud Monitoring                  | `monitoring.googleapis.com/mcp`          | Read metrics, alerts, uptime, SLOs | read-only (query time series)              | `monitoring.googleapis.com`          | `roles/monitoring.viewer`                                      |
+| Cloud Trace                       | `cloudtrace.googleapis.com/mcp`          | Latency / span RCA                 | read-only (read traces)                    | `cloudtrace.googleapis.com`          | `roles/cloudtrace.user` (read)                                 |
+| Error Reporting                   | `clouderrorreporting.googleapis.com/mcp` | Service error triage               | read-only (list error groups)              | `clouderrorreporting.googleapis.com` | `roles/errorreporting.viewer`                                  |
+| Cloud Run                         | `run.googleapis.com/mcp`                 | Inspect services/revisions         | **read-only** (describe/list)              | `run.googleapis.com`                 | `roles/run.viewer`                                             |
+| Cloud Asset Inventory _(Preview)_ | `cloudasset.googleapis.com/mcp`          | Resource inventory / drift / RCA   | read-only (search/list/history)            | `cloudasset.googleapis.com`          | `roles/cloudasset.viewer`                                      |
+| Network Intelligence Center       | `networkmanagement.googleapis.com/mcp`   | Connectivity/network diagnostics   | read-only diagnostics (connectivity tests) | `networkmanagement.googleapis.com`   | `roles/networkmanagement.viewer`                               |
 
 **Expected inputs/outputs (all servers):** input = a scoped query (log filter,
 metric type + window, trace/asset filter, service name, connectivity-test
@@ -38,13 +38,13 @@ groups, asset records, reachability results). No input mutates state.
 
 ## Per-agent allow-lists (least-privilege)
 
-| Agent | MCP servers | Viewer roles granted (besides `roles/mcp.toolUser`) |
-|-------|-------------|-----------------------------------------------------|
-| **Orchestrator** | Logging, Monitoring | `logging.viewer`, `monitoring.viewer` |
-| **SRE** | Logging, Monitoring, Trace, Error Reporting, Cloud Run, Network Intelligence | `logging.viewer`, `monitoring.viewer`, `cloudtrace.user`, `errorreporting.viewer`, `run.viewer`, `networkmanagement.viewer` |
-| **DevSecOps** | Logging, Monitoring, Asset Inventory | `logging.privateLogViewer`, `monitoring.viewer`, `cloudasset.viewer` |
-| **Platform** | Logging, Monitoring, Asset Inventory, Cloud Run | `logging.viewer`, `monitoring.viewer`, `cloudasset.viewer`, `run.viewer` |
-| **FinOps** | Monitoring | `monitoring.viewer` (+ BigQuery billing — deferred, see below) |
+| Agent            | MCP servers                                                                  | Viewer roles granted (besides `roles/mcp.toolUser`)                                                                         |
+| ---------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Orchestrator** | Logging, Monitoring                                                          | `logging.viewer`, `monitoring.viewer`                                                                                       |
+| **SRE**          | Logging, Monitoring, Trace, Error Reporting, Cloud Run, Network Intelligence | `logging.viewer`, `monitoring.viewer`, `cloudtrace.user`, `errorreporting.viewer`, `run.viewer`, `networkmanagement.viewer` |
+| **DevSecOps**    | Logging, Monitoring, Asset Inventory                                         | `logging.privateLogViewer`, `monitoring.viewer`, `cloudasset.viewer`                                                        |
+| **Platform**     | Logging, Monitoring, Asset Inventory, Cloud Run                              | `logging.viewer`, `monitoring.viewer`, `cloudasset.viewer`, `run.viewer`                                                    |
+| **FinOps**       | Monitoring                                                                   | `monitoring.viewer` (+ BigQuery billing — deferred, see below)                                                              |
 
 All five also receive `roles/mcp.toolUser`.
 
@@ -55,7 +55,7 @@ All five also receive `roles/mcp.toolUser`.
   control + Model Armor screening of MCP calls/responses.
 - **No direct remediation via MCP.** Cloud Run remediation (scale-within-range,
   rollback-to-previous, restart-revision) is **not** performed through the Cloud
-  Run MCP server. An agent *proposes* the action to the **Action Broker**
+  Run MCP server. An agent _proposes_ the action to the **Action Broker**
   (`propose_action`); the broker evaluates policy and executes it under its
   tiered model:
   - **Tier 0–2** (recommend / low-risk): broker may execute per policy.
@@ -92,15 +92,15 @@ All five also receive `roles/mcp.toolUser`.
 
 ## Excluded / deferred (and why)
 
-| Item | Why |
-|------|-----|
-| GKE, Compute Engine | not in the AOP stack (Cloud Run only) |
-| Resource Manager MCP | overlaps Cloud Asset Inventory for inspection |
-| SecOps / Chronicle | not used here (SCC findings flow via the governance pipeline) |
-| Gemini Cloud Assist, Developer Knowledge, Agent Registry, Recommender MCP | Preview / unverified as supported servers; avoid broad/ambiguous surface |
-| **BigQuery MCP** | **deferred** — *FinOps billing-BigQuery (read-only) is the first planned addition*; would grant FinOps `bigquery.dataViewer`/`jobUser` scoped to the billing export |
-| Pub/Sub MCP | deferred — eventing is consumed directly, not via MCP, for now |
-| Broad `@google-cloud/gcloud-mcp` | wraps the whole gcloud CLI (too broad); scoped per-product servers are the least-privilege path |
+| Item                                                                      | Why                                                                                                                                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GKE, Compute Engine                                                       | not in the AOP stack (Cloud Run only)                                                                                                                               |
+| Resource Manager MCP                                                      | overlaps Cloud Asset Inventory for inspection                                                                                                                       |
+| SecOps / Chronicle                                                        | not used here (SCC findings flow via the governance pipeline)                                                                                                       |
+| Gemini Cloud Assist, Developer Knowledge, Agent Registry, Recommender MCP | Preview / unverified as supported servers; avoid broad/ambiguous surface                                                                                            |
+| **BigQuery MCP**                                                          | **deferred** — _FinOps billing-BigQuery (read-only) is the first planned addition_; would grant FinOps `bigquery.dataViewer`/`jobUser` scoped to the billing export |
+| Pub/Sub MCP                                                               | deferred — eventing is consumed directly, not via MCP, for now                                                                                                      |
+| Broad `@google-cloud/gcloud-mcp`                                          | wraps the whole gcloud CLI (too broad); scoped per-product servers are the least-privilege path                                                                     |
 
 ## Caveats
 
@@ -108,7 +108,7 @@ All five also receive `roles/mcp.toolUser`.
   **Preview**. Re-confirm endpoint availability and the exact `content-security`
   flags against the [official docs](https://docs.cloud.google.com/mcp/supported-products).
 - **The agent tier is not deployed** (the ADK builders are stubs — see
-  [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md)). This wiring is therefore *ready-to-use*:
+  [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md)). This wiring is therefore _ready-to-use_:
   the APIs apply now; the `mcp.toolUser` + viewer IAM binds when the agent SAs
   are created at deploy.
 - The ADK↔endpoint Bearer/ADC handshake in `build_mcp_toolsets()` should be

@@ -6,13 +6,13 @@ Cost-intelligence specialist. Monitors spend anomalies, budget burn rate, idle/o
 
 ## MCP allow-list
 
-| Endpoint | Status | Purpose |
-|---|---|---|
-| `bigquery.googleapis.com/mcp` | GA | Billing export queries (billing_dataset) |
-| `recommender.googleapis.com/mcp` | GA | Active rightsizing recommendations |
-| `geminicloudassist.googleapis.com/mcp` | Preview | FinOps agent narrative (graceful fallback) |
-| `developerknowledge.googleapis.com/mcp` | GA | Billing / Recommender API documentation lookup |
-| Action Broker MCP (custom) | — | cost.shrink_idle_resource proposals |
+| Endpoint                                | Status  | Purpose                                        |
+| --------------------------------------- | ------- | ---------------------------------------------- |
+| `bigquery.googleapis.com/mcp`           | GA      | Billing export queries (billing_dataset)       |
+| `recommender.googleapis.com/mcp`        | GA      | Active rightsizing recommendations             |
+| `geminicloudassist.googleapis.com/mcp`  | Preview | FinOps agent narrative (graceful fallback)     |
+| `developerknowledge.googleapis.com/mcp` | GA      | Billing / Recommender API documentation lookup |
+| Action Broker MCP (custom)              | —       | cost.shrink_idle_resource proposals            |
 
 ## Action classes this agent may propose
 
@@ -22,6 +22,7 @@ Cost-intelligence specialist. Monitors spend anomalies, budget burn rate, idle/o
 ## Cost impact reporting
 
 Every Finding must include cost impact in:
+
 - Absolute GBP (or local billing currency).
 - Percentage change vs. same period last month.
 - Estimated monthly run-rate if anomaly continues.
