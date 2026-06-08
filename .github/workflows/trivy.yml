@@ -34,7 +34,7 @@ jobs:
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: read
-      security-events: write   # Upload SARIF to Code Scanning
+      security-events: write # Upload SARIF to Code Scanning
     strategy:
       fail-fast: false
       matrix:

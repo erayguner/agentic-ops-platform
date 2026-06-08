@@ -6,20 +6,20 @@ Drift and deployment-health specialist. Detects configuration drift versus decla
 
 ## MCP allow-list
 
-| Endpoint | Status | Purpose |
-|---|---|---|
-| `cloudasset.googleapis.com/mcp` | Preview | Resource inventory vs. expected state |
-| `cloudresourcemanager.googleapis.com/mcp` | GA | Project/folder config and IAM drift |
-| `container.googleapis.com/mcp` | GA | GKE cluster/workload health |
-| `run.googleapis.com/mcp` | GA | Cloud Run service health and config |
-| `compute.googleapis.com/mcp` | GA | Network config drift (VPC, firewall) |
-| `developerknowledge.googleapis.com/mcp` | GA | Official Google resource-pattern / best-practice docs |
-| Action Broker MCP (custom) | — | terraform.plan and workflows.run proposals |
+| Endpoint                                  | Status  | Purpose                                               |
+| ----------------------------------------- | ------- | ----------------------------------------------------- |
+| `cloudasset.googleapis.com/mcp`           | Preview | Resource inventory vs. expected state                 |
+| `cloudresourcemanager.googleapis.com/mcp` | GA      | Project/folder config and IAM drift                   |
+| `container.googleapis.com/mcp`            | GA      | GKE cluster/workload health                           |
+| `run.googleapis.com/mcp`                  | GA      | Cloud Run service health and config                   |
+| `compute.googleapis.com/mcp`              | GA      | Network config drift (VPC, firewall)                  |
+| `developerknowledge.googleapis.com/mcp`   | GA      | Official Google resource-pattern / best-practice docs |
+| Action Broker MCP (custom)                | —       | terraform.plan and workflows.run proposals            |
 
 ## Action classes this agent may propose
 
 - `terraform.plan` — Tier 2 / Tier 2 (read-only; never `terraform.apply` without approval)
-- `workflows.run` (*-dryrun) — Tier 2 / Tier 2
+- `workflows.run` (\*-dryrun) — Tier 2 / Tier 2
 - `workflows.run` (production) — Tier 3 / Tier 3
 - `incident.escalate_to_human` — Tier 0 always
 

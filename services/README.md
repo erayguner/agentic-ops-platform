@@ -14,7 +14,7 @@ buttons → `ops.actions.approved`).
 ## action-broker
 
 Custom MCP server exposing five tools (`propose_action`, `request_approval`,
-`execute`, `rollback`, `status`).  The only writer on GCP — all agent write
+`execute`, `rollback`, `status`). The only writer on GCP — all agent write
 actions go through this service under policy control and short-lived
 per-action-class SA impersonation.
 
@@ -31,11 +31,11 @@ python3 -m compileall -q services/
 
 ## Key contracts
 
-| Thing | Source of truth |
-|---|---|
-| Topic names | `terraform/modules/eventing/main.tf` |
-| Schema field names | `agents/aop_common/schemas.py`, `services/*/schemas.py` |
-| Action-class strings | `services/action-broker/policy/action_classes.yaml` |
-| SA names | `terraform/modules/agent-runtime/main.tf`, `terraform/modules/action-broker/main.tf` |
-| Slack channels | `services/slack-notifier/blockkit.py` |
-| Block Kit layout | `docs/DESIGN-REVIEW.md §6.6` |
+| Thing                | Source of truth                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Topic names          | `terraform/modules/eventing/main.tf`                                                 |
+| Schema field names   | `agents/aop_common/schemas.py`, `services/*/schemas.py`                              |
+| Action-class strings | `services/action-broker/policy/action_classes.yaml`                                  |
+| SA names             | `terraform/modules/agent-runtime/main.tf`, `terraform/modules/action-broker/main.tf` |
+| Slack channels       | `services/slack-notifier/blockkit.py`                                                |
+| Block Kit layout     | `docs/DESIGN-REVIEW.md §6.6`                                                         |

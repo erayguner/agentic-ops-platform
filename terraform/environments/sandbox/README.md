@@ -15,13 +15,13 @@ checks) → a monthly Cloud Billing **budget** guardrail.
 
 ## What it intentionally gates off (and why)
 
-| Gated | Why | Re-enable |
-|-------|-----|-----------|
-| `agent-runtime` reasoning engines | Preview API + placeholder pickle artifacts (stub agents) | package agents, then add the module |
-| Org Policy, SCC | Organization-scoped; this project has no org | set `enable_org_policies` / `enable_scc` + `org_id` |
-| Model Armor | No agent traffic to screen yet | `enable_model_armor = true` in `governance` |
-| Eventarc triggers | Cloud Run destinations absent on a clean first apply | `enable_eventarc_triggers = true` after services exist |
-| Native Slack notification channel | Verified against a live token at create | `enable_slack_notification_channel = true` with a real token |
+| Gated                             | Why                                                      | Re-enable                                                    |
+| --------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------ |
+| `agent-runtime` reasoning engines | Preview API + placeholder pickle artifacts (stub agents) | package agents, then add the module                          |
+| Org Policy, SCC                   | Organization-scoped; this project has no org             | set `enable_org_policies` / `enable_scc` + `org_id`          |
+| Model Armor                       | No agent traffic to screen yet                           | `enable_model_armor = true` in `governance`                  |
+| Eventarc triggers                 | Cloud Run destinations absent on a clean first apply     | `enable_eventarc_triggers = true` after services exist       |
+| Native Slack notification channel | Verified against a live token at create                  | `enable_slack_notification_channel = true` with a real token |
 
 ## State backend
 

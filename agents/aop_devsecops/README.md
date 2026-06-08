@@ -6,15 +6,15 @@ Security specialist. Investigates SCC findings, IAM drift, service-account key e
 
 ## MCP allow-list
 
-| Endpoint | Status | Purpose |
-|---|---|---|
-| `chronicle.<region>.rep.googleapis.com/mcp` | GA | SecOps alerts, IOCs, threat intel |
-| `cloudasset.googleapis.com/mcp` | Preview | IAM policy drift vs. baseline |
-| `cloudresourcemanager.googleapis.com/mcp` | GA | Project / folder IAM changes |
-| `logging.googleapis.com/mcp` | GA | Audit log queries (SA key events, etc.) |
-| `compute.googleapis.com/mcp` | GA | Firewall rule / network exposure reads |
-| `developerknowledge.googleapis.com/mcp` | GA | Official Google security / IAM guidance lookup |
-| Action Broker MCP (custom) | — | Action proposals only — no direct writes |
+| Endpoint                                    | Status  | Purpose                                        |
+| ------------------------------------------- | ------- | ---------------------------------------------- |
+| `chronicle.<region>.rep.googleapis.com/mcp` | GA      | SecOps alerts, IOCs, threat intel              |
+| `cloudasset.googleapis.com/mcp`             | Preview | IAM policy drift vs. baseline                  |
+| `cloudresourcemanager.googleapis.com/mcp`   | GA      | Project / folder IAM changes                   |
+| `logging.googleapis.com/mcp`                | GA      | Audit log queries (SA key events, etc.)        |
+| `compute.googleapis.com/mcp`                | GA      | Firewall rule / network exposure reads         |
+| `developerknowledge.googleapis.com/mcp`     | GA      | Official Google security / IAM guidance lookup |
+| Action Broker MCP (custom)                  | —       | Action proposals only — no direct writes       |
 
 ## Action classes this agent may propose
 

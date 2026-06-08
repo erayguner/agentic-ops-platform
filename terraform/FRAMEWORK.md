@@ -57,22 +57,22 @@ flag to false and the underlying module is not instantiated at all.
 
 ## Module catalogue
 
-| Module | Purpose | Default state |
-|--------|---------|---------------|
-| `modules/aop-platform` | Top-level composition (use this) | n/a |
-| `modules/foundation` | VPC, Artifact Registry, Essential Contacts, API enable | `enable_foundation = true` |
-| `modules/eventing` | Pub/Sub spine, schemas, DLQs, BQ audit table, Eventarc | `enable_eventing = true` |
-| `modules/governance` | Model Armor, SCC notify, Org Policy, audit sink, Auditor role | `enable_governance = true` |
-| `modules/observability` | Dashboards, alerts, log-based metrics, uptime checks, SLOs | `enable_observability = true` |
-| `modules/action-broker` | Cloud Run broker + per-action-class SAs | `enable_action_broker = true` |
-| `modules/slack-notifier` | Cloud Run notifier + Slack secrets | `enable_slack_notifier = true` |
-| `modules/agents/_base` | Shared per-agent base (SA, engine, IAM, schedule, checks) | n/a |
-| `modules/agents/orchestrator` | Ops Orchestrator agent | opt-in |
-| `modules/agents/sre` | SRE agent | opt-in |
-| `modules/agents/devsecops` | DevSecOps agent | opt-in |
-| `modules/agents/platform` | Platform Engineering agent | opt-in |
-| `modules/agents/finops` | FinOps agent | opt-in |
-| `modules/agent-runtime` | Legacy monolithic agent module (kept for back-compat) | use new agents/ instead |
+| Module                        | Purpose                                                       | Default state                  |
+| ----------------------------- | ------------------------------------------------------------- | ------------------------------ |
+| `modules/aop-platform`        | Top-level composition (use this)                              | n/a                            |
+| `modules/foundation`          | VPC, Artifact Registry, Essential Contacts, API enable        | `enable_foundation = true`     |
+| `modules/eventing`            | Pub/Sub spine, schemas, DLQs, BQ audit table, Eventarc        | `enable_eventing = true`       |
+| `modules/governance`          | Model Armor, SCC notify, Org Policy, audit sink, Auditor role | `enable_governance = true`     |
+| `modules/observability`       | Dashboards, alerts, log-based metrics, uptime checks, SLOs    | `enable_observability = true`  |
+| `modules/action-broker`       | Cloud Run broker + per-action-class SAs                       | `enable_action_broker = true`  |
+| `modules/slack-notifier`      | Cloud Run notifier + Slack secrets                            | `enable_slack_notifier = true` |
+| `modules/agents/_base`        | Shared per-agent base (SA, engine, IAM, schedule, checks)     | n/a                            |
+| `modules/agents/orchestrator` | Ops Orchestrator agent                                        | opt-in                         |
+| `modules/agents/sre`          | SRE agent                                                     | opt-in                         |
+| `modules/agents/devsecops`    | DevSecOps agent                                               | opt-in                         |
+| `modules/agents/platform`     | Platform Engineering agent                                    | opt-in                         |
+| `modules/agents/finops`       | FinOps agent                                                  | opt-in                         |
+| `modules/agent-runtime`       | Legacy monolithic agent module (kept for back-compat)         | use new agents/ instead        |
 
 ## Quick start
 
@@ -88,13 +88,13 @@ terraform plan \
 
 The four working examples are:
 
-| Example | Posture |
-|---------|---------|
-| `terraform/examples/full-dev` | every component, every agent, dev defaults |
-| `terraform/examples/minimal-sre-only` | only SRE, only what it needs |
-| `terraform/examples/staging` | warm pools, every agent, no destroy lock |
-| `terraform/examples/prod-locked-down` | warm pools, destroy lock, dataset-scoped IAM |
-| `terraform/examples/downstream-consumer` | consume the framework from another repo |
+| Example                                  | Posture                                      |
+| ---------------------------------------- | -------------------------------------------- |
+| `terraform/examples/full-dev`            | every component, every agent, dev defaults   |
+| `terraform/examples/minimal-sre-only`    | only SRE, only what it needs                 |
+| `terraform/examples/staging`             | warm pools, every agent, no destroy lock     |
+| `terraform/examples/prod-locked-down`    | warm pools, destroy lock, dataset-scoped IAM |
+| `terraform/examples/downstream-consumer` | consume the framework from another repo      |
 
 ## Selecting agents
 
@@ -118,13 +118,13 @@ enabled_agents = {
 
 Per-agent fields:
 
-| Field | Default | Notes |
-|-------|---------|-------|
-| `enabled` | `true` | set to `false` to skip while keeping the map key |
-| `enable_memory_bank` | `false` | uses the beta provider |
-| `package_pickle_gcs_uri` | `""` | placeholder fails the framework's check block |
-| `schedule` | `null` | Cloud Scheduler config (see below) |
-| `labels` | `{}` | merged with the canonical AOP labels |
+| Field                    | Default | Notes                                            |
+| ------------------------ | ------- | ------------------------------------------------ |
+| `enabled`                | `true`  | set to `false` to skip while keeping the map key |
+| `enable_memory_bank`     | `false` | uses the beta provider                           |
+| `package_pickle_gcs_uri` | `""`    | placeholder fails the framework's check block    |
+| `schedule`               | `null`  | Cloud Scheduler config (see below)               |
+| `labels`                 | `{}`    | merged with the canonical AOP labels             |
 
 ## Per-agent scheduling and event triggers
 
@@ -157,19 +157,19 @@ AOP_SKIP_TFLINT=1 ./scripts/preflight.sh terraform/examples/full-dev
 
 Categories of checks:
 
-| Category | Implementation | Tools required |
-|----------|----------------|----------------|
-| Tooling presence | `aop::check_tool` | `terraform`, `tflint`, `jq` |
-| `fmt` / `validate` / `tflint` / `trivy` / `checkov` | `aop::run_*` | matching binaries on PATH |
-| Naming (project_id, region, env) | regex + placeholder check | none |
-| ADC / gcloud auth | `gcloud auth application-default print-access-token` | `gcloud` |
-| Project existence | `gcloud projects describe` | `gcloud` |
-| Required APIs | `gcloud services list --enabled` cross-check | `gcloud` |
-| State backend | `gcloud storage buckets describe` + versioning + UBLA | `gcloud` |
-| WIF pool | `gcloud iam workload-identity-pools describe aop-ci-pool` | `gcloud` |
-| Runner SA | `gcloud iam service-accounts describe sa-tf-runner-<env>` | `gcloud` |
-| Required secrets | `gcloud secrets list` cross-check | `gcloud` |
-| Org Policy | `gcloud org-policies list --project` | `gcloud` |
+| Category                                            | Implementation                                            | Tools required              |
+| --------------------------------------------------- | --------------------------------------------------------- | --------------------------- |
+| Tooling presence                                    | `aop::check_tool`                                         | `terraform`, `tflint`, `jq` |
+| `fmt` / `validate` / `tflint` / `trivy` / `checkov` | `aop::run_*`                                              | matching binaries on PATH   |
+| Naming (project_id, region, env)                    | regex + placeholder check                                 | none                        |
+| ADC / gcloud auth                                   | `gcloud auth application-default print-access-token`      | `gcloud`                    |
+| Project existence                                   | `gcloud projects describe`                                | `gcloud`                    |
+| Required APIs                                       | `gcloud services list --enabled` cross-check              | `gcloud`                    |
+| State backend                                       | `gcloud storage buckets describe` + versioning + UBLA     | `gcloud`                    |
+| WIF pool                                            | `gcloud iam workload-identity-pools describe aop-ci-pool` | `gcloud`                    |
+| Runner SA                                           | `gcloud iam service-accounts describe sa-tf-runner-<env>` | `gcloud`                    |
+| Required secrets                                    | `gcloud secrets list` cross-check                         | `gcloud`                    |
+| Org Policy                                          | `gcloud org-policies list --project`                      | `gcloud`                    |
 
 Outputs a `pass / warn / fail` summary; exit code is non-zero if any check
 failed. CI uses it as a gate (`smoke` job in `.github/workflows/terraform.yml`).
@@ -267,9 +267,9 @@ The framework uses [release-please](https://github.com/googleapis/release-please
 to drive semantic versions, the CHANGELOG, and GitHub releases:
 
 - Configuration: `release-please-config.json`
-- Manifest:      `.release-please-manifest.json`
-- Workflow:      `.github/workflows/release-please.yml`
-- Section map:   `feat → minor`, `fix → patch`, `feat!: → major`
+- Manifest: `.release-please-manifest.json`
+- Workflow: `.github/workflows/release-please.yml`
+- Section map: `feat → minor`, `fix → patch`, `feat!: → major`
 
 Commits MUST follow [Conventional Commits](https://www.conventionalcommits.org/);
 this is already enforced by the `conventional-pre-commit` commit-msg hook.

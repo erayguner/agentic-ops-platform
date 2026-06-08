@@ -57,15 +57,15 @@ module "aop" {
 
 ## What's enabled by default
 
-| Component | Default | Override flag |
-|-----------|---------|---------------|
-| Foundation (VPC, AR, Essential Contacts) | on | `enable_foundation` |
-| Eventing (Pub/Sub, DLQs, BQ audit) | on | `enable_eventing` |
-| Governance (Model Armor, SCC, OrgPolicy) | on | `enable_governance` |
-| Observability (dashboards, alerts, SLOs) | on | `enable_observability` |
-| Action Broker (Cloud Run) | on | `enable_action_broker` |
-| Slack Notifier (Cloud Run) | on | `enable_slack_notifier` |
-| All 5 agents | on | `enabled_agents` map |
+| Component                                | Default | Override flag           |
+| ---------------------------------------- | ------- | ----------------------- |
+| Foundation (VPC, AR, Essential Contacts) | on      | `enable_foundation`     |
+| Eventing (Pub/Sub, DLQs, BQ audit)       | on      | `enable_eventing`       |
+| Governance (Model Armor, SCC, OrgPolicy) | on      | `enable_governance`     |
+| Observability (dashboards, alerts, SLOs) | on      | `enable_observability`  |
+| Action Broker (Cloud Run)                | on      | `enable_action_broker`  |
+| Slack Notifier (Cloud Run)               | on      | `enable_slack_notifier` |
+| All 5 agents                             | on      | `enabled_agents` map    |
 
 ## Plan-time invariants
 
@@ -83,16 +83,16 @@ treats any failing check as a build failure.
 
 ## Outputs
 
-| Output | Notes |
-|--------|-------|
-| `topic_ids` | map of canonical Pub/Sub topic IDs |
-| `agent_sa_emails` | map of agent slug → SA email |
-| `agent_reasoning_engine_ids` | map of agent slug → engine ID |
-| `agent_scheduler_job_ids` | map of agent slug → Cloud Scheduler job ID |
-| `action_broker_url`, `slack_notifier_url` | Cloud Run URLs |
-| `action_class_sa_emails` | per-action-class impersonation SAs |
-| `auditor_role_id` | custom IAM role for compliance reviewers |
-| `audit_bq_dataset_id` | dataset holding the audit log export |
+| Output                                    | Notes                                      |
+| ----------------------------------------- | ------------------------------------------ |
+| `topic_ids`                               | map of canonical Pub/Sub topic IDs         |
+| `agent_sa_emails`                         | map of agent slug → SA email               |
+| `agent_reasoning_engine_ids`              | map of agent slug → engine ID              |
+| `agent_scheduler_job_ids`                 | map of agent slug → Cloud Scheduler job ID |
+| `action_broker_url`, `slack_notifier_url` | Cloud Run URLs                             |
+| `action_class_sa_emails`                  | per-action-class impersonation SAs         |
+| `auditor_role_id`                         | custom IAM role for compliance reviewers   |
+| `audit_bq_dataset_id`                     | dataset holding the audit log export       |
 
 See `outputs.tf` for the exhaustive list.
 

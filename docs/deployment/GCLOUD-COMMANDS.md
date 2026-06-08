@@ -19,6 +19,7 @@ the image at deploy). Run after `terraform apply -target=module.foundation`
 (which creates the `aop-containers` repo and enables `cloudbuild`).
 
 **Command:**
+
 ```bash
 AR="europe-west2-docker.pkg.dev/agentic-ops-platform/aop-containers"
 gcloud builds submit services/slack-notifier \
@@ -28,6 +29,7 @@ gcloud builds submit services/action-broker \
   --config=services/cloudbuild.yaml \
   --substitutions=_IMAGE="$AR/action-broker:latest" --region=europe-west2
 ```
+
 `services/cloudbuild.yaml` builds with `DOCKER_BUILDKIT=1` (the Dockerfiles use
 BuildKit `--mount` cache; the `gcloud builds submit --tag` shortcut uses a
 non-BuildKit builder and fails — finding from the chronicle).
@@ -63,24 +65,30 @@ We avoided it to keep the fix in code/repeatable.
 created **outside** Terraform and are cleaned up manually:
 
 ### 3a. Cloud Build staging bucket
+
 **Reason:** `gcloud builds submit` auto-creates `gs://<project>_cloudbuild` for
 source staging; it is not Terraform-managed.
+
 ```bash
 gcloud storage rm --recursive gs://agentic-ops-platform_cloudbuild --quiet
 ```
+
 **Expected:** bucket and contents removed. **Reversal:** none (recreated
 automatically on the next build).
 
 ### 3b. Default VPC network (auto-created by enabling Compute API)
+
 **Reason:** enabling `compute.googleapis.com` auto-creates a `default` auto-mode
 VPC + `default-allow-{icmp,internal,ssh,rdp}` firewall rules. These are not
 Terraform-managed and (the open SSH/RDP rules) are mild security residue.
+
 ```bash
 gcloud compute firewall-rules delete \
   default-allow-icmp default-allow-internal default-allow-rdp default-allow-ssh \
   --project=agentic-ops-platform --quiet
 gcloud compute networks delete default --project=agentic-ops-platform --quiet
 ```
+
 **Expected:** 0 networks, 0 firewall rules remaining.
 **Reversal (if ever needed):** `gcloud compute networks create default --subnet-mode=auto`.
 
@@ -97,11 +105,11 @@ Used during review; change nothing, need no reversal:
 
 ## Summary
 
-| Action | Tool | Reversal |
-|--------|------|----------|
-| Build/push 2 images | `gcloud builds submit` | images via `terraform destroy`; bucket §3a |
-| ADC quota project | **Terraform** (`user_project_override`) | n/a |
-| Enable APIs | **Terraform** (`google_project_service`) | `gcloud services disable` (optional) |
-| Remove Cloud Build bucket | `gcloud storage rm` | recreated on next build |
-| Remove default VPC | `gcloud compute …delete` | `gcloud compute networks create default` |
-| Everything else (108-resource platform) | **Terraform** | `terraform destroy` |
+| Action                                  | Tool                                     | Reversal                                   |
+| --------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| Build/push 2 images                     | `gcloud builds submit`                   | images via `terraform destroy`; bucket §3a |
+| ADC quota project                       | **Terraform** (`user_project_override`)  | n/a                                        |
+| Enable APIs                             | **Terraform** (`google_project_service`) | `gcloud services disable` (optional)       |
+| Remove Cloud Build bucket               | `gcloud storage rm`                      | recreated on next build                    |
+| Remove default VPC                      | `gcloud compute …delete`                 | `gcloud compute networks create default`   |
+| Everything else (108-resource platform) | **Terraform**                            | `terraform destroy`                        |

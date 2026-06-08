@@ -43,13 +43,13 @@ names exactly, so no source-to-target mapping is required in `pyproject.toml`.
 
 ## Agent roster
 
-| Agent            | Package            | SA                | Mandate                                   |
-| ---------------- | ------------------ | ----------------- | ----------------------------------------- |
-| Ops Orchestrator | `aop_orchestrator` | `sa-orchestrator` | Duty manager; dedup; route; HITL          |
-| SRE              | `aop_sre`          | `sa-sre`          | Latency, error rate, SLO, deploys         |
-| DevSecOps        | `aop_devsecops`    | `sa-devsecops`    | SCC, IAM drift, key exposure              |
-| Platform         | `aop_platform`    | `sa-platform`    | Drift, IaC state, hygiene, compliance     |
-| FinOps           | `aop_finops`      | `sa-finops`      | Cost, rightsizing, budget                 |
+| Agent            | Package            | SA                | Mandate                               |
+| ---------------- | ------------------ | ----------------- | ------------------------------------- |
+| Ops Orchestrator | `aop_orchestrator` | `sa-orchestrator` | Duty manager; dedup; route; HITL      |
+| SRE              | `aop_sre`          | `sa-sre`          | Latency, error rate, SLO, deploys     |
+| DevSecOps        | `aop_devsecops`    | `sa-devsecops`    | SCC, IAM drift, key exposure          |
+| Platform         | `aop_platform`     | `sa-platform`     | Drift, IaC state, hygiene, compliance |
+| FinOps           | `aop_finops`       | `sa-finops`       | Cost, rightsizing, budget             |
 
 ## Set up the dev environment
 
@@ -141,11 +141,11 @@ step (see `terraform/modules/agent-runtime/`).
 All configuration comes from env vars with prefix `AOP_`. See
 `aop_common/config.py` for the full list. Required vars:
 
-| Variable                          | Purpose                                |
-| --------------------------------- | -------------------------------------- |
-| `AOP_PROJECT`                     | Target GCP project                     |
-| `AOP_AGENT_IDENTITY`              | SA email or SPIFFE ID                  |
-| `AOP_ACTION_BROKER_MCP_ENDPOINT`  | Cloud Run URL of the Action Broker     |
-| `AOP_ORG_CONTEXT_MCP_ENDPOINT`    | Cloud Run URL of the Org Context MCP   |
-| `AOP_MODEL_ID`                    | Default model id (e.g. `gemini-3-pro`) |
-| `AOP_ENVIRONMENT`                 | `dev` or `prod`                        |
+| Variable                         | Purpose                                |
+| -------------------------------- | -------------------------------------- |
+| `AOP_PROJECT`                    | Target GCP project                     |
+| `AOP_AGENT_IDENTITY`             | SA email or SPIFFE ID                  |
+| `AOP_ACTION_BROKER_MCP_ENDPOINT` | Cloud Run URL of the Action Broker     |
+| `AOP_ORG_CONTEXT_MCP_ENDPOINT`   | Cloud Run URL of the Org Context MCP   |
+| `AOP_MODEL_ID`                   | Default model id (e.g. `gemini-3-pro`) |
+| `AOP_ENVIRONMENT`                | `dev` or `prod`                        |

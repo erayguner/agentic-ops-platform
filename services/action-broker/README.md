@@ -29,13 +29,13 @@ Slack Approve / Reject
 
 ## MCP tools exposed
 
-| Tool               | Description                                                                                                   |
-| ------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `propose_action`   | Main entry point — validate, policy-check, auto-approve (Tier ≤ 2) or queue for approval (Tier ≥ 3)            |
-| `request_approval` | Query pending approval status                                                                                  |
-| `execute`          | Execute a pre-approved action (used for Tier-2 auto-approve override)                                          |
-| `rollback`         | Roll back a completed action                                                                                   |
-| `status`           | Return current action status by ID                                                                             |
+| Tool               | Description                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `propose_action`   | Main entry point — validate, policy-check, auto-approve (Tier ≤ 2) or queue for approval (Tier ≥ 3) |
+| `request_approval` | Query pending approval status                                                                       |
+| `execute`          | Execute a pre-approved action (used for Tier-2 auto-approve override)                               |
+| `rollback`         | Roll back a completed action                                                                        |
+| `status`           | Return current action status by ID                                                                  |
 
 ## Security model
 
@@ -62,15 +62,15 @@ uv lock
 
 ## Environment variables
 
-| Variable                   | Default          | Description                                                                                                |
-| -------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
-| `LIVE_MODE`                | `false`          | When `false`, executors raise `NotImplementedError`; event chains (Pub/Sub, audit, idempotency) log-only   |
-| `GCP_PROJECT_ID`           | `ops-agents-dev` | Target GCP project                                                                                         |
-| `PUBSUB_PUSH_TOKEN`        | `""`             | Shared secret for push subscription URL validation                                                         |
-| `OIDC_AUDIENCE`            | `""`             | Expected `aud` claim for agent OIDC tokens on the MCP path; **required in `LIVE_MODE`** — tokens rejected if unset |
-| `APPROVAL_WINDOW_MINUTES`  | `15`             | Slack approval expiry window                                                                               |
-| `POLICY_FILE`              | `policy/action_classes.yaml` | Path to the policy file (autonomy tiers + bounds per action class × env)                       |
-| `PORT`                     | `8080`           | Injected by Cloud Run                                                                                      |
+| Variable                  | Default                      | Description                                                                                                        |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `LIVE_MODE`               | `false`                      | When `false`, executors raise `NotImplementedError`; event chains (Pub/Sub, audit, idempotency) log-only           |
+| `GCP_PROJECT_ID`          | `ops-agents-dev`             | Target GCP project                                                                                                 |
+| `PUBSUB_PUSH_TOKEN`       | `""`                         | Shared secret for push subscription URL validation                                                                 |
+| `OIDC_AUDIENCE`           | `""`                         | Expected `aud` claim for agent OIDC tokens on the MCP path; **required in `LIVE_MODE`** — tokens rejected if unset |
+| `APPROVAL_WINDOW_MINUTES` | `15`                         | Slack approval expiry window                                                                                       |
+| `POLICY_FILE`             | `policy/action_classes.yaml` | Path to the policy file (autonomy tiers + bounds per action class × env)                                           |
+| `PORT`                    | `8080`                       | Injected by Cloud Run                                                                                              |
 
 ## Policy
 

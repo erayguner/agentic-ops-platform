@@ -37,26 +37,26 @@ uv lock
 
 ## Environment variables
 
-| Variable               | Default          | Description                                                                                          |
-| ---------------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
-| `LIVE_SLACK_ENABLED`   | `false`          | When `false`, log rendered Block Kit JSON instead of calling Slack or Pub/Sub                        |
-| `SLACK_BOT_TOKEN`      | _(required live)_| `xoxb-...` OAuth token; from Secret Manager secret `slack-oauth-token`                               |
-| `SLACK_SIGNING_SECRET` | _(required)_     | From Secret Manager secret `slack-signing-secret`; used to verify interactivity requests             |
-| `PUBSUB_PUSH_TOKEN`    | `""`             | Shared secret appended as `?token=` in the push subscription URL                                     |
-| `GCP_PROJECT_ID`       | `ops-agents-dev` | Target project for Pub/Sub publish calls                                                             |
-| `PORT`                 | `8080`           | Injected by Cloud Run                                                                                |
+| Variable               | Default           | Description                                                                              |
+| ---------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| `LIVE_SLACK_ENABLED`   | `false`           | When `false`, log rendered Block Kit JSON instead of calling Slack or Pub/Sub            |
+| `SLACK_BOT_TOKEN`      | _(required live)_ | `xoxb-...` OAuth token; from Secret Manager secret `slack-oauth-token`                   |
+| `SLACK_SIGNING_SECRET` | _(required)_      | From Secret Manager secret `slack-signing-secret`; used to verify interactivity requests |
+| `PUBSUB_PUSH_TOKEN`    | `""`              | Shared secret appended as `?token=` in the push subscription URL                         |
+| `GCP_PROJECT_ID`       | `ops-agents-dev`  | Target project for Pub/Sub publish calls                                                 |
+| `PORT`                 | `8080`            | Injected by Cloud Run                                                                    |
 
 ## Channel routing
 
-| Domain                  | Severity            | Channel          |
-| ----------------------- | ------------------- | ---------------- |
-| `devsecops`             | any                 | `#ops-security`  |
-| `finops`                | any                 | `#ops-finops`    |
-| `platform`              | critical / high     | `#ops-incidents` |
-| `platform`              | medium / low / info | `#ops-platform`  |
-| `sre`, `orchestrator`   | any                 | `#ops-incidents` |
-| eval-related signals    | —                   | `#ops-eval`      |
-| Tier-2 audit announcements | —                | `#ops-audit`     |
+| Domain                     | Severity            | Channel          |
+| -------------------------- | ------------------- | ---------------- |
+| `devsecops`                | any                 | `#ops-security`  |
+| `finops`                   | any                 | `#ops-finops`    |
+| `platform`                 | critical / high     | `#ops-incidents` |
+| `platform`                 | medium / low / info | `#ops-platform`  |
+| `sre`, `orchestrator`      | any                 | `#ops-incidents` |
+| eval-related signals       | —                   | `#ops-eval`      |
+| Tier-2 audit announcements | —                   | `#ops-audit`     |
 
 > Channel discipline is enforced in `blockkit.resolve_channel()`.
 > Changing the mapping requires a code change and review, not a runtime config.

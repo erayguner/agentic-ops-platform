@@ -182,56 +182,98 @@ components:
     bom-ref: action:cloud_run.scale_within_range
     group: action-class
     name: cloud_run.scale_within_range
-    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "2" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:cloud_run.restart_revision
     group: action-class
     name: cloud_run.restart_revision
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:cloud_run.rollback_to_previous
     group: action-class
     name: cloud_run.rollback_to_previous
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }, { name: aop:required-approvers, value: "2" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "true" },
+        { name: aop:required-approvers, value: "2" },
+      ]
   - type: application
     bom-ref: action:iam.disable_service_account_key
     group: action-class
     name: iam.disable_service_account_key
     description: Custom role aopIamServiceAccountKeyDisableOnly (disable/get/list only).
-    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "2" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:secret_manager.disable_version
     group: action-class
     name: secret_manager.disable_version
     description: Custom role aopSecretVersionDisableOnly (versions.disable/get/list only).
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:scc.mute_finding
     group: action-class
     name: scc.mute_finding
     description: Custom role aopSccFindingMuteOnly (findings.setMute/get/list only).
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:workflows.run
     group: action-class
     name: workflows.run
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "false" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "false" },
+      ]
   - type: application
     bom-ref: action:terraform.plan
     group: action-class
     name: terraform.plan
     description: Plan only — never apply. Read-equivalent blast radius.
-    properties: [{ name: aop:max-tier, value: "2" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "2" },
+        { name: aop:reversible, value: "true" },
+      ]
   - type: application
     bom-ref: action:cost.shrink_idle_resource
     group: action-class
     name: cost.shrink_idle_resource
-    properties: [{ name: aop:max-tier, value: "3" }, { name: aop:reversible, value: "false" }, { name: aop:max-blast-radius, value: "2" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "false" },
+        { name: aop:max-blast-radius, value: "2" },
+      ]
   - type: application
     bom-ref: action:incident.escalate_to_human
     group: action-class
     name: incident.escalate_to_human
-    properties: [{ name: aop:max-tier, value: "0" }, { name: aop:reversible, value: "true" }]
+    properties:
+      [
+        { name: aop:max-tier, value: "0" },
+        { name: aop:reversible, value: "true" },
+      ]
 
 services:
   # ---------------------------------------------------------------------------
@@ -326,7 +368,8 @@ services:
     endpoints: ["https://cloudresourcemanager.googleapis.com/mcp"]
     authenticated: true
     x-trust-boundary: true
-    properties: [{ name: aop:consumers, value: "orchestrator,devsecops,platform" }]
+    properties:
+      [{ name: aop:consumers, value: "orchestrator,devsecops,platform" }]
   - bom-ref: mcp:assetinventory
     provider: { name: Google }
     name: Cloud Asset Inventory MCP
@@ -373,7 +416,10 @@ services:
     properties:
       - { name: aop:consumers, value: "none-yet" }
       - { name: aop:release-stage, value: "preview" }
-      - { name: aop:note, value: "Candidate Agent Naming Service surface (OWASP Agent Identity)." }
+      - {
+          name: aop:note,
+          value: "Candidate Agent Naming Service surface (OWASP Agent Identity).",
+        }
   - bom-ref: mcp:geminicloudassist
     provider: { name: Google }
     name: Gemini Cloud Assist MCP
@@ -396,7 +442,8 @@ services:
     endpoints: ["https://developerknowledge.googleapis.com/mcp"]
     authenticated: true
     x-trust-boundary: true
-    properties: [{ name: aop:consumers, value: "sre,devsecops,platform,finops" }]
+    properties:
+      [{ name: aop:consumers, value: "sre,devsecops,platform,finops" }]
 
 externalReferences:
   - type: other

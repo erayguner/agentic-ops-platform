@@ -35,12 +35,12 @@ terraform apply \
 
 ## Dev vs prod differences
 
-| Aspect | Dev |
-|--------|-----|
-| `deletion_policy_prevent` | false — reasoning engines can be destroyed |
-| `min_instance_count` (broker, notifier) | 0 — scale to zero |
-| Container images | `:latest` tags acceptable |
-| Org Policy | recommendations only (project scope) |
+| Aspect                                  | Dev                                        |
+| --------------------------------------- | ------------------------------------------ |
+| `deletion_policy_prevent`               | false — reasoning engines can be destroyed |
+| `min_instance_count` (broker, notifier) | 0 — scale to zero                          |
+| Container images                        | `:latest` tags acceptable                  |
+| Org Policy                              | recommendations only (project scope)       |
 
 ## Destroy
 

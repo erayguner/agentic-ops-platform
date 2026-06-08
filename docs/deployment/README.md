@@ -6,15 +6,15 @@ deploy/destroy lifecycle run on **`agentic-ops-platform`** (europe-west2).
 
 ## Contents
 
-| Doc | What |
-|-----|------|
-| [`DEPLOYMENT-LOG.md`](./DEPLOYMENT-LOG.md) | Full chronicle: findings F1–F18, every apply/destroy pass, fixes, verification, teardown, residuals |
-| [`REQUIRED-APIS.md`](./REQUIRED-APIS.md) | Every required GCP API and where it is enabled in Terraform |
-| [`COST-ESTIMATE.md`](./COST-ESTIMATE.md) | Monthly cost by scenario, unit prices, free tier, sources |
-| [`GCLOUD-COMMANDS.md`](./GCLOUD-COMMANDS.md) | Every non-Terraform/gcloud step: reason, command, expected result, reversal |
-| [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md) | One-step-away procedure to deploy the agent tier (Agent Engine) once the agents are built out |
-| [`MCP-SERVERS.md`](./MCP-SERVERS.md) | Google Cloud MCP servers the agents consume (read-only): per-agent matrix, permissions, safety boundaries, approval triggers |
-| [`RETROSPECTIVE.md`](./RETROSPECTIVE.md) | Lessons learned / retro for the whole deploy-validation & hardening effort (themes, decisions, metrics, action items) |
+| Doc                                          | What                                                                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| [`DEPLOYMENT-LOG.md`](./DEPLOYMENT-LOG.md)   | Full chronicle: findings F1–F18, every apply/destroy pass, fixes, verification, teardown, residuals                          |
+| [`REQUIRED-APIS.md`](./REQUIRED-APIS.md)     | Every required GCP API and where it is enabled in Terraform                                                                  |
+| [`COST-ESTIMATE.md`](./COST-ESTIMATE.md)     | Monthly cost by scenario, unit prices, free tier, sources                                                                    |
+| [`GCLOUD-COMMANDS.md`](./GCLOUD-COMMANDS.md) | Every non-Terraform/gcloud step: reason, command, expected result, reversal                                                  |
+| [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md)       | One-step-away procedure to deploy the agent tier (Agent Engine) once the agents are built out                                |
+| [`MCP-SERVERS.md`](./MCP-SERVERS.md)         | Google Cloud MCP servers the agents consume (read-only): per-agent matrix, permissions, safety boundaries, approval triggers |
+| [`RETROSPECTIVE.md`](./RETROSPECTIVE.md)     | Lessons learned / retro for the whole deploy-validation & hardening effort (themes, decisions, metrics, action items)        |
 
 ## What gets deployed
 

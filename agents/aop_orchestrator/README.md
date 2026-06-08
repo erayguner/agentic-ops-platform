@@ -6,13 +6,13 @@ Duty-manager hub. Receives every operational signal, deduplicates, correlates, c
 
 ## MCP allow-list
 
-| Endpoint | Purpose |
-|---|---|
-| `logging.googleapis.com/mcp` | Correlation log queries |
-| `pubsub.googleapis.com/mcp` | Signal and notification topics |
-| `cloudresourcemanager.googleapis.com/mcp` | Project / resource context |
-| Action Broker MCP (custom) | Relay ActionApproval decisions |
-| Org Context MCP (custom) | Owner, team, change-freeze lookups |
+| Endpoint                                  | Purpose                            |
+| ----------------------------------------- | ---------------------------------- |
+| `logging.googleapis.com/mcp`              | Correlation log queries            |
+| `pubsub.googleapis.com/mcp`               | Signal and notification topics     |
+| `cloudresourcemanager.googleapis.com/mcp` | Project / resource context         |
+| Action Broker MCP (custom)                | Relay ActionApproval decisions     |
+| Org Context MCP (custom)                  | Owner, team, change-freeze lookups |
 
 ## Action classes the orchestrator may propose
 

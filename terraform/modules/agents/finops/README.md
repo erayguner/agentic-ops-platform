@@ -19,17 +19,17 @@ Deploys the AOP FinOps agent — cost/burn/waste specialist.
 
 ## Inputs
 
-| Name | Required | Notes |
-|------|----------|-------|
-| `project_id` | yes | |
-| `env` | yes | |
-| `ops_findings_topic_id` | yes | |
-| `ops_notifications_topic_id` | yes | |
-| `ops_audit_topic_id` | yes | |
+| Name                           | Required    | Notes                             |
+| ------------------------------ | ----------- | --------------------------------- |
+| `project_id`                   | yes         |                                   |
+| `env`                          | yes         |                                   |
+| `ops_findings_topic_id`        | yes         |                                   |
+| `ops_notifications_topic_id`   | yes         |                                   |
+| `ops_audit_topic_id`           | yes         |                                   |
 | `billing_export_bq_dataset_id` | recommended | leave empty only in dev / sandbox |
-| `billing_export_bq_project_id` | no | defaults to `project_id` |
-| `deletion_policy_prevent` | no | `true` in prod |
-| `schedule` | no | |
-| `labels` | no | |
+| `billing_export_bq_project_id` | no          | defaults to `project_id`          |
+| `deletion_policy_prevent`      | no          | `true` in prod                    |
+| `schedule`                     | no          |                                   |
+| `labels`                       | no          |                                   |
 
 See [FRAMEWORK.md](../../../FRAMEWORK.md).

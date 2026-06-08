@@ -110,14 +110,14 @@ This framework is compatible with, and maps onto, the following
 authoritative sources. Adopters use the mapping to produce regulator
 evidence packs without re-writing controls.
 
-| Framework | Element | Maps to |
-|---|---|---|
-| Google **SAIF** (6 core elements) | Expand strong security foundations; extend detection & response; automate defences; harmonize platform controls; adapt controls for feedback loops; contextualize risks | §7 (least privilege), §8 (audit), §9 (observability), §12 (security), §15 (incident response) |
-| **NIST AI RMF 1.0** | Govern / Map / Measure / Manage | §17 (operating model) / §3 (boundaries) / §9 (observability) / §14–§16 (oversight, IR, change) |
-| **EU AI Act** high-risk obligations | Risk management system, logging, transparency, human oversight, accuracy/robustness | §3, §8, §10, §14, §16 |
-| **ISO/IEC 42001** | AI management system | §17, §18 (maturity) |
-| **SOC 2** CC-series | Logical access, change mgmt, monitoring | §7, §8, §16 |
-| **UK NCSC** secure AI guidelines | Secure design, development, deployment, operation | §3, §12, §13, §15 |
+| Framework                           | Element                                                                                                                                                                 | Maps to                                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Google **SAIF** (6 core elements)   | Expand strong security foundations; extend detection & response; automate defences; harmonize platform controls; adapt controls for feedback loops; contextualize risks | §7 (least privilege), §8 (audit), §9 (observability), §12 (security), §15 (incident response)  |
+| **NIST AI RMF 1.0**                 | Govern / Map / Measure / Manage                                                                                                                                         | §17 (operating model) / §3 (boundaries) / §9 (observability) / §14–§16 (oversight, IR, change) |
+| **EU AI Act** high-risk obligations | Risk management system, logging, transparency, human oversight, accuracy/robustness                                                                                     | §3, §8, §10, §14, §16                                                                          |
+| **ISO/IEC 42001**                   | AI management system                                                                                                                                                    | §17, §18 (maturity)                                                                            |
+| **SOC 2** CC-series                 | Logical access, change mgmt, monitoring                                                                                                                                 | §7, §8, §16                                                                                    |
+| **UK NCSC** secure AI guidelines    | Secure design, development, deployment, operation                                                                                                                       | §3, §12, §13, §15                                                                              |
 
 ### 2.2 Principles
 
@@ -156,12 +156,12 @@ document enforces at least one of them.
 
 Classify every agent into exactly one of:
 
-| Role | Permitted actions | Example |
-|---|---|---|
-| **Observer** | Read-only. No tool call may write, mutate, or transact. | Cost analyst agent reading CUR/billing export. |
-| **Advisor** | Read + prepare-drafts. Produces plans, PRs, tickets, but does not apply them. | An agent that opens a remediation PR but never merges. |
-| **Operator** | Read + write under policy + per-action approval. | FinOps agent that tags resources after approver clicks through. |
-| **Autonomous operator** | Write under policy with *rate- and blast-limited* budgets; subject to kill-switch and real-time anomaly detection. | Remediation agent that auto-stops idle dev instances during business hours. |
+| Role                    | Permitted actions                                                                                                  | Example                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| **Observer**            | Read-only. No tool call may write, mutate, or transact.                                                            | Cost analyst agent reading CUR/billing export.                              |
+| **Advisor**             | Read + prepare-drafts. Produces plans, PRs, tickets, but does not apply them.                                      | An agent that opens a remediation PR but never merges.                      |
+| **Operator**            | Read + write under policy + per-action approval.                                                                   | FinOps agent that tags resources after approver clicks through.             |
+| **Autonomous operator** | Write under policy with _rate- and blast-limited_ budgets; subject to kill-switch and real-time anomaly detection. | Remediation agent that auto-stops idle dev instances during business hours. |
 
 Promotion between roles (e.g. Advisor → Operator) is a change-management
 event (see §16), not a runtime flag.
@@ -247,7 +247,7 @@ requirements apply:
 ### 4.1 Structured sandboxing
 
 All tool invocation — including MCP tool calls — passes through a
-single enforcement function (the *governor*). The governor takes a
+single enforcement function (the _governor_). The governor takes a
 structured `ToolRequest`, applies policy, argument validators, and
 budget admission, and emits a `ToolResult`. The model never calls
 tools directly.
@@ -442,7 +442,7 @@ never acceptable. Where possible, split permissions across:
 - A **writer** identity that is only assumed after approval.
 
 **Third-party tool access.** When the agent calls non-cloud-provider
-APIs, use one of the following patterns — *never* a shared API key or
+APIs, use one of the following patterns — _never_ a shared API key or
 long-lived bearer token in the agent's environment:
 
 - **OAuth delegation** — the agent acts on behalf of a user; both the
@@ -503,8 +503,8 @@ replicate manually.
   Monitoring, Cloud Logging, Agent Identity, Agent Engine Threat
   Detection, Sessions, Memory Bank, Code Execution, Example Store.
 - **AWS:** Amazon Bedrock **AgentCore** — Runtime + Identity + Memory
-  + Gateway + Observability + Code Interpreter. Pairs with Bedrock
-  Guardrails and CloudWatch / X-Ray.
+  - Gateway + Observability + Code Interpreter. Pairs with Bedrock
+    Guardrails and CloudWatch / X-Ray.
 
 L1 deployments on bespoke hosts are allowed; boundary contract must
 note the migration path to a managed runtime for L2 graduation.
@@ -588,7 +588,7 @@ only local files:
 - AWS: X-Ray / AWS Distro for OpenTelemetry (ADOT), CloudWatch
   Metrics, CloudWatch Logs.
 - Bedrock AgentCore and Vertex Agent Engine emit OTel spans natively;
-  adopters should *consume* those, not re-invent them.
+  adopters should _consume_ those, not re-invent them.
 
 Reference: `core/agent_trace.py`.
 
@@ -691,12 +691,12 @@ adopter, so fairness is named explicitly.
 
 Every agent declares the data classes it may encounter:
 
-| Class | Examples | Handling |
-|---|---|---|
-| Public | open-source code, press releases | No special handling. |
-| Internal | architecture docs, cost numbers | No external egress. |
+| Class        | Examples                            | Handling                                          |
+| ------------ | ----------------------------------- | ------------------------------------------------- |
+| Public       | open-source code, press releases    | No special handling.                              |
+| Internal     | architecture docs, cost numbers     | No external egress.                               |
 | Confidential | customer data, secrets, credentials | Encrypted at rest & in transit; never in prompts. |
-| Regulated | PII, PHI, PCI | Above + provider PII filters + DLP scanning. |
+| Regulated    | PII, PHI, PCI                       | Above + provider PII filters + DLP scanning.      |
 
 ### 11.2 Input filters
 
@@ -765,7 +765,7 @@ with appropriate retention.
 Managed session / memory primitives — **Vertex Agent Engine Sessions
 and Memory Bank**, **Bedrock AgentCore Memory** — store
 user-associated content across interactions. They inherit the full
-data-handling obligations of §11 *plus* four memory-specific
+data-handling obligations of §11 _plus_ four memory-specific
 controls:
 
 1. **Retention policy.** Declared per memory store, defaulting to the
@@ -820,7 +820,7 @@ training-like flows exist, differential privacy.
   into the incident pipeline (§15).
 - **Differential privacy:** BigQuery DP aggregations for any agent-
   served analytics over user populations. DP is orthogonal to output
-  filtering — it protects the *training-time* or *aggregation-time*
+  filtering — it protects the _training-time_ or _aggregation-time_
   population from re-identification.
 - **k-anonymity thresholds** on cohort-level outputs: an agent that
   returns grouped statistics must refuse groups below a declared `k`.
@@ -898,9 +898,9 @@ attack patterns. Generic anomaly detection is insufficient.
 
 ### 12.7 Red-teaming and adversarial evaluation
 
-Regression eval (§16.3) proves the agent still *does the right thing*
-on the happy path. Red-teaming proves the agent *refuses the wrong
-thing* under pressure. They are distinct activities with distinct
+Regression eval (§16.3) proves the agent still _does the right thing_
+on the happy path. Red-teaming proves the agent _refuses the wrong
+thing_ under pressure. They are distinct activities with distinct
 cadences.
 
 Required red-team coverage:
@@ -1016,8 +1016,8 @@ requests in a chat or dashboard. The request carries:
 
 Downstream stakeholders — resource owners, cost centres, security
 reviewers — receive **contextualised** notifications, not just
-identifiers. Every alert names *who* created the resource, *what* the
-cost impact is, *what to do next*, and *the escalation path* so no
+identifiers. Every alert names _who_ created the resource, _what_ the
+cost impact is, _what to do next_, and _the escalation path_ so no
 recipient needs to look anything up. Attribution is not optional.
 
 ---
@@ -1026,7 +1026,7 @@ recipient needs to look anything up. Attribution is not optional.
 
 ### 15.1 Definition
 
-An *agent incident* is any of:
+An _agent incident_ is any of:
 
 - An agent took an action outside its boundary contract.
 - A guardrail intervention rate > baseline for > 5 minutes.
@@ -1083,14 +1083,14 @@ All live in git; changes land via pull request.
 
 ### 16.2 Review requirements
 
-| Change type | Reviewers | Additional gate |
-|---|---|---|
-| Policy add / update | 1 peer + policy owner | Drift check (e.g. Terraform-to-policy mapping). |
-| Policy delete / disable | 2 peers including security | Explicit justification in PR body. |
-| Approver pool | Security + pool owner | Pool diff captured in audit on merge. |
-| Prompt / instruction | Agent owner + 1 peer | Regression eval harness passes. |
-| Model pin upgrade | Agent owner + platform | Eval harness + guardrail compatibility check. |
-| Tool added to allow-list | Agent owner + security | Boundary contract updated in same PR. |
+| Change type              | Reviewers                  | Additional gate                                 |
+| ------------------------ | -------------------------- | ----------------------------------------------- |
+| Policy add / update      | 1 peer + policy owner      | Drift check (e.g. Terraform-to-policy mapping). |
+| Policy delete / disable  | 2 peers including security | Explicit justification in PR body.              |
+| Approver pool            | Security + pool owner      | Pool diff captured in audit on merge.           |
+| Prompt / instruction     | Agent owner + 1 peer       | Regression eval harness passes.                 |
+| Model pin upgrade        | Agent owner + platform     | Eval harness + guardrail compatibility check.   |
+| Tool added to allow-list | Agent owner + security     | Boundary contract updated in same PR.           |
 
 ### 16.3 Pre-flight gates
 
@@ -1107,14 +1107,14 @@ covers at least the following six dimensions; named criteria shown
 use the ADK Evaluate vocabulary — AWS equivalents exist via Bedrock
 evaluation jobs and custom metrics.
 
-| Dimension | ADK criterion | What it catches |
-|---|---|---|
-| Tool trajectory | `tool_trajectory_avg_score` | Wrong tool chosen or wrong order |
-| Response match | `response_match_score` / `final_response_match_v2` | Regression in answer content |
-| Response quality | `rubric_based_final_response_quality_v1` | Degradation vs rubric (concise, on-brand, complete) |
-| Tool-use quality | `rubric_based_tool_use_quality_v1` | Over-calling, wrong args, missing required tool |
-| Groundedness | `hallucinations_v1` | Claims unsupported by retrieved context |
-| Safety | `safety_v1` | Harmful / unsafe response slipped past guardrails |
+| Dimension        | ADK criterion                                      | What it catches                                     |
+| ---------------- | -------------------------------------------------- | --------------------------------------------------- |
+| Tool trajectory  | `tool_trajectory_avg_score`                        | Wrong tool chosen or wrong order                    |
+| Response match   | `response_match_score` / `final_response_match_v2` | Regression in answer content                        |
+| Response quality | `rubric_based_final_response_quality_v1`           | Degradation vs rubric (concise, on-brand, complete) |
+| Tool-use quality | `rubric_based_tool_use_quality_v1`                 | Over-calling, wrong args, missing required tool     |
+| Groundedness     | `hallucinations_v1`                                | Claims unsupported by retrieved context             |
+| Safety           | `safety_v1`                                        | Harmful / unsafe response slipped past guardrails   |
 
 Multi-turn agents additionally cover `multi_turn_task_success_v1`,
 `multi_turn_trajectory_quality_v1`, `multi_turn_tool_use_quality_v1`.
@@ -1170,13 +1170,13 @@ the foundation model card in its boundary contract (§3.2).
 
 ### 17.1 Roles
 
-| Role | Responsibility |
-|---|---|
-| **Agent owner** | Purpose, boundary contract, approver pool, on-call. |
-| **Platform team** | Governor, audit, approval gateway, content filters, observability. |
-| **Security** | Threat model, guardrail content, supply-chain integrity, incident lead. |
-| **Compliance** | Retention regimes, signed-export chain-of-custody, regulator interface. |
-| **SRE / operators** | Kill-switch, reconciliation, DLQ handling, runbooks. |
+| Role                | Responsibility                                                          |
+| ------------------- | ----------------------------------------------------------------------- |
+| **Agent owner**     | Purpose, boundary contract, approver pool, on-call.                     |
+| **Platform team**   | Governor, audit, approval gateway, content filters, observability.      |
+| **Security**        | Threat model, guardrail content, supply-chain integrity, incident lead. |
+| **Compliance**      | Retention regimes, signed-export chain-of-custody, regulator interface. |
+| **SRE / operators** | Kill-switch, reconciliation, DLQ handling, runbooks.                    |
 
 One human holds each role per agent. RACI is explicit.
 
@@ -1484,29 +1484,29 @@ links each shape to the actual file, module, or resource implementing
 it in the project's codebase. Treat the names below as patterns, not
 paths.
 
-| Control | Reference shape |
-|---|---|
-| Single enforcement point | A function `governed_call(request) -> result` that all tool invocations pass through. No path to a tool exists outside it. |
-| Declarative policy | Versioned `GovernancePolicy` data (JSON / YAML) loaded at startup, validated against a schema. Code reads the policy; code does not embed it. |
-| Structured sandboxing | A typed `ToolRequest` → typed `ToolResult` boundary; the governor produces a `DecisionRecord` artifact for every call. |
-| Fail-closed default | `default_allow = False` at the policy root; unknown tools, unparseable policies, and missing guardrail content all deny. |
-| Audit trail | An append-only structured log (JSONL or equivalent) with chained SHA-256 per entry. Each entry's checksum is a function of the previous entry's checksum. |
-| Chain-across-file verification | Audit loader rejects on chain break across rotated files at load time; load is `strict=True` by default. |
-| Signed exports | Audit exports carry `(payload, signature, algorithm)` with canonical JSON serialisation; Ed25519 in prod, HMAC-SHA256 in dev. |
-| Agent trace model | A `correlation_id` / `step_id` / `parent_step_id` graph emittable as OpenTelemetry spans. Reconstruction by `correlation_id` is a single query. |
-| Provider trace adapters | Per-provider adapter (Bedrock, ADK, AgentCore, Agent Engine, etc.) that lifts native trace events into the canonical `AgentTrace` model. Each adapter is independently testable. |
-| Content filters | A composable filter stack (PII redactor → secret scanner → prompt-injection heuristic) applied to inputs and outputs. |
-| Circuit breaker | A standard breaker abstraction (open / half-open / closed thresholds) wrapping every external dependency. |
-| Reconciliation | A scheduled reconciliation pass that detects unevaluated events, stale alerts, audit gaps, and expired approvals. |
-| Health probes | Liveness / readiness / deep probes against the governance plane (governor, audit, approval gateway, filters). |
-| Statistical thresholds | Z-score and χ² baselines per session and per agent; thresholds in declared config, not buried in code. |
-| Policy-as-code | Architecture-decision record documenting the policy data shape, schema, and validation pipeline. |
-| Per-event evaluation | Architecture-decision record describing how each evaluable event is matched against policies (composable, orthogonal). |
-| Event-driven alert pipeline | Architecture-decision record describing the dispatcher topology, DLQ, retry, and dedup. |
-| Agent governance decision | Architecture-decision record consolidating audit chaining, approval gateway, supervisor halt, and trace adapters. |
-| Boundary contract | Versioned per-agent document declaring purpose, role, allow-listed tools, out-of-scope systems, delegatable set, data classes, approval class, owner, on-call, and foundation-model card reference. Lives next to the agent definition in source. |
-| Approval gateway | An out-of-band channel returning a single-use signed decision token before a high-risk action executes. Channels: CLI (dev), webhook (service-to-service), chat (prod). |
-| Kill-switch | Operator-callable API that writes a halt entry the governor consults; in-flight tool calls observing the halt short-circuit to `Decision.DENY` with `halt_reason`. |
+| Control                        | Reference shape                                                                                                                                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Single enforcement point       | A function `governed_call(request) -> result` that all tool invocations pass through. No path to a tool exists outside it.                                                                                                                        |
+| Declarative policy             | Versioned `GovernancePolicy` data (JSON / YAML) loaded at startup, validated against a schema. Code reads the policy; code does not embed it.                                                                                                     |
+| Structured sandboxing          | A typed `ToolRequest` → typed `ToolResult` boundary; the governor produces a `DecisionRecord` artifact for every call.                                                                                                                            |
+| Fail-closed default            | `default_allow = False` at the policy root; unknown tools, unparseable policies, and missing guardrail content all deny.                                                                                                                          |
+| Audit trail                    | An append-only structured log (JSONL or equivalent) with chained SHA-256 per entry. Each entry's checksum is a function of the previous entry's checksum.                                                                                         |
+| Chain-across-file verification | Audit loader rejects on chain break across rotated files at load time; load is `strict=True` by default.                                                                                                                                          |
+| Signed exports                 | Audit exports carry `(payload, signature, algorithm)` with canonical JSON serialisation; Ed25519 in prod, HMAC-SHA256 in dev.                                                                                                                     |
+| Agent trace model              | A `correlation_id` / `step_id` / `parent_step_id` graph emittable as OpenTelemetry spans. Reconstruction by `correlation_id` is a single query.                                                                                                   |
+| Provider trace adapters        | Per-provider adapter (Bedrock, ADK, AgentCore, Agent Engine, etc.) that lifts native trace events into the canonical `AgentTrace` model. Each adapter is independently testable.                                                                  |
+| Content filters                | A composable filter stack (PII redactor → secret scanner → prompt-injection heuristic) applied to inputs and outputs.                                                                                                                             |
+| Circuit breaker                | A standard breaker abstraction (open / half-open / closed thresholds) wrapping every external dependency.                                                                                                                                         |
+| Reconciliation                 | A scheduled reconciliation pass that detects unevaluated events, stale alerts, audit gaps, and expired approvals.                                                                                                                                 |
+| Health probes                  | Liveness / readiness / deep probes against the governance plane (governor, audit, approval gateway, filters).                                                                                                                                     |
+| Statistical thresholds         | Z-score and χ² baselines per session and per agent; thresholds in declared config, not buried in code.                                                                                                                                            |
+| Policy-as-code                 | Architecture-decision record documenting the policy data shape, schema, and validation pipeline.                                                                                                                                                  |
+| Per-event evaluation           | Architecture-decision record describing how each evaluable event is matched against policies (composable, orthogonal).                                                                                                                            |
+| Event-driven alert pipeline    | Architecture-decision record describing the dispatcher topology, DLQ, retry, and dedup.                                                                                                                                                           |
+| Agent governance decision      | Architecture-decision record consolidating audit chaining, approval gateway, supervisor halt, and trace adapters.                                                                                                                                 |
+| Boundary contract              | Versioned per-agent document declaring purpose, role, allow-listed tools, out-of-scope systems, delegatable set, data classes, approval class, owner, on-call, and foundation-model card reference. Lives next to the agent definition in source. |
+| Approval gateway               | An out-of-band channel returning a single-use signed decision token before a high-risk action executes. Channels: CLI (dev), webhook (service-to-service), chat (prod).                                                                           |
+| Kill-switch                    | Operator-callable API that writes a halt entry the governor consults; in-flight tool calls observing the halt short-circuit to `Decision.DENY` with `halt_reason`.                                                                                |
 
 An adopting project links each row to its actual implementation in a
 companion `GOVERNANCE-MAPPING.md` (see "How to use this document").
@@ -1520,36 +1520,36 @@ external requirements encountered during audit.
 
 ### Google SAIF (6 elements)
 
-| SAIF element | Our sections |
-|---|---|
-| Expand strong security foundations to the AI ecosystem | §7, §12 |
+| SAIF element                                                             | Our sections   |
+| ------------------------------------------------------------------------ | -------------- |
+| Expand strong security foundations to the AI ecosystem                   | §7, §12        |
 | Extend detection and response to bring AI into the org's threat universe | §9, §12.6, §15 |
-| Automate defences to keep pace with existing and new threats | §13, §16.3 |
-| Harmonize platform-level controls to ensure consistent security | §6, §11.4 |
-| Adapt controls to adjust mitigations and create feedback loops | §9.2, §16 |
-| Contextualize AI system risks in surrounding business processes | §3.2, §17 |
+| Automate defences to keep pace with existing and new threats             | §13, §16.3     |
+| Harmonize platform-level controls to ensure consistent security          | §6, §11.4      |
+| Adapt controls to adjust mitigations and create feedback loops           | §9.2, §16      |
+| Contextualize AI system risks in surrounding business processes          | §3.2, §17      |
 
 ### NIST AI RMF 1.0
 
-| Function | Our sections |
-|---|---|
-| Govern | §3 (roles/boundaries), §16 (change mgmt), §17 (operating model) |
-| Map | §3.2 (boundary contract), §11.1 (data classification), §12.1 (threat model) |
-| Measure | §9 (observability), §16.3 (eval) |
-| Manage | §5 (approvals), §13 (resilience), §14 (oversight), §15 (IR) |
+| Function | Our sections                                                                |
+| -------- | --------------------------------------------------------------------------- |
+| Govern   | §3 (roles/boundaries), §16 (change mgmt), §17 (operating model)             |
+| Map      | §3.2 (boundary contract), §11.1 (data classification), §12.1 (threat model) |
+| Measure  | §9 (observability), §16.3 (eval)                                            |
+| Manage   | §5 (approvals), §13 (resilience), §14 (oversight), §15 (IR)                 |
 
 ### EU AI Act high-risk obligations
 
-| Obligation | Our sections |
-|---|---|
-| Risk management system | §3, §12.1 |
-| Data and data governance | §11 |
-| Technical documentation | §3.2 (boundary contract), model cards (§3.2) |
-| Record-keeping / logging | §8 |
-| Transparency and provision of information | §10, §14.4 |
-| Human oversight | §14 |
-| Accuracy, robustness, cybersecurity | §12, §13, §16.3 (eval) |
-| Quality management system | §17 |
+| Obligation                                | Our sections                                 |
+| ----------------------------------------- | -------------------------------------------- |
+| Risk management system                    | §3, §12.1                                    |
+| Data and data governance                  | §11                                          |
+| Technical documentation                   | §3.2 (boundary contract), model cards (§3.2) |
+| Record-keeping / logging                  | §8                                           |
+| Transparency and provision of information | §10, §14.4                                   |
+| Human oversight                           | §14                                          |
+| Accuracy, robustness, cybersecurity       | §12, §13, §16.3 (eval)                       |
+| Quality management system                 | §17                                          |
 
 ---
 
@@ -1596,13 +1596,13 @@ prefer a **five-position numeric tier (0–4)** per action class
 instead of a single role per agent. The two taxonomies are
 compatible; the table below shows how they map.
 
-| Numeric tier | Name | §3.1 role equivalent | Approval requirement | Typical action class |
-|---|---|---|---|---|
-| 0 | Observe | Observer | None (no write) | `discovery.list_services` |
-| 1 | Recommend | Advisor | None (produces drafts only) | `cost.shrink_idle_resource.draft` |
-| 2 | Act-guarded | Operator (policy-gated, no human in loop) | Policy + bounds check; no per-action human approval | `cloud_run.scale_within_range` within declared bounds |
-| 3 | Act-approved | Operator (per-call approval) | Out-of-band human approval per action | `iam.disable_service_account_key` |
-| 4 | Act-autonomous-bounded | Autonomous operator | Policy + bounds + rate limit + kill-switch | `cost.shrink_idle_resource` during declared windows |
+| Numeric tier | Name                   | §3.1 role equivalent                      | Approval requirement                                | Typical action class                                  |
+| ------------ | ---------------------- | ----------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| 0            | Observe                | Observer                                  | None (no write)                                     | `discovery.list_services`                             |
+| 1            | Recommend              | Advisor                                   | None (produces drafts only)                         | `cost.shrink_idle_resource.draft`                     |
+| 2            | Act-guarded            | Operator (policy-gated, no human in loop) | Policy + bounds check; no per-action human approval | `cloud_run.scale_within_range` within declared bounds |
+| 3            | Act-approved           | Operator (per-call approval)              | Out-of-band human approval per action               | `iam.disable_service_account_key`                     |
+| 4            | Act-autonomous-bounded | Autonomous operator                       | Policy + bounds + rate limit + kill-switch          | `cost.shrink_idle_resource` during declared windows   |
 
 Two key compatibility rules apply:
 

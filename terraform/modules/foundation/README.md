@@ -26,25 +26,25 @@ module "foundation" {
 
 ## Inputs
 
-| Name | Type | Default | Required | Description |
-|------|------|---------|----------|-------------|
-| project_id | string | — | yes | GCP project ID |
-| env | string | — | yes | dev or prod |
-| essential_contacts_email | string | — | yes | Contact email |
-| region | string | europe-west2 | no | GCP region |
-| org_id | string | "" | no | GCP org ID |
-| folder_id | string | "" | no | GCP folder ID |
-| vpc_name | string | aop-vpc | no | VPC name |
-| subnet_name | string | aop-subnet-ew2 | no | Subnet name |
-| subnet_cidr | string | 10.10.0.0/24 | no | Subnet CIDR |
-| artifact_registry_repo | string | aop-containers | no | AR repo name |
+| Name                     | Type   | Default        | Required | Description    |
+| ------------------------ | ------ | -------------- | -------- | -------------- |
+| project_id               | string | —              | yes      | GCP project ID |
+| env                      | string | —              | yes      | dev or prod    |
+| essential_contacts_email | string | —              | yes      | Contact email  |
+| region                   | string | europe-west2   | no       | GCP region     |
+| org_id                   | string | ""             | no       | GCP org ID     |
+| folder_id                | string | ""             | no       | GCP folder ID  |
+| vpc_name                 | string | aop-vpc        | no       | VPC name       |
+| subnet_name              | string | aop-subnet-ew2 | no       | Subnet name    |
+| subnet_cidr              | string | 10.10.0.0/24   | no       | Subnet CIDR    |
+| artifact_registry_repo   | string | aop-containers | no       | AR repo name   |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| vpc_id | VPC self-link |
-| vpc_name | VPC name |
-| subnet_id | Subnet self-link |
-| artifact_registry_repo_id | AR repository resource ID |
-| artifact_registry_repo_url | Docker push URL |
+| Name                       | Description               |
+| -------------------------- | ------------------------- |
+| vpc_id                     | VPC self-link             |
+| vpc_name                   | VPC name                  |
+| subnet_id                  | Subnet self-link          |
+| artifact_registry_repo_id  | AR repository resource ID |
+| artifact_registry_repo_url | Docker push URL           |

@@ -27,15 +27,15 @@ module "eventing" {
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| env | string | — | yes |
-| audit_bq_dataset_id | string | — | yes |
-| audit_bq_table_id | string | audit_events | no |
-| slack_notifier_url | string | placeholder | no |
-| deletion_policy_prevent | bool | false | no |
-| region | string | europe-west2 | no |
+| Name                    | Type   | Default      | Required |
+| ----------------------- | ------ | ------------ | -------- |
+| project_id              | string | —            | yes      |
+| env                     | string | —            | yes      |
+| audit_bq_dataset_id     | string | —            | yes      |
+| audit_bq_table_id       | string | audit_events | no       |
+| slack_notifier_url      | string | placeholder  | no       |
+| deletion_policy_prevent | bool   | false        | no       |
+| region                  | string | europe-west2 | no       |
 
 ## Outputs
 

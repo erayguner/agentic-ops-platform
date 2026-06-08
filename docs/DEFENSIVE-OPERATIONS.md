@@ -7,12 +7,12 @@ can probe hundreds of systems in the time a human reviews one alert. This
 runbook is AOP's **Part V** — defensive operations at the speed of autonomous
 threats.
 
-> **Source framework:** Anthropic, *Zero Trust for AI Agents* (2026), Part V.
+> **Source framework:** Anthropic, _Zero Trust for AI Agents_ (2026), Part V.
 > **Conformance:** `AGENT_GOVERNANCE_FRAMEWORK v1.1`; cross-referenced from
 > [`GOVERNANCE-MAPPING.md`](./GOVERNANCE-MAPPING.md) (§15 Incident response, §9
 > Observability) and [`DESIGN-REVIEW.md`](./DESIGN-REVIEW.md) Part 15.
-> **Design test (applies to every control here):** *does this make the attack
-> impossible, or just tedious?* Friction controls (rate limits, extra hops) buy
+> **Design test (applies to every control here):** _does this make the attack
+> impossible, or just tedious?_ Friction controls (rate limits, extra hops) buy
 > time but do not stop a determined agentic attacker — prefer controls that
 > remove a capability over controls that throttle it.
 
@@ -56,15 +56,15 @@ Instrument these two metrics before investing anywhere else; they are where
 AI-assisted automation has the most leverage and they matter most as exploit
 windows shorten.
 
-| Metric | Definition | Where it lives | Target |
-|---|---|---|---|
-| **Dwell time** | Seconds from anomaly occurrence to first-pass triage | `aop_alert_dwell_seconds` (distribution, `terraform/modules/observability/main.tf`) | p95 **< 1 h for critical** |
-| **Coverage** | Fraction of alerts routed for human investigation vs total | `aop_alert_triage_total` labelled by `routed_to_human` | Tracked on the Platform Overview dashboard |
-| **Detection speed alert** | p95 critical dwell breaches the 1 h target | `detection_dwell_p95` alert policy → Slack + Pub/Sub | Fires at > 3600 s |
+| Metric                    | Definition                                                 | Where it lives                                                                      | Target                                     |
+| ------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Dwell time**            | Seconds from anomaly occurrence to first-pass triage       | `aop_alert_dwell_seconds` (distribution, `terraform/modules/observability/main.tf`) | p95 **< 1 h for critical**                 |
+| **Coverage**              | Fraction of alerts routed for human investigation vs total | `aop_alert_triage_total` labelled by `routed_to_human`                              | Tracked on the Platform Overview dashboard |
+| **Detection speed alert** | p95 critical dwell breaches the 1 h target                 | `detection_dwell_p95` alert policy → Slack + Pub/Sub                                | Fires at > 3600 s                          |
 
-Standing questions for the security team (from the brief): *would we know within
+Standing questions for the security team (from the brief): _would we know within
 an hour if an agent went rogue? Can the team take time off without worrying
-about undetected agent misbehaviour?* If either answer is uncertain, the
+about undetected agent misbehaviour?_ If either answer is uncertain, the
 foundational controls need more work.
 
 ---
@@ -76,14 +76,14 @@ than a general goal to "improve detection". Prioritise **lateral movement** and
 **credential access**: these are where AI-accelerated attackers get the most
 leverage from a compromised agent identity.
 
-| ATT&CK area | AOP detection surface | Status |
-|---|---|---|
-| Credential Access (T1552 unsecured creds, T1528 token theft) | No exported SA keys (WIF); per-action-class short-lived impersonation (`services/action-broker/impersonation.py`); `gitleaks` + `secret-scan.yml` | Partial — runtime token-anomaly detection is a gap |
-| Lateral Movement / pivot (T1550 alt-auth material) | Per-agent identity + explicit `run.invoker` allow-list; broker ingress `INTERNAL_LOAD_BALANCER`; VPC-SC perimeter (`terraform/modules/governance/`) | Partial — east-west call anomaly baselines are a gap |
-| Privilege Escalation (T1078 valid accounts) | Custom roles ⊂ predefined; Principal Access Boundary; `aop_policy_denial_count` metric | Implemented (static) — per-principal budgets are a gap |
-| Defense Evasion (T1562 impair defences) | Immutable BigQuery audit; SCC v2 + Model Armor floor settings; ConfigChange auditing | Partial — hash-chained/signed audit is a gap |
-| Collection / Exfiltration (T1041) | Egress denied by default (VPC-SC); output redaction (`services/slack-notifier/redaction.py`); memory injection screen (`aop_common/memory.py`) | Partial |
-| Impact (T1485/T1489) | Single write chokepoint + tiered approval; auto-rollback on post-condition failure (`services/action-broker/broker.py`) | Implemented (write side) |
+| ATT&CK area                                                  | AOP detection surface                                                                                                                               | Status                                                 |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Credential Access (T1552 unsecured creds, T1528 token theft) | No exported SA keys (WIF); per-action-class short-lived impersonation (`services/action-broker/impersonation.py`); `gitleaks` + `secret-scan.yml`   | Partial — runtime token-anomaly detection is a gap     |
+| Lateral Movement / pivot (T1550 alt-auth material)           | Per-agent identity + explicit `run.invoker` allow-list; broker ingress `INTERNAL_LOAD_BALANCER`; VPC-SC perimeter (`terraform/modules/governance/`) | Partial — east-west call anomaly baselines are a gap   |
+| Privilege Escalation (T1078 valid accounts)                  | Custom roles ⊂ predefined; Principal Access Boundary; `aop_policy_denial_count` metric                                                              | Implemented (static) — per-principal budgets are a gap |
+| Defense Evasion (T1562 impair defences)                      | Immutable BigQuery audit; SCC v2 + Model Armor floor settings; ConfigChange auditing                                                                | Partial — hash-chained/signed audit is a gap           |
+| Collection / Exfiltration (T1041)                            | Egress denied by default (VPC-SC); output redaction (`services/slack-notifier/redaction.py`); memory injection screen (`aop_common/memory.py`)      | Partial                                                |
+| Impact (T1485/T1489)                                         | Single write chokepoint + tiered approval; auto-rollback on post-condition failure (`services/action-broker/broker.py`)                             | Implemented (write side)                               |
 
 **Atomic Red Team — one-afternoon coverage check.** Atomic Red Team is an
 open-source library of small, safe tests mapped to ATT&CK techniques. Run a
@@ -95,7 +95,7 @@ concrete coverage map — repeat quarterly and after any detection change.
 
 ## 4. Session-level kill-switch
 
-**Today:** the Slack `Reject` button halts a *pending* action chain — the
+**Today:** the Slack `Reject` button halts a _pending_ action chain — the
 broker receives `ops.actions.approved` carrying `decision: rejected`
 ([`services/slack-notifier/interactivity.py`](../services/slack-notifier/interactivity.py)).
 This is action-level, not session-level.
@@ -145,17 +145,17 @@ authorise each action, how fast they can be authorised, and what evidence is
 required — then practise the authorisation path so it is not improvised during
 an incident.
 
-| Emergency action | Pre-authorised by | How | Evidence required |
-|---|---|---|---|
-| Take a service offline | Platform Owner **or** on-call SRE | Cloud Run revision → 0; or demote action class to Tier 0 | Correlation id + triage disposition |
-| Rotate a credential | DevSecOps Reviewer | New Secret Manager version (`latest`); services pick it up without redeploy | Affected secret + reason |
-| Block a network path | Platform Owner | Tighten VPC-SC / firewall (`terraform/modules/foundation/`, `governance/`) | Source/destination + signal |
-| Demote an action class to Tier 0 | On-call SRE (single approver in emergency) | Set tier `0` in `services/action-broker/policy/action_classes.yaml`, apply | Action class + incident id |
+| Emergency action                 | Pre-authorised by                          | How                                                                         | Evidence required                   |
+| -------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------- |
+| Take a service offline           | Platform Owner **or** on-call SRE          | Cloud Run revision → 0; or demote action class to Tier 0                    | Correlation id + triage disposition |
+| Rotate a credential              | DevSecOps Reviewer                         | New Secret Manager version (`latest`); services pick it up without redeploy | Affected secret + reason            |
+| Block a network path             | Platform Owner                             | Tighten VPC-SC / firewall (`terraform/modules/foundation/`, `governance/`)  | Source/destination + signal         |
+| Demote an action class to Tier 0 | On-call SRE (single approver in emergency) | Set tier `0` in `services/action-broker/policy/action_classes.yaml`, apply  | Action class + incident id          |
 
 All emergency changes are still **logged and audited** (`AuditRecord`) and
 **reviewed after the fact** under the normal 2-reviewer rule in
 [`CONTRIBUTING.md`](../CONTRIBUTING.md). Emergency speed buys a relaxed
-*pre*-approval, never a skipped *audit*.
+_pre_-approval, never a skipped _audit_.
 
 ---
 

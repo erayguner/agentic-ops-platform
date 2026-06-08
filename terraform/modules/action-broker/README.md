@@ -28,19 +28,19 @@ The broker is the **only** component that holds write grants. It holds no broad 
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| env | string | — | yes |
-| ops_actions_approved_topic_id | string | — | yes |
-| ops_actions_requested_topic_id | string | — | yes |
-| ops_actions_executed_topic_id | string | — | yes |
-| ops_audit_topic_id | string | — | yes |
-| container_image | string | placeholder | no |
-| min_instance_count | number | 0 | no |
-| max_instance_count | number | 3 | no |
-| agent_sa_emails | list(string) | `[]` | no |
-| workflows_invoker_resource_pattern | string | `""` | no |
+| Name                               | Type         | Default     | Required |
+| ---------------------------------- | ------------ | ----------- | -------- |
+| project_id                         | string       | —           | yes      |
+| env                                | string       | —           | yes      |
+| ops_actions_approved_topic_id      | string       | —           | yes      |
+| ops_actions_requested_topic_id     | string       | —           | yes      |
+| ops_actions_executed_topic_id      | string       | —           | yes      |
+| ops_audit_topic_id                 | string       | —           | yes      |
+| container_image                    | string       | placeholder | no       |
+| min_instance_count                 | number       | 0           | no       |
+| max_instance_count                 | number       | 3           | no       |
+| agent_sa_emails                    | list(string) | `[]`        | no       |
+| workflows_invoker_resource_pattern | string       | `""`        | no       |
 
 ## Outputs
 

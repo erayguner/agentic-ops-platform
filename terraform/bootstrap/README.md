@@ -37,10 +37,10 @@ If you later need to import bootstrap resources into a remote backend, use `terr
 
 The WIF provider trusts GitHub Actions OIDC tokens issued for **this repo only**, and the runner SAs are tightly scoped per environment:
 
-| SA | Impersonatable from | Use |
-|----|---------------------|-----|
-| `sa-tf-runner-dev` | Any workflow run satisfying the provider's `attribute_condition` (push to `main`, or PR event, or run declaring any environment) | `dev` plans & applies |
-| `sa-tf-runner-prod` | **ONLY** workflow runs that declare the GitHub Actions environment named `${var.prod_github_environment}` (default `deploy-prod`) | `prod` applies |
+| SA                  | Impersonatable from                                                                                                               | Use                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `sa-tf-runner-dev`  | Any workflow run satisfying the provider's `attribute_condition` (push to `main`, or PR event, or run declaring any environment)  | `dev` plans & applies |
+| `sa-tf-runner-prod` | **ONLY** workflow runs that declare the GitHub Actions environment named `${var.prod_github_environment}` (default `deploy-prod`) | `prod` applies        |
 
 The provider's `attribute_condition` enforces:
 
@@ -53,7 +53,7 @@ assertion.repository == "<org>/<repo>"
 )
 ```
 
-— so a push to a feature branch *without* a PR or declared environment cannot impersonate either runner.
+— so a push to a feature branch _without_ a PR or declared environment cannot impersonate either runner.
 
 ### Required GitHub-side setup (one-time per repository)
 
@@ -92,7 +92,7 @@ Prod apply (gated by the `deploy-prod` GitHub Environment):
 ```yaml
 jobs:
   prod-apply:
-    environment: deploy-prod          # ← required to satisfy WIF principalSet binding
+    environment: deploy-prod # ← required to satisfy WIF principalSet binding
     permissions:
       id-token: write
       contents: read
@@ -106,12 +106,12 @@ jobs:
 
 ## Inputs
 
-| Name | Type | Default | Required |
-|------|------|---------|----------|
-| project_id | string | — | yes |
-| github_org | string | REPLACE | yes |
-| github_repo | string | REPLACE | yes |
-| prod_github_environment | string | `deploy-prod` | no |
-| region | string | europe-west2 | no |
-| envs | list(string) | [dev, prod] | no |
-| org_slug | string | aop | no |
+| Name                    | Type         | Default       | Required |
+| ----------------------- | ------------ | ------------- | -------- |
+| project_id              | string       | —             | yes      |
+| github_org              | string       | REPLACE       | yes      |
+| github_repo             | string       | REPLACE       | yes      |
+| prod_github_environment | string       | `deploy-prod` | no       |
+| region                  | string       | europe-west2  | no       |
+| envs                    | list(string) | [dev, prod]   | no       |
+| org_slug                | string       | aop           | no       |
