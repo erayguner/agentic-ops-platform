@@ -60,12 +60,12 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.30" },
     { name = "google-cloud-firestore", specifier = ">=2.16" },
     { name = "google-cloud-iam", specifier = ">=2.15" },
-    { name = "google-cloud-pubsub", specifier = ">=2.21" },
+    { name = "google-cloud-pubsub", specifier = ">=2.39.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pydantic-settings", specifier = ">=2.5" },
     { name = "pyyaml", specifier = ">=6.0" },
-    { name = "starlette", specifier = ">=1.0.1" },
+    { name = "starlette", specifier = ">=1.2.1" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.49.0" },
 ]
 
@@ -354,22 +354,22 @@ wheels = [
 
 [[package]]
 name = "google-cloud-pubsub"
-version = "2.38.0"
+version = "2.39.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core", extra = ["grpc"] },
     { name = "google-auth" },
     { name = "grpc-google-iam-v1" },
-    { name = "grpcio", marker = "python_full_version < '3.14'" },
+    { name = "grpcio" },
     { name = "grpcio-status" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
     { name = "proto-plus" },
     { name = "protobuf" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/a5/0c7b27493ad6e744d175999e93bc51141ae70b23184d0bdbcb13fc9a4b29/google_cloud_pubsub-2.38.0.tar.gz", hash = "sha256:9212309f8d6cfaefb577bca52492b13464b56e584505408685d63e69346c56cf", size = 402783, upload-time = "2026-05-07T08:04:29.024Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/2b/4bf2c17e319ff65340389565b0e1b4d72696d87802b2f5f94390fbefa73c/google_cloud_pubsub-2.39.0.tar.gz", hash = "sha256:eed65e25f57f95bf3e02d96d7ee171688b23922471f9f21b5a91ed90e1282c0f", size = 402096, upload-time = "2026-06-03T15:28:26.396Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0c/ea/d000ce0663c8989651f80b02e2ea8bb700d29140ade580f275b4ec4c9687/google_cloud_pubsub-2.38.0-py3-none-any.whl", hash = "sha256:fed2c40cfb77d58f6dced563a8146a8c34319c7dfbbb4d045b6c9c101e043db9", size = 324839, upload-time = "2026-05-07T08:03:04.923Z" },
+    { url = "https://files.pythonhosted.org/packages/93/20/dd0b27d4ad4577c062e77ff968ca3e2d404186cd78c8a2a53a0ef5fe5389/google_cloud_pubsub-2.39.0-py3-none-any.whl", hash = "sha256:7210d691a46d7a66559696899ebe6eb731e63de29b624964b3be4dd2d12d3e19", size = 324665, upload-time = "2026-06-03T15:27:41.119Z" },
 ]
 
 [[package]]
@@ -766,14 +766,14 @@ wheels = [
 
 [[package]]
 name = "starlette"
-version = "1.2.0"
+version = "1.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/bf/616a066c2760f6c2b1ae3437cc28149734d069fbb46511712beae118a68c/starlette-1.2.0.tar.gz", hash = "sha256:3c5a6b23fff42492914e93890bb80cbfea72dbf37de268eec06185d62a4ca553", size = 2668923, upload-time = "2026-05-28T11:42:50.568Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/25/44/ec35f1b6e83094b997da438a02c8c9b0ade2b1e84cfc48bd4656780760a6/starlette-1.2.1.tar.gz", hash = "sha256:9b9b5ebb992e67d6093741e63c2f59e4f6fff986f81163c087867bd7b924b3f6", size = 2701854, upload-time = "2026-05-31T01:07:51.847Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/85/492183764d5d01d4514be3730fdb8e228a80605783099551c51627578b5d/starlette-1.2.0-py3-none-any.whl", hash = "sha256:36e0c76ac59157e75dc4b3bdeafba97fb04eaf1878045f15dbef666a6f092ed7", size = 73213, upload-time = "2026-05-28T11:42:48.801Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/54/196d0c1db10af76baa4f64894448505d60d3cdf70ef92cbb35f46a4e4c71/starlette-1.2.1-py3-none-any.whl", hash = "sha256:4de0082d08c8f6764a85a54cf1120d6939507a19905c7768acad2a9f875d2b89", size = 73350, upload-time = "2026-05-31T01:07:50.09Z" },
 ]
 
 [[package]]
