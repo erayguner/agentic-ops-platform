@@ -59,6 +59,7 @@ agentic-ops-platform/
 │   ├── aop_devsecops/
 │   ├── aop_platform/
 │   ├── aop_finops/
+│   ├── aop_decommission/           ← project-closure campaign agent (inventory → teardown → validate)
 │   └── deployment/                 ← deploys agents to Agent Engine
 └── services/
     ├── slack-notifier/             ← Cloud Run; OpsNotification → Block Kit; interactivity webhook

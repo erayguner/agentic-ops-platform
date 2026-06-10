@@ -76,6 +76,12 @@ AGENT_REGISTRY: dict[str, dict[str, str]] = {
         "sa": "sa-finops",
         "description": "FinOps Agent — cost anomalies, rightsizing, budget burn",
     },
+    "decommission": {
+        "package": "aop_decommission",
+        "builder": "aop_decommission.agent:build_decommission_agent",
+        "sa": "sa-decommission",
+        "description": "Decommission Agent — closure inventory, teardown planning, validation",
+    },
 }
 
 # Regions that do NOT support Agent Engine (non-exhaustive guard for the most

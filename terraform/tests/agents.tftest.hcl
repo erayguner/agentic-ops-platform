@@ -209,3 +209,58 @@ run "finops_plans_clean_in_dev_without_dataset_scope" {
     package_pickle_gcs_uri     = "gs://test-bucket/finops/agent.pkl"
   }
 }
+
+# ---------------------------------------------------------------------------
+# decommission
+# ---------------------------------------------------------------------------
+
+run "decommission_plans_clean_with_minimum_inputs" {
+  command = plan
+  providers = {
+    google      = google
+    google-beta = google-beta
+  }
+  module {
+    source = "../modules/agents/decommission"
+  }
+
+  variables {
+    project_id                 = "ops-agents-dev"
+    region                     = "europe-west2"
+    env                        = "dev"
+    ops_findings_topic_id      = "projects/ops-agents-dev/topics/ops.findings"
+    ops_notifications_topic_id = "projects/ops-agents-dev/topics/ops.notifications"
+    ops_audit_topic_id         = "projects/ops-agents-dev/topics/ops.audit"
+    package_pickle_gcs_uri     = "gs://test-bucket/decommission/agent.pkl"
+  }
+}
+
+run "decommission_sa_is_read_only" {
+  command = plan
+  providers = {
+    google      = google
+    google-beta = google-beta
+  }
+  module {
+    source = "../modules/agents/decommission"
+  }
+
+  variables {
+    project_id                 = "ops-agents-dev"
+    region                     = "europe-west2"
+    env                        = "prod"
+    ops_findings_topic_id      = "projects/ops-agents-dev/topics/ops.findings"
+    ops_notifications_topic_id = "projects/ops-agents-dev/topics/ops.notifications"
+    ops_audit_topic_id         = "projects/ops-agents-dev/topics/ops.audit"
+    package_pickle_gcs_uri     = "gs://test-bucket/decommission/agent.pkl"
+    deletion_policy_prevent    = true
+  }
+
+  # Every granted role must be read-only — assert the module exposes only those.
+  assert {
+    condition = alltrue([
+      for r in output.predefined_roles : can(regex("(?i)(viewer|reader|browser)$", r))
+    ])
+    error_message = "Decommission SA must hold only read-only roles."
+  }
+}

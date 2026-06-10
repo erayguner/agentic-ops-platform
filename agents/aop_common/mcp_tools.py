@@ -84,6 +84,19 @@ FINOPS_MCP_ENDPOINTS: list[str] = [
     MONITORING_MCP,
 ]
 
+# Decommission is a read-only *discovery* surface: it inventories the estate
+# (Cloud Asset Inventory + Resource Manager), reads activity/cost signals
+# (Monitoring, Logging, Recommender) to classify dormant/idle/orphaned/billable
+# resources, and proposes every teardown through the Action Broker. It holds NO
+# delete/write IAM — irreversible destroys go via the Broker's policy-gated
+# `terraform.destroy_target` / `decommission.delete_resource` executors only.
+DECOMMISSION_MCP_ENDPOINTS: list[str] = [
+    ASSET_INVENTORY_MCP,
+    RESOURCE_MANAGER_MCP,
+    MONITORING_MCP,
+    LOGGING_MCP,
+]
+
 
 def build_mcp_toolsets(
     allowed_endpoints: list[str],

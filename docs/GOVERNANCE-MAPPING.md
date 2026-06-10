@@ -175,6 +175,21 @@ tiering does not measure. Both scales agree on the forward work.
 | §3.2 boundary contract      | Partial     | `aop_common/config.py:AopSettings` declares purpose / role / scope / approval class. Foundation-model card reference is in `aop_common/models.py:ModelFactory`. The contract is not yet a _single artefact per agent_ — it is reconstructed from settings + prompts. **Gap:** consolidate into a per-agent `boundary.yaml`. |
 | §3.3 multi-agent boundaries | Partial     | Orchestrator (`aop_orchestrator/agent.py`) coordinates specialists via shared schemas (`aop_common/schemas.py:Finding`). A2A protocol is not yet wired; the seam is the `Finding` envelope carrying `agent_identity` and `correlation_id`. **Gap:** agent cards (framework Appendix E.1) not yet served.                    |
 
+### §3.4 Decommission Agent — project closure
+
+The Decommission Agent (`agents/aop_decommission/`, domain `decommission`) is the
+one specialist whose mandate is destruction, so it is held to the strictest
+boundary and is a concrete instantiation of the controls above:
+
+| Property                        | Implementation                                                                                                                                                                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Read-only identity (§7)         | `terraform/modules/agents/decommission` grants only viewer roles (Asset Inventory, Resource Manager, Monitoring, Logging, Recommender); a `check` block fails the plan on any non-read-only role. No delete/write IAM.                                     |
+| Execution split (§4.1)          | The agent only *proposes*; teardown runs through `services/action-broker` via two new classes — `terraform.destroy_target`, `decommission.delete_resource` (`executors/__init__.py`, `policy/action_classes.yaml`).                                       |
+| Irreversible-class quorum (§5.3) | Both destroy classes are Tier 3 — dev 1 approver, **prod 2 approvers** — and bounded by `max_blast_radius` (`target_count` stamped per campaign), so an oversized sweep is denied at the Broker before any delete.                                       |
+| Retention fail-safe             | Exemption policy (`aop_decommission/exemptions.py`) **halts** the campaign on a missing/malformed/match-everything policy rather than deleting; retention is transitive (a dependency of any retained resource is demoted to manual review).               |
+| Preservation (§11)              | Post-decommission validation (`aop_decommission/validation.py`) asserts audit / billing / compliance / backup artefacts were preserved; the closure report (`report.py`) redacts secrets and personal data before it is emitted.                          |
+| Auditability (§8)               | Every lifecycle phase emits via the campaign `AuditSink` (inventory → plan → execute → validate), reusing the `ops.audit` `AuditRecord` stream.                                                                                                          |
+
 ## §4 — Tool and MCP access controls
 
 | Sub-section                      | Status      | Implementation                                                                                                                                                                                                                                                                            |

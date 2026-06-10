@@ -1,0 +1,51 @@
+# Decommission exemption policy — what must SURVIVE project closure.
+#
+# Every rule retains the resources it matches; a `reason` is MANDATORY and is
+# reproduced verbatim in the final decommission report. Match criteria within a
+# rule are ANDed; `name`, `type`, and `service` accept fnmatch globs. A rule with
+# no criteria, a missing `reason`, a duplicate `id`, or malformed YAML HALTS the
+# campaign — the engine refuses to delete when retention cannot be trusted
+# (aop_decommission/exemptions.py).
+#
+# Copy this file, bind it to your project, and pass its path to the campaign.
+
+exemptions:
+  # --- Compliance & audit: never tear these down during closure ---------------
+  - id: retain-audit-log-sinks
+    reason: "Audit log sinks are legally retained evidence — keep until the retention clock expires."
+    type: "logging.googleapis.com/LogSink"
+
+  - id: retain-audit-log-buckets
+    reason: "_Required log bucket holds the immutable audit trail (compliance hold)."
+    type: "logging.googleapis.com/LogBucket"
+    name: "_Required"
+
+  - id: retain-billing-export-dataset
+    reason: "Billing export dataset is needed for final cost reconciliation and FinOps records."
+    service: "bigquery"
+    label_selector:
+      purpose: "billing-export"
+
+  # --- Backups & legal hold ---------------------------------------------------
+  - id: retain-compliance-backups
+    reason: "Backups under a legal hold; deletion would breach the retention obligation."
+    tag_selector:
+      legal-hold: "true"
+
+  # --- Break-glass identity ---------------------------------------------------
+  - id: retain-breakglass-sa
+    reason: "Break-glass service account retained for emergency access during the closure window."
+    type: "iam.googleapis.com/ServiceAccount"
+    name: "breakglass-*"
+
+  # --- Explicit, by exact resource id -----------------------------------------
+  - id: retain-explicit-state-bucket
+    reason: "Terraform remote state bucket — keep until all dependent stacks are destroyed."
+    resource_id: "//storage.googleapis.com/projects/_/buckets/example-tfstate"
+
+  # --- Time-boxed exemption (auto-expires) ------------------------------------
+  - id: retain-handover-dashboard-until-q3
+    reason: "Ops handover dashboard needed until the Q3 review; exemption lapses afterwards."
+    service: "monitoring"
+    name: "handover-*"
+    expires_at: "2026-09-30T00:00:00Z"

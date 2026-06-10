@@ -50,7 +50,9 @@ class TriageVerdict:
     disposition: Disposition
     confidence: float
     rationale: str
-    recommended_domain: Literal["sre", "devsecops", "platform", "finops"] | None = None
+    recommended_domain: Literal["sre", "devsecops", "platform", "finops", "decommission"] | None = (
+        None
+    )
     model: ModelUsage | None = None
 
 

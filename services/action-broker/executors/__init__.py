@@ -46,6 +46,8 @@ _REGISTRY: dict[str, str] = {
     "scc.mute_finding": "executors.scc_mute_finding",
     "workflows.run": "executors.workflows_run",
     "terraform.plan": "executors.terraform_plan",
+    "terraform.destroy_target": "executors.terraform_destroy_target",
+    "decommission.delete_resource": "executors.decommission_delete_resource",
     "cost.shrink_idle_resource": "executors.cost_shrink_idle_resource",
     "incident.escalate_to_human": "executors.incident_escalate_to_human",
 }

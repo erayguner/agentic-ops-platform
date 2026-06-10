@@ -116,6 +116,40 @@ action_classes:
         required_approvers: 0
         bounds: {}
 
+  # Decommission teardown — irreversible. Always human-approved (never Tier 4),
+  # prod requires two approvers, and max_blast_radius caps a runaway campaign:
+  # the agent stamps target_count = number of resources the campaign will destroy,
+  # so an oversized sweep is denied at the Broker before a single delete runs.
+  - name: terraform.destroy_target
+    environments:
+      - env: dev
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds:
+          max_blast_radius: 25
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 2
+        bounds:
+          max_blast_radius: 10
+
+  - name: decommission.delete_resource
+    environments:
+      - env: dev
+        tier: 3
+        allowed: true
+        required_approvers: 1
+        bounds:
+          max_blast_radius: 25
+      - env: prod
+        tier: 3
+        allowed: true
+        required_approvers: 2
+        bounds:
+          max_blast_radius: 5
+
   - name: cost.shrink_idle_resource
     environments:
       - env: dev

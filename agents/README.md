@@ -34,6 +34,14 @@ agents/
 ├── aop_devsecops/
 ├── aop_platform/
 ├── aop_finops/
+├── aop_decommission/       ← WorkflowAgent + pure-Python closure engine
+│   ├── inventory.py        ← discover + reconcile + classify
+│   ├── exemptions.py       ← policy-driven retention (fail-safe)
+│   ├── planner.py          ← dry-run plan + dependency-ordered teardown
+│   ├── executor.py         ← staged, idempotent, propose-only via the Broker
+│   ├── validation.py       ← post-decommission assurance
+│   ├── report.py           ← closure report (redacted)
+│   └── campaign.py         ← end-to-end lifecycle
 └── deployment/
     └── deploy.py           ← CLI skeleton — dry-run only
 ```
@@ -50,6 +58,7 @@ names exactly, so no source-to-target mapping is required in `pyproject.toml`.
 | DevSecOps        | `aop_devsecops`    | `sa-devsecops`    | SCC, IAM drift, key exposure          |
 | Platform         | `aop_platform`     | `sa-platform`     | Drift, IaC state, hygiene, compliance |
 | FinOps           | `aop_finops`       | `sa-finops`       | Cost, rightsizing, budget             |
+| Decommission     | `aop_decommission` | `sa-decommission` | Project closure: inventory, teardown plan, validation |
 
 ## Set up the dev environment
 

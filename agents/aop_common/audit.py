@@ -29,7 +29,7 @@ class AuditEmitter:
         project: GCP project id hosting the Pub/Sub topic.
         agent_identity: SPIFFE URI or SA email of the emitting agent.
         environment: 'dev' or 'prod'.
-        domain: Agent domain — sre, devsecops, platform, finops, orchestrator.
+        domain: Agent domain — sre, devsecops, platform, finops, decommission, orchestrator.
     """
 
     def __init__(

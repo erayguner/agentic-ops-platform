@@ -147,7 +147,7 @@ class Finding(BaseModel):
     correlation_id: str = Field(...)
     produced_at: str = Field(default_factory=_now_rfc3339)
     agent_identity: str = Field(..., description="SPIFFE URI or SA email of the producing agent.")
-    domain: Literal["sre", "devsecops", "platform", "finops"]
+    domain: Literal["sre", "devsecops", "platform", "finops", "decommission"]
     summary: str = Field(..., min_length=1)
     cause_hypothesis: str | None = None
     confidence: float = Field(..., ge=0.0, le=1.0)
@@ -297,7 +297,7 @@ class OpsNotification(BaseModel):
     produced_at: str = Field(default_factory=_now_rfc3339)
     severity: Literal["info", "low", "medium", "high", "critical"]
     environment: Literal["dev", "prod"]
-    domain: Literal["sre", "devsecops", "platform", "finops", "orchestrator"]
+    domain: Literal["sre", "devsecops", "platform", "finops", "decommission", "orchestrator"]
 
     # Brief's required fields.
     summary: str = Field(..., min_length=1)
@@ -353,7 +353,7 @@ class AuditRecord(BaseModel):
     agent_identity: str = Field(...)
     human_identity: str | None = None
     environment: Literal["dev", "prod"]
-    domain: Literal["sre", "devsecops", "platform", "finops", "orchestrator"]
+    domain: Literal["sre", "devsecops", "platform", "finops", "decommission", "orchestrator"]
     action_class: str | None = None
     policy_decision: PolicyDecision | None = None
     evidence_refs: list[str] = Field(default_factory=list)
@@ -408,7 +408,9 @@ class TriageDisposition(BaseModel):
         ...,
         description="True iff the alert is routed for human investigation (coverage numerator).",
     )
-    recommended_domain: Literal["sre", "devsecops", "platform", "finops"] | None = None
+    recommended_domain: Literal["sre", "devsecops", "platform", "finops", "decommission"] | None = (
+        None
+    )
     confidence: float = Field(..., ge=0.0, le=1.0)
     rationale: str = Field(
         ..., min_length=1, description="Why this disposition — decision transparency."
