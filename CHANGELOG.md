@@ -5,6 +5,14 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.1...v0.9.0) (2026-06-11)
+
+
+### Features
+
+* **decommission:** add decommission agent and related actions ([7dd0333](https://github.com/erayguner/agentic-ops-platform/commit/7dd0333cab8423732783102bf0caef03c54d4da7))
+* **decommission:** introduce Decommission Agent for project closure ([6f04313](https://github.com/erayguner/agentic-ops-platform/commit/6f04313c40e4be2d4642b6b16dc97f6df33b9c5e))
+
 ## [0.8.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.0...v0.8.1) (2026-06-08)
 
 
