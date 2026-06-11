@@ -310,6 +310,14 @@ class ExecutionRecord(BaseModel):
     detail: str | None = None
     error: str | None = None
     idempotency_key: str | None = None
+    approval_window_until: str | None = Field(
+        None,
+        description=(
+            "RFC3339 expiry of the Broker's approval window when status is "
+            "pending_approval — lets a re-run avoid re-queueing an approval "
+            "that is still open."
+        ),
+    )
 
 
 class ExecutionResult(BaseModel):
@@ -396,6 +404,10 @@ class DecommissionReport(BaseModel):
     retained_exempt: list[ExemptionMatch] = Field(default_factory=list)
     skipped: list[str] = Field(default_factory=list)
     failed: list[str] = Field(default_factory=list)
+    failure_details: dict[str, str] = Field(
+        default_factory=dict,
+        description="resource_id → redacted failure/deny cause, for the remediation section.",
+    )
     manual_review: list[str] = Field(default_factory=list)
     pending_approval: list[str] = Field(default_factory=list)
 

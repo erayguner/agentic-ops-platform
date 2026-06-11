@@ -47,7 +47,7 @@ foundation  eventing                      governance         observability
 
                                  ┌────────── agents/ (opt-in) ───────────────┐
                                  │ orchestrator  sre  devsecops  platform    │
-                                 │                              finops       │
+                                 │                 finops  decommission      │
                                  └────────────────────────────────────────────┘
 ```
 
@@ -57,22 +57,23 @@ flag to false and the underlying module is not instantiated at all.
 
 ## Module catalogue
 
-| Module                        | Purpose                                                       | Default state                  |
-| ----------------------------- | ------------------------------------------------------------- | ------------------------------ |
-| `modules/aop-platform`        | Top-level composition (use this)                              | n/a                            |
-| `modules/foundation`          | VPC, Artifact Registry, Essential Contacts, API enable        | `enable_foundation = true`     |
-| `modules/eventing`            | Pub/Sub spine, schemas, DLQs, BQ audit table, Eventarc        | `enable_eventing = true`       |
-| `modules/governance`          | Model Armor, SCC notify, Org Policy, audit sink, Auditor role | `enable_governance = true`     |
-| `modules/observability`       | Dashboards, alerts, log-based metrics, uptime checks, SLOs    | `enable_observability = true`  |
-| `modules/action-broker`       | Cloud Run broker + per-action-class SAs                       | `enable_action_broker = true`  |
-| `modules/slack-notifier`      | Cloud Run notifier + Slack secrets                            | `enable_slack_notifier = true` |
-| `modules/agents/_base`        | Shared per-agent base (SA, engine, IAM, schedule, checks)     | n/a                            |
-| `modules/agents/orchestrator` | Ops Orchestrator agent                                        | opt-in                         |
-| `modules/agents/sre`          | SRE agent                                                     | opt-in                         |
-| `modules/agents/devsecops`    | DevSecOps agent                                               | opt-in                         |
-| `modules/agents/platform`     | Platform Engineering agent                                    | opt-in                         |
-| `modules/agents/finops`       | FinOps agent                                                  | opt-in                         |
-| `modules/agent-runtime`       | Legacy monolithic agent module (kept for back-compat)         | use new agents/ instead        |
+| Module                        | Purpose                                                                                          | Default state                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------ |
+| `modules/aop-platform`        | Top-level composition (use this)                                                                 | n/a                            |
+| `modules/foundation`          | VPC, Artifact Registry, Essential Contacts, API enable                                           | `enable_foundation = true`     |
+| `modules/eventing`            | Pub/Sub spine, schemas, DLQs, BQ audit table, Eventarc                                           | `enable_eventing = true`       |
+| `modules/governance`          | Model Armor, SCC notify, Org Policy, audit sink, Auditor role                                    | `enable_governance = true`     |
+| `modules/observability`       | Dashboards, alerts, log-based metrics, uptime checks, SLOs                                       | `enable_observability = true`  |
+| `modules/action-broker`       | Cloud Run broker + per-action-class SAs                                                          | `enable_action_broker = true`  |
+| `modules/slack-notifier`      | Cloud Run notifier + Slack secrets                                                               | `enable_slack_notifier = true` |
+| `modules/agents/_base`        | Shared per-agent base (SA, engine, IAM, schedule, checks)                                        | n/a                            |
+| `modules/agents/orchestrator` | Ops Orchestrator agent                                                                           | opt-in                         |
+| `modules/agents/sre`          | SRE agent                                                                                        | opt-in                         |
+| `modules/agents/devsecops`    | DevSecOps agent                                                                                  | opt-in                         |
+| `modules/agents/platform`     | Platform Engineering agent                                                                       | opt-in                         |
+| `modules/agents/finops`       | FinOps agent                                                                                     | opt-in                         |
+| `modules/agents/decommission` | Decommission agent — project closure (standalone; not yet in the composition's `enabled_agents`) | opt-in                         |
+| `modules/agent-runtime`       | Legacy monolithic agent module (kept for back-compat)                                            | use new agents/ instead        |
 
 ## Quick start
 

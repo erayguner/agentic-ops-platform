@@ -13,7 +13,7 @@ It is a **campaign agent**: a multi-stage lifecycle, not a single signal→findi
 pass. The real engine is pure Python and fully unit-tested; the ADK
 `WorkflowAgent` graph in `agent.py` drives it.
 
-```
+```text
 discover → inventory → plan → [approval gate] → execute → validate → report
 ```
 
@@ -35,26 +35,30 @@ Four independent gates sit in front of any real deletion:
 
 ## Modules
 
-| Module          | Responsibility                                                            |
-| --------------- | ------------------------------------------------------------------------- |
-| `inventory.py`  | Discover + reconcile (terraform/unmanaged/drifted/ghost) + classify       |
-| `exemptions.py` | Policy-driven retention; **fails safe by halting** on a bad policy         |
-| `planner.py`    | Dry-run plan, transitive retention, dependency-ordered deletion stages     |
+| Module          | Responsibility                                                              |
+| --------------- | --------------------------------------------------------------------------- |
+| `inventory.py`  | Discover + reconcile (terraform/unmanaged/drifted/ghost) + classify         |
+| `exemptions.py` | Policy-driven retention; **fails safe by halting** on a bad policy          |
+| `planner.py`    | Dry-run plan, transitive retention, dependency-ordered deletion stages      |
 | `executor.py`   | Staged, idempotent, resumable teardown via the Action Broker (propose-only) |
-| `validation.py` | Post-decommission re-scan + closure-readiness assurance                    |
-| `report.py`     | Final report + Markdown render + secret/PII redaction                      |
-| `campaign.py`   | End-to-end lifecycle + per-phase audit emission                            |
-| `agent.py`      | ADK 2.0 WorkflowAgent skeleton (graph nodes drive the campaign)            |
+| `validation.py` | Post-decommission re-scan + closure-readiness assurance                     |
+| `report.py`     | Final report + Markdown render + secret/PII redaction                       |
+| `campaign.py`   | End-to-end lifecycle + per-phase audit emission                             |
+| `agent.py`      | ADK 2.0 WorkflowAgent skeleton (graph nodes drive the campaign)             |
 
 ## MCP allow-list (read-only)
 
-| Endpoint                                   | Status  | Purpose                                  |
-| ------------------------------------------ | ------- | ---------------------------------------- |
-| `cloudasset.googleapis.com/mcp`            | Preview | Live estate inventory (Asset Inventory)  |
-| `cloudresourcemanager.googleapis.com/mcp`  | GA      | Project / ancestry / ownership lookups   |
-| `monitoring.googleapis.com/mcp`            | GA      | Activity + utilisation signals           |
-| `logging.googleapis.com/mcp`              | GA      | Last-activity / access evidence          |
-| Action Broker MCP (custom)                 | —       | `terraform.destroy_target`, `decommission.delete_resource` proposals |
+| Endpoint                        | Status  | Purpose                                                              |
+| ------------------------------- | ------- | -------------------------------------------------------------------- |
+| `cloudasset.googleapis.com/mcp` | Preview | Live estate inventory (Asset Inventory)                              |
+| `monitoring.googleapis.com/mcp` | GA      | Activity + utilisation signals                                       |
+| `logging.googleapis.com/mcp`    | GA      | Last-activity / access evidence                                      |
+| Action Broker MCP (custom)      | —       | `terraform.destroy_target`, `decommission.delete_resource` proposals |
+
+Resource Manager MCP is excluded fleet-wide (overlaps Asset Inventory — see
+`docs/deployment/MCP-SERVERS.md`); project metadata reads are bounded by the
+SA's `resourcemanager.projectViewer` role. Recommender MCP is deferred
+(Preview), matching FinOps — `recommender.viewer` is granted for when it lands.
 
 ## Action classes this agent may propose
 

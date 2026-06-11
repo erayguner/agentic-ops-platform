@@ -10,6 +10,7 @@ Channel routing — (domain, severity) → Slack channel:
   devsecops (any severity)                              → #ops-security
   finops (any severity)                                 → #ops-finops
   platform drift/low                                    → #ops-platform
+  decommission (campaign; critical/high escalates)      → #ops-platform
   eval-related                                          → #ops-eval
   Tier-2 after-the-fact audit                           → #ops-audit
 """
@@ -44,23 +45,26 @@ _SEVERITY_LABEL: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# Channel routing — domain-level dispatch; platform escalates critical/high to incidents.
+# Channel routing — domain-level dispatch; platform-lifecycle domains escalate
+# critical/high to incidents.
 # ---------------------------------------------------------------------------
 
 _DOMAIN_CHANNEL: dict[str, str] = {
     "devsecops": "#ops-security",
     "finops": "#ops-finops",
     "platform": "#ops-platform",  # overridden for critical/high below
+    "decommission": "#ops-platform",  # planned closure work; escalates like platform
     "sre": "#ops-incidents",
     "orchestrator": "#ops-incidents",
 }
 _HIGH_SEVERITY = {"critical", "high"}
+_ESCALATING_DOMAINS = {"platform", "decommission"}
 
 
 def resolve_channel(notification: OpsNotification) -> str:
     """Return the canonical Slack channel for this notification."""
     ch = _DOMAIN_CHANNEL.get(notification.domain, "#ops-incidents")
-    if notification.domain == "platform" and notification.severity in _HIGH_SEVERITY:
+    if notification.domain in _ESCALATING_DOMAINS and notification.severity in _HIGH_SEVERITY:
         ch = "#ops-incidents"
     return ch
 

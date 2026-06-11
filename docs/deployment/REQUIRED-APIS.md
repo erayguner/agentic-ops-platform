@@ -62,9 +62,9 @@ bound agent roles need them to function at runtime; add to `foundation`
 | API                                                               | For                                    |
 | ----------------------------------------------------------------- | -------------------------------------- |
 | `cloudscheduler.googleapis.com`                                   | per-agent Cloud Scheduler triggers     |
-| `recommender.googleapis.com`                                      | FinOps agent recommendations           |
+| `recommender.googleapis.com`                                      | FinOps / Decommission agent roles      |
 | `cloudtrace.googleapis.com`, `clouderrorreporting.googleapis.com` | SRE agent roles                        |
-| `cloudasset.googleapis.com`                                       | DevSecOps / Platform agent roles       |
+| `cloudasset.googleapis.com`                                       | DevSecOps / Platform / Decommission    |
 | `clouddeploy.googleapis.com`                                      | Platform agent role                    |
 | `datastore.googleapis.com` (Firestore)                            | orchestrator `datastore.user`          |
 | `orgpolicy.googleapis.com`                                        | Org Policy (only with an organization) |

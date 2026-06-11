@@ -79,6 +79,7 @@ def build_report(
 
     deleted: list[str] = []
     failed: list[str] = []
+    failure_details: dict[str, str] = {}
     skipped: list[str] = []
     pending: list[str] = []
     if execution is not None:
@@ -87,6 +88,9 @@ def build_report(
                 deleted.append(record.resource_id)
             elif record.status in ("failed", "denied"):
                 failed.append(record.resource_id)
+                failure_details[record.resource_id] = redact_text(
+                    record.error or record.detail or record.broker_status or "unknown failure"
+                )
             elif record.status == "pending_approval":
                 pending.append(record.resource_id)
             elif record.status == "skipped" and record.action_class:
@@ -124,6 +128,7 @@ def build_report(
         retained_exempt=retained,
         skipped=sorted(set(skipped)),
         failed=sorted(set(failed)),
+        failure_details=failure_details,
         manual_review=manual,
         pending_approval=sorted(set(pending)),
         remaining_risks=risks,
@@ -260,7 +265,6 @@ def _section(title: str, items: list[str]) -> list[str]:
 def _remediation_lines(report: DecommissionReport, plan: DecommissionPlan | None) -> list[str]:
     if not report.failed:
         return []
-    detail_by_id: dict[str, str] = {}
     item_by_id = {i.resource.resource_id: i for i in plan.items} if plan else {}
     lines: list[str] = []
     for rid in report.failed:
@@ -268,5 +272,7 @@ def _remediation_lines(report: DecommissionReport, plan: DecommissionPlan | None
         hint = "retry after resolving the dependency/permission/lock, or tear down manually"
         if item is not None and item.resource.security_sensitive:
             hint = "security-sensitive — confirm intent, then retry or remove manually"
-        lines.append(f"`{redact_text(rid)}` — {detail_by_id.get(rid, hint)}")
+        detail = report.failure_details.get(rid)
+        cause = f"{redact_text(detail)}; " if detail else ""
+        lines.append(f"`{redact_text(rid)}` — {cause}{hint}")
     return lines

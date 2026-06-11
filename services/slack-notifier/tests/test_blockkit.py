@@ -108,6 +108,23 @@ class TestResolveChannel:
             resolve_channel(_notification(domain="platform", severity="high")) == "#ops-incidents"
         )
 
+    def test_decommission_low_severity_routes_to_ops_platform(self) -> None:
+        assert (
+            resolve_channel(_notification(domain="decommission", severity="low")) == "#ops-platform"
+        )
+
+    def test_decommission_medium_severity_routes_to_ops_platform(self) -> None:
+        assert (
+            resolve_channel(_notification(domain="decommission", severity="medium"))
+            == "#ops-platform"
+        )
+
+    def test_decommission_critical_escalates_to_ops_incidents(self) -> None:
+        assert (
+            resolve_channel(_notification(domain="decommission", severity="critical"))
+            == "#ops-incidents"
+        )
+
     def test_unknown_domain_defaults_to_ops_incidents(self) -> None:
         assert resolve_channel(_notification(domain="unknown_domain")) == "#ops-incidents"
 

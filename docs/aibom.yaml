@@ -31,7 +31,7 @@ version: 1
 serialNumber: "urn:uuid:00000000-0000-0000-0000-aopplatform001"
 
 metadata:
-  timestamp: "2026-06-05T00:00:00Z" # last manual AIBOM review (see GOVERNANCE-MAPPING §19)
+  timestamp: "2026-06-10T00:00:00Z" # last manual AIBOM review (see GOVERNANCE-MAPPING §19)
   lifecycles:
     - phase: design
     - phase: operations
@@ -170,6 +170,19 @@ components:
         value: advisor
       - name: aop:service-account
         value: sa-finops
+  - type: application
+    bom-ref: agent:decommission
+    group: agent
+    name: aop_decommission
+    description: >-
+      Project-closure campaigns — estate inventory, exemption-aware teardown
+      planning, Broker-gated destroys, post-decommission validation. Read-only
+      IAM; never deletes directly.
+    properties:
+      - name: aop:role-class
+        value: advisor
+      - name: aop:service-account
+        value: sa-decommission
 
   # ---------------------------------------------------------------------------
   # Tool connectors — action classes invocable via the Action Broker.
@@ -256,6 +269,34 @@ components:
         { name: aop:reversible, value: "true" },
       ]
   - type: application
+    bom-ref: action:terraform.destroy_target
+    group: action-class
+    name: terraform.destroy_target
+    description: >-
+      Targeted IaC teardown for decommission campaigns (terraform destroy
+      -target). Irreversible; prod requires 2 approvers; blast radius bounded.
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "false" },
+        { name: aop:required-approvers, value: "2" },
+        { name: aop:max-blast-radius, value: "10" },
+      ]
+  - type: application
+    bom-ref: action:decommission.delete_resource
+    group: action-class
+    name: decommission.delete_resource
+    description: >-
+      Provider-API delete for unmanaged/drifted resources found by the
+      decommission inventory. Irreversible; prod requires 2 approvers.
+    properties:
+      [
+        { name: aop:max-tier, value: "3" },
+        { name: aop:reversible, value: "false" },
+        { name: aop:required-approvers, value: "2" },
+        { name: aop:max-blast-radius, value: "5" },
+      ]
+  - type: application
     bom-ref: action:cost.shrink_idle_resource
     group: action-class
     name: cost.shrink_idle_resource
@@ -319,14 +360,26 @@ services:
     endpoints: ["https://logging.googleapis.com/mcp"]
     authenticated: true
     x-trust-boundary: true
-    properties: [{ name: aop:consumers, value: "orchestrator,sre,devsecops" }]
+    properties:
+      [
+        {
+          name: aop:consumers,
+          value: "orchestrator,sre,devsecops,platform,decommission",
+        },
+      ]
   - bom-ref: mcp:monitoring
     provider: { name: Google }
     name: Cloud Monitoring MCP
     endpoints: ["https://monitoring.googleapis.com/mcp"]
     authenticated: true
     x-trust-boundary: true
-    properties: [{ name: aop:consumers, value: "sre" }]
+    properties:
+      [
+        {
+          name: aop:consumers,
+          value: "orchestrator,sre,devsecops,platform,finops,decommission",
+        },
+      ]
   - bom-ref: mcp:cloudtrace
     provider: { name: Google }
     name: Cloud Trace MCP
@@ -377,7 +430,7 @@ services:
     authenticated: true
     x-trust-boundary: true
     properties:
-      - { name: aop:consumers, value: "devsecops,platform" }
+      - { name: aop:consumers, value: "devsecops,platform,decommission" }
       - { name: aop:release-stage, value: "preview" }
   - bom-ref: mcp:secops
     provider: { name: Google }

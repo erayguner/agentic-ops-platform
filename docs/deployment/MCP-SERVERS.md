@@ -8,7 +8,7 @@ Action Broker.**
 ## Model
 
 - **Clients = the AOP agents.** Each agent (orchestrator, SRE, DevSecOps,
-  Platform, FinOps) runs as its own service account / Vertex AI **Agent
+  Platform, FinOps, Decommission) runs as its own service account / Vertex AI **Agent
   Identity** and connects to the managed remote MCP endpoints
   (`https://<service>.googleapis.com/mcp`, Streamable HTTP, Bearer token from the
   agent's ADC). Wiring: [`agents/aop_common/mcp_tools.py`](../../agents/aop_common/mcp_tools.py).
@@ -38,15 +38,16 @@ groups, asset records, reachability results). No input mutates state.
 
 ## Per-agent allow-lists (least-privilege)
 
-| Agent            | MCP servers                                                                  | Viewer roles granted (besides `roles/mcp.toolUser`)                                                                         |
-| ---------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Orchestrator** | Logging, Monitoring                                                          | `logging.viewer`, `monitoring.viewer`                                                                                       |
-| **SRE**          | Logging, Monitoring, Trace, Error Reporting, Cloud Run, Network Intelligence | `logging.viewer`, `monitoring.viewer`, `cloudtrace.user`, `errorreporting.viewer`, `run.viewer`, `networkmanagement.viewer` |
-| **DevSecOps**    | Logging, Monitoring, Asset Inventory                                         | `logging.privateLogViewer`, `monitoring.viewer`, `cloudasset.viewer`                                                        |
-| **Platform**     | Logging, Monitoring, Asset Inventory, Cloud Run                              | `logging.viewer`, `monitoring.viewer`, `cloudasset.viewer`, `run.viewer`                                                    |
-| **FinOps**       | Monitoring                                                                   | `monitoring.viewer` (+ BigQuery billing — deferred, see below)                                                              |
+| Agent            | MCP servers                                                                  | Viewer roles granted (besides `roles/mcp.toolUser`)                                                                                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Orchestrator** | Logging, Monitoring                                                          | `logging.viewer`, `monitoring.viewer`                                                                                                                                                                                    |
+| **SRE**          | Logging, Monitoring, Trace, Error Reporting, Cloud Run, Network Intelligence | `logging.viewer`, `monitoring.viewer`, `cloudtrace.user`, `errorreporting.viewer`, `run.viewer`, `networkmanagement.viewer`                                                                                              |
+| **DevSecOps**    | Logging, Monitoring, Asset Inventory                                         | `logging.privateLogViewer`, `monitoring.viewer`, `cloudasset.viewer`                                                                                                                                                     |
+| **Platform**     | Logging, Monitoring, Asset Inventory, Cloud Run                              | `logging.viewer`, `monitoring.viewer`, `cloudasset.viewer`, `run.viewer`                                                                                                                                                 |
+| **FinOps**       | Monitoring                                                                   | `monitoring.viewer` (+ BigQuery billing — deferred, see below)                                                                                                                                                           |
+| **Decommission** | Logging, Monitoring, Asset Inventory                                         | `logging.viewer`, `monitoring.viewer`, `cloudasset.viewer` (+ `resourcemanager.projectViewer`, `recommender.viewer` for API-side lookups; Resource Manager + Recommender MCP stay excluded/deferred per the table below) |
 
-All five also receive `roles/mcp.toolUser`.
+All six also receive `roles/mcp.toolUser`.
 
 ## Safety boundaries & when human approval is required
 
@@ -76,10 +77,12 @@ All five also receive `roles/mcp.toolUser`.
    wrappers must include the viewer roles from the matrix in their
    `project_iam_roles`).
 3. **Read-only enforcement (one-off, documented in `GCLOUD-COMMANDS.md`):**
+
    ```bash
    gcloud beta services mcp content-security add --project=PROJECT_ID \
      --prevent-read-write   # confirm exact flag against `gcloud beta services mcp content-security --help`
    ```
+
    Reversal: `gcloud beta services mcp content-security remove …`.
 4. **Client wiring** — `agents/aop_common/mcp_tools.py` per-agent allow-lists.
 

@@ -44,7 +44,7 @@ uv run python deployment/deploy.py --agent orchestrator \
 requirements=[...], extra_packages=["aop_common", "aop_<agent>"], service_account=sa-<agent>@…)`.
 Confirm the `create()` signature against the installed `google-cloud-aiplatform`
 / `google-adk` 2.1.x before first use. Repeat per agent (orchestrator, sre,
-devsecops, platform, finops).
+devsecops, platform, finops, decommission).
 
 ## Path B — Terraform: `modules/agents/_base` (or `agent-runtime`)
 

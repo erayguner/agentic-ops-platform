@@ -13,6 +13,10 @@ Behaviour required of a robust teardown engine, all implemented here:
 * **Idempotent + resumable** — a prior :class:`ExecutionResult` short-circuits
   finished resources, and the Broker itself de-duplicates on
   ``(correlation_id, action_class, target)``, so re-running is always safe.
+  A prior proposal still awaiting human approval (its approval window has not
+  expired) is *not* re-proposed — re-running mid-approval never re-queues the
+  same destroy in Slack; once the window lapses unanswered, a re-run proposes
+  it afresh.
 * **Partial-failure aware** — classifies locked / permission / dependency /
   transient errors, retries only the transient ones, and records every attempt.
 * **Stage-safe halting** — if a stage cannot fully complete (a failure, denial,
@@ -116,10 +120,12 @@ class DecommissionExecutor:
 
         ``dry_run=True`` records what *would* be proposed without calling the
         Broker at all (a second dry-run layer above the Broker's own LIVE_MODE).
-        ``prior`` lets a re-run skip resources already finished.
+        ``prior`` lets a re-run skip resources already finished and avoid
+        re-queueing approvals that are still pending within their window.
         """
         result = ExecutionResult(correlation_id=plan.correlation_id, dry_run=dry_run)
         done = _finished_ids(prior)
+        in_flight = _in_flight_approvals(prior, self._now_fn())
         item_by_id = {i.resource.resource_id: i for i in plan.items}
         total_delete = plan.to_delete
 
@@ -129,6 +135,10 @@ class DecommissionExecutor:
                 item = item_by_id[rid]
                 if rid in done:
                     result.records.append(self._skip(item, "already completed in a prior run"))
+                    continue
+                if rid in in_flight:
+                    result.records.append(self._still_pending(item, in_flight[rid]))
+                    stage_complete = False
                     continue
                 record = self._propose_one(item, plan, total_delete=total_delete, dry_run=dry_run)
                 result.records.append(record)
@@ -221,6 +231,8 @@ class DecommissionExecutor:
             record.broker_status = str(response.get("status", "unknown"))
             record.status = _BROKER_STATUS_MAP.get(record.broker_status, "failed")
             record.detail = response.get("detail") or response.get("reason")
+            window = response.get("approval_window_until")
+            record.approval_window_until = str(window) if window else None
             record.finished_at = self._now_fn().isoformat()
             return record
 
@@ -269,6 +281,20 @@ class DecommissionExecutor:
             finished_at=now,
         )
 
+    def _still_pending(self, item: PlanItem, window_until: str) -> ExecutionRecord:
+        """Carry forward a prior proposal whose approval window is still open."""
+        now = self._now_fn().isoformat()
+        return ExecutionRecord(
+            resource_id=item.resource.resource_id,
+            action_class=item.action_class,
+            status="pending_approval",
+            stage=item.stage,
+            detail=f"approval still pending from a prior run (window until {window_until})",
+            approval_window_until=window_until,
+            started_at=now,
+            finished_at=now,
+        )
+
     def _mark_remaining_skipped(
         self,
         plan: DecommissionPlan,
@@ -299,6 +325,28 @@ def _finished_ids(prior: ExecutionResult | None) -> set[str]:
     if prior is None:
         return set()
     return {r.resource_id for r in prior.records if r.status in _DONE_STATUSES}
+
+
+def _in_flight_approvals(prior: ExecutionResult | None, now: datetime) -> dict[str, str]:
+    """Map resource_id → approval_window_until for prior proposals still awaiting approval.
+
+    Only windows that have not yet expired count; an expired, unanswered approval
+    must be re-proposed (the Broker treats the old request as expired). Records
+    without a captured window are also re-proposed — the safe default when we
+    cannot prove an approval is still open.
+    """
+    if prior is None:
+        return {}
+    out: dict[str, str] = {}
+    for record in prior.records:
+        if record.status != "pending_approval" or not record.approval_window_until:
+            continue
+        window = datetime.fromisoformat(record.approval_window_until)
+        if window.tzinfo is None:
+            window = window.replace(tzinfo=UTC)
+        if window > now:
+            out[record.resource_id] = record.approval_window_until
+    return out
 
 
 def _classify_error(message: str) -> str:

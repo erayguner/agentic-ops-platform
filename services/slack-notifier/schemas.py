@@ -55,7 +55,7 @@ class OpsNotification(BaseModel):
     produced_at: datetime
     severity: str  # info|low|medium|high|critical
     environment: str  # dev|prod
-    domain: str  # sre|devsecops|platform|finops|orchestrator
+    domain: str  # sre|devsecops|platform|finops|decommission|orchestrator
 
     summary: str = Field(min_length=20, max_length=400)
     affected_component: AffectedComponent

@@ -156,3 +156,71 @@ class TestRender:
         md = render_markdown(report, plan=plan)
         assert "admin@corp.example" not in md
         assert "@corp.example" in md
+
+
+# --------------------------------------------------------------------------- #
+# Failure remediation details (requirement: failed deletions + remediation steps)
+# --------------------------------------------------------------------------- #
+
+
+class TestFailureDetails:
+    def test_failure_cause_is_captured_and_redacted(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        execution = ExecutionResult(
+            correlation_id="inc_test",
+            dry_run=False,
+            records=[
+                ExecutionRecord(
+                    resource_id="a",
+                    status="failed",
+                    error="permission: token=abc123secret rejected by IAM",
+                )
+            ],
+        )
+        report = build_report(plan=plan, initial_count=1, mode="execute", execution=execution)
+        assert "a" in report.failure_details
+        assert "abc123secret" not in report.failure_details["a"]
+        assert "permission" in report.failure_details["a"]
+
+    def test_denied_reason_is_captured_from_detail(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        execution = ExecutionResult(
+            correlation_id="inc_test",
+            dry_run=False,
+            records=[
+                ExecutionRecord(
+                    resource_id="a",
+                    status="denied",
+                    detail="bounds_violation:target_count=99 > max=10",
+                )
+            ],
+        )
+        report = build_report(plan=plan, initial_count=1, mode="execute", execution=execution)
+        assert report.failed == ["a"]
+        assert "bounds_violation" in report.failure_details["a"]
+
+    def test_remediation_section_renders_cause_without_secrets(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        execution = ExecutionResult(
+            correlation_id="inc_test",
+            dry_run=False,
+            records=[
+                ExecutionRecord(
+                    resource_id="a",
+                    status="failed",
+                    error="locked: lien held; password=swordfish",
+                )
+            ],
+        )
+        report = build_report(plan=plan, initial_count=1, mode="execute", execution=execution)
+        md = render_markdown(report, plan=plan)
+        assert "Failed / denied — remediation required" in md
+        assert "locked" in md
+        assert "swordfish" not in md
+        assert "retry after resolving" in md

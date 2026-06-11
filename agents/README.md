@@ -10,7 +10,7 @@ the `LIVE_*` env flags are set on the corresponding services.
 
 ## Layout
 
-```
+```text
 agents/
 ├── pyproject.toml          ← uv-managed; google-adk==2.1.*; hatchling build backend
 ├── uv.lock                 ← committed; regenerate with `uv lock`
@@ -51,13 +51,13 @@ names exactly, so no source-to-target mapping is required in `pyproject.toml`.
 
 ## Agent roster
 
-| Agent            | Package            | SA                | Mandate                               |
-| ---------------- | ------------------ | ----------------- | ------------------------------------- |
-| Ops Orchestrator | `aop_orchestrator` | `sa-orchestrator` | Duty manager; dedup; route; HITL      |
-| SRE              | `aop_sre`          | `sa-sre`          | Latency, error rate, SLO, deploys     |
-| DevSecOps        | `aop_devsecops`    | `sa-devsecops`    | SCC, IAM drift, key exposure          |
-| Platform         | `aop_platform`     | `sa-platform`     | Drift, IaC state, hygiene, compliance |
-| FinOps           | `aop_finops`       | `sa-finops`       | Cost, rightsizing, budget             |
+| Agent            | Package            | SA                | Mandate                                               |
+| ---------------- | ------------------ | ----------------- | ----------------------------------------------------- |
+| Ops Orchestrator | `aop_orchestrator` | `sa-orchestrator` | Duty manager; dedup; route; HITL                      |
+| SRE              | `aop_sre`          | `sa-sre`          | Latency, error rate, SLO, deploys                     |
+| DevSecOps        | `aop_devsecops`    | `sa-devsecops`    | SCC, IAM drift, key exposure                          |
+| Platform         | `aop_platform`     | `sa-platform`     | Drift, IaC state, hygiene, compliance                 |
+| FinOps           | `aop_finops`       | `sa-finops`       | Cost, rightsizing, budget                             |
 | Decommission     | `aop_decommission` | `sa-decommission` | Project closure: inventory, teardown plan, validation |
 
 ## Set up the dev environment

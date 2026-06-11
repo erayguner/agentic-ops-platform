@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
@@ -20,6 +21,7 @@ class FakeProposer:
     def __init__(self, *, default_status: str = "success") -> None:
         self.calls: list[dict[str, Any]] = []
         self.status_by_id: dict[str, str] = {}
+        self.approval_window_by_id: dict[str, str] = {}
         self.fail_times: dict[str, int] = {}
         self.permanent_error: dict[str, str] = {}
         self.default_status = default_status
@@ -44,7 +46,10 @@ class FakeProposer:
             self.fail_times[rid] -= 1
             raise RuntimeError("service temporarily unavailable (503)")
         status = self.status_by_id.get(rid, self.default_status)
-        return {"status": status, "detail": f"{status} for {rid}"}
+        response: dict[str, Any] = {"status": status, "detail": f"{status} for {rid}"}
+        if status == "pending_approval" and rid in self.approval_window_by_id:
+            response["approval_window_until"] = self.approval_window_by_id[rid]
+        return response
 
     @property
     def called_ids(self) -> list[str]:
@@ -239,3 +244,78 @@ class TestIdempotency:
         )
         assert second.calls == []  # nothing re-proposed
         assert all(r.status == "skipped" for r in run2.records)
+
+
+# --------------------------------------------------------------------------- #
+# Approval-window-aware resume — re-running mid-approval must not re-queue
+# the same destroy in Slack; an expired window must be re-proposed.
+# --------------------------------------------------------------------------- #
+
+
+class TestApprovalWindowResume:
+    _NOW = datetime(2026, 6, 10, 12, 0, 0, tzinfo=UTC)
+
+    def _pending_run(
+        self, plan: DecommissionPlan, window_until: str, *, now: datetime
+    ) -> ExecutionResult:
+        proposer = FakeProposer()
+        proposer.status_by_id = {"a": "pending_approval"}
+        proposer.approval_window_by_id = {"a": window_until}
+        return DecommissionExecutor(proposer, requested_by="sa", now_fn=lambda: now).execute(
+            plan, dry_run=False
+        )
+
+    def test_first_run_captures_approval_window(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        window = (self._NOW + timedelta(minutes=15)).isoformat()
+        run1 = self._pending_run(plan, window, now=self._NOW)
+        assert run1.pending_approval == 1
+        assert run1.records[0].approval_window_until == window
+
+    def test_pending_within_window_is_not_reproposed(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        window = (self._NOW + timedelta(minutes=15)).isoformat()
+        run1 = self._pending_run(plan, window, now=self._NOW)
+
+        second = FakeProposer()
+        rerun_at = self._NOW + timedelta(minutes=5)  # still inside the window
+        run2 = DecommissionExecutor(second, requested_by="sa", now_fn=lambda: rerun_at).execute(
+            plan, dry_run=False, prior=run1
+        )
+        assert second.calls == []  # approval not re-queued
+        assert _status(run2, "a") == "pending_approval"
+        assert run2.halted is True  # stage cannot complete until the human decides
+
+    def test_pending_after_window_expiry_is_reproposed(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        plan = _plan([make_resource("a", management="unmanaged")])
+        window = (self._NOW + timedelta(minutes=15)).isoformat()
+        run1 = self._pending_run(plan, window, now=self._NOW)
+
+        second = FakeProposer()  # default success this time
+        rerun_at = self._NOW + timedelta(minutes=30)  # window lapsed unanswered
+        run2 = DecommissionExecutor(second, requested_by="sa", now_fn=lambda: rerun_at).execute(
+            plan, dry_run=False, prior=run1
+        )
+        assert second.called_ids == ["a"]  # proposed afresh
+        assert _status(run2, "a") == "executed"
+
+    def test_pending_without_window_is_reproposed(
+        self, make_resource: Callable[..., ResourceRecord]
+    ) -> None:
+        # Prior data lacking a captured window cannot prove the approval is
+        # still open — the safe default is to re-propose.
+        plan = _plan([make_resource("a", management="unmanaged")])
+        first = FakeProposer()
+        first.status_by_id = {"a": "pending_approval"}  # no window configured
+        run1 = DecommissionExecutor(first, requested_by="sa").execute(plan, dry_run=False)
+        assert run1.records[0].approval_window_until is None
+
+        second = FakeProposer()
+        DecommissionExecutor(second, requested_by="sa").execute(plan, dry_run=False, prior=run1)
+        assert second.called_ids == ["a"]
