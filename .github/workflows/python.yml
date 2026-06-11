@@ -73,9 +73,12 @@ jobs:
   test-agents-common:
     name: pytest (agents/aop_common)
     runs-on: ubuntu-latest
-    # aop_common.{memory,triage,schemas} depend only on pydantic, so these run
+    # aop_common.{memory,triage,schemas} and the aop_decommission engine depend
+    # only on pydantic + pyyaml (the exemption-policy loader), so these run
     # without resolving the heavy google-adk agent lock. conftest.py puts the
-    # agents/ dir on sys.path. Keep this job's deps minimal and pydantic-only.
+    # agents/ dir on sys.path. Keep this job's deps minimal — mirror any new
+    # module-level import in agents/ code under test here AND in
+    # agents/pyproject.toml.
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -88,6 +91,7 @@ jobs:
           uvx --python 3.13
           --with 'pydantic>=2.7'
           --with 'pydantic-settings>=2.5'
+          --with 'pyyaml>=6.0'
           --with pytest
           --with pytest-asyncio
           pytest agents/tests -q
