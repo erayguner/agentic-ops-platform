@@ -39,9 +39,9 @@ package = false
 [dependency-groups]
 dev = [
     "pre-commit>=4.0",
-    "ruff>=0.15.16",
+    "ruff>=0.15.17",
     "mypy>=1.13",
-    "pytest>=8.3",
+    "pytest>=9.1.0",
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "types-pyyaml>=6.0",
