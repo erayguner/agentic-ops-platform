@@ -1,0 +1,39 @@
+# Slack-notifier — Cloud Run service.
+#
+# Managed by uv. To install the deps and create a venv:
+#     uv sync
+#
+# To run locally in dry-run (no real Slack calls):
+#     LIVE_SLACK_ENABLED=false uv run uvicorn main:app --reload --port 8080
+#
+# To bump the lockfile after editing dependencies:
+#     uv lock
+
+[project]
+name = "aop-slack-notifier"
+version = "0.1.0"
+description = "AOP Slack notifier — renders OpsNotification events to Slack Block Kit and handles interactivity."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.13"
+authors = [
+    { name = "Agentic Operations Platform contributors" },
+]
+
+dependencies = [
+    "fastapi>=0.137.0",
+    "uvicorn[standard]>=0.49.0",
+    # Floor the transitive Starlette to the BadHost fix (CVE-2026-48710); fastapi
+    # 0.136.3 already resolves >=1.0.1 — this keeps a future re-lock from regressing it.
+    "starlette>=1.3.1",
+    "slack_sdk>=3.27",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.5",
+    "google-cloud-pubsub>=2.39.0",
+    "google-cloud-secret-manager>=2.29.0",
+    "httpx>=0.27",
+]
+
+# This is an application, not a library — uv should not try to build a wheel.
+[tool.uv]
+package = false

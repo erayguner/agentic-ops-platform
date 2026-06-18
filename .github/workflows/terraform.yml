@@ -1,0 +1,191 @@
+# Terraform CI for the AOP deployment framework.
+#
+# Runs on every PR + push to main + manually. Validates:
+#   1. terraform fmt (recursive)
+#   2. terraform validate on every module + example
+#   3. tflint with the bundled terraform ruleset
+#   4. checkov against the modules (HIGH/CRITICAL only)
+#   5. preflight.sh in framework-only mode (no GCP creds required)
+#   6. terraform test against the native test suite in terraform/tests/
+#
+# Trivy IaC and CodeQL Actions are already covered by:
+#   .github/workflows/trivy.yml   (config + fs scans)
+#   .github/workflows/codeql.yml  (security-and-quality)
+# This workflow stays focused on Terraform-specific correctness so the
+# signals from those scanners are not duplicated here.
+
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "scripts/preflight*.sh"
+      - "scripts/lib/preflight_*.sh"
+      - ".github/workflows/terraform.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "scripts/preflight*.sh"
+      - "scripts/lib/preflight_*.sh"
+      - ".github/workflows/terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TF_VERSION: "1.15.5"
+  TFLINT_VERSION: "v0.63.0"
+  # checkov pinned to a validated version. The CSEK/encryption + design findings
+  # the 3.2.5xx line surfaces are now handled: a real fix (public_access_prevention)
+  # plus per-resource inline `checkov:skip` justifications, and one global CMEK
+  # skip for the Pub/Sub topics (see skip_check below). Re-triage findings before
+  # bumping further.
+  CHECKOV_VERSION: "3.2.531"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Fast smoke gates — formatting + the framework-only pre-flight.
+  # ---------------------------------------------------------------------------
+  smoke:
+    name: smoke (fmt + preflight)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt -check -recursive
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Preflight (framework-only)
+        run: bash scripts/preflight.sh
+
+  # ---------------------------------------------------------------------------
+  # validate — fan out across every module and every example directory.
+  # ---------------------------------------------------------------------------
+  validate:
+    name: validate (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - terraform/modules/foundation
+          - terraform/modules/eventing
+          - terraform/modules/governance
+          - terraform/modules/observability
+          - terraform/modules/action-broker
+          - terraform/modules/slack-notifier
+          - terraform/modules/agent-runtime
+          - terraform/modules/agents/_base
+          - terraform/modules/agents/orchestrator
+          - terraform/modules/agents/sre
+          - terraform/modules/agents/devsecops
+          - terraform/modules/agents/platform
+          - terraform/modules/agents/finops
+          - terraform/modules/aop-platform
+          - terraform/examples/full-dev
+          - terraform/examples/minimal-sre-only
+          - terraform/examples/staging
+          - terraform/examples/prod-locked-down
+          - terraform/examples/downstream-consumer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init (no backend)
+        run: terraform -chdir=${{ matrix.target }} init -backend=false -input=false
+
+      - name: terraform validate
+        run: terraform -chdir=${{ matrix.target }} validate
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint
+        run: tflint --chdir=${{ matrix.target }} --minimum-failure-severity=error
+
+  # ---------------------------------------------------------------------------
+  # checkov — policy-as-code gate. Soft-fail in PRs; hard-fail on push to main.
+  # ---------------------------------------------------------------------------
+  checkov:
+    name: checkov
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@fa9edf8f0a491c59a924ea6accd5bdcf07752cff # v12.3107.0
+        with:
+          directory: terraform
+          framework: terraform
+          quiet: true
+          soft_fail: ${{ github.event_name == 'pull_request' }}
+          download_external_modules: false
+          # Global skips for checks that conflict with the documented design.
+          # Resource-specific accepted risks use inline `checkov:skip` comments
+          # instead (bootstrap / eventing / governance / foundation / action-broker).
+          # CKV_GCP_2  — broker uses INTERNAL_LOAD_BALANCER ingress (intentional).
+          # CKV_GCP_49 — Cloud Scheduler is internal-only by design.
+          # CKV_GCP_83 — CMEK on the 14 Pub/Sub topics is a documented roadmap
+          #              hardening; Google-managed encryption is the baseline.
+          #              Global (not 14 inline skips). See GOVERNANCE-MAPPING §12.
+          skip_check: CKV_GCP_2,CKV_GCP_49,CKV_GCP_83
+
+  # ---------------------------------------------------------------------------
+  # Terraform native test suite (terraform/tests/*.tftest.hcl).
+  # Run once against the composition module; tests fan-out internally.
+  # ---------------------------------------------------------------------------
+  tftest:
+    name: terraform test
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init
+        run: terraform -chdir=terraform/tests init -backend=false -input=false
+
+      - name: terraform test
+        run: terraform -chdir=terraform/tests test

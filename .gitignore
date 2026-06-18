@@ -1,0 +1,103 @@
+# Terraform — local caches, state, crash logs, machine-local overrides
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.auto.tfvars
+*.local.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# DO commit:
+#   terraform.tfvars         — placeholder values (must contain NO real IDs/tokens)
+#   .terraform.lock.hcl      — Terraform dependency lockfile
+#   uv.lock                  — uv (Python) dependency lockfile (one per component)
+#   .python-version          — uv-managed Python version pin
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*-key.json
+service-account*.json
+credentials*.json
+*.p12
+*.pfx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+build/
+dist/
+.eggs/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+# Build artefacts
+*.log
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+
+# Claude Code / claude-flow / ruv-swarm local workspace state
+# These directories are dropped by Claude tooling running against this repo.
+# They contain conversational / cognitive state that must NEVER be public.
+.claude/
+.claude-flow/
+.swarm/
+.cursor/
+ruvector.db
+memory.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Local scratch / sandbox
+.scratch/
+local-only/
+tmp/
+
+# Backups
+*.bak
+*.orig

@@ -1,0 +1,9 @@
+# Rename to backend.tf and edit before consuming. Each downstream repo gets
+# its own GCS bucket — keep state isolated per env.
+#
+# terraform {
+#   backend "gcs" {
+#     bucket = "my-org-aop-tfstate-dev"
+#     prefix = "downstream-app/"
+#   }
+# }

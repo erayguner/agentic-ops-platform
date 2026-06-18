@@ -1,0 +1,52 @@
+name: 📚 Documentation issue
+description: A defect or improvement in the design review, READMEs, or any other documentation.
+title: "docs: "
+labels: ["documentation", "triage"]
+
+body:
+  - type: input
+    id: location
+    attributes:
+      label: File and section
+      description: Where, exactly?
+      placeholder: docs/DESIGN-REVIEW.md §3.4
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What's wrong, unclear, or missing
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested change
+      description: Proposed wording, structure, or example.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of issue
+      options:
+        - Factually incorrect or outdated
+        - Unclear or ambiguous
+        - Missing content
+        - Broken link or reference
+        - Typo / formatting
+        - Out-of-date maturity / status tag (e.g., Announced-GA* item now actually GA)
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission checklist
+      options:
+        - label: I searched the open and closed issues for duplicates.
+          required: true
+        - label: My proposed change contains no real GCP project IDs, account emails, or other estate-specific values.
+          required: true

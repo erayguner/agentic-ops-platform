@@ -1,0 +1,49 @@
+# release-please — automated semantic-version releases driven by Conventional
+# Commits. On every push to main, this workflow either:
+#   - opens / updates a "release PR" with the next version + CHANGELOG diff
+#   - cuts the GitHub Release when that PR is merged
+#
+# Conventional Commit scopes used by this repo:
+#   feat(framework): …      → minor bump
+#   fix(agents): …          → patch bump
+#   feat(framework)!: …     → major bump
+#
+# Docs: https://github.com/googleapis/release-please
+# Action ref: https://github.com/googleapis/release-please-action
+#
+# Repo prerequisite (one-time, owner only):
+#   Settings → Actions → General → Workflow permissions →
+#   tick "Allow GitHub Actions to create and approve pull requests".
+# Without it, the default GITHUB_TOKEN can read+write contents but is blocked
+# from opening the release PR and the action fails with
+#   "GitHub Actions is not permitted to create or approve pull requests".
+
+name: release-please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Run release-please
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          target-branch: main

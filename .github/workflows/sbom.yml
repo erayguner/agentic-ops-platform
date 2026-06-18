@@ -1,0 +1,179 @@
+# SBOM & Provenance — software supply-chain transparency for the agentic
+# platform. Generates a build-time Software Bill of Materials in both
+# CycloneDX and SPDX (the NTIA-aligned formats), signs each SBOM with a
+# Sigstore-backed SLSA build-provenance attestation (keyless, via the
+# workflow's OIDC identity — no long-lived keys), and validates the curated
+# AI Bill of Materials (docs/aibom.yaml).
+#
+# Why: OWASP "State of Agentic AI Security & Governance" v2.01 makes AI supply
+# chain a governance control — ASI04 (Agentic Supply Chain) is among the
+# highest-volume incident categories, and the report calls for SBOM aligned to
+# "NTIA Minimum Elements ... SPDX 3.0, and CycloneDX" plus signing and
+# provenance. The dependency-graph SBOM produced here is the build-time layer;
+# the runtime-composition + AI-specific layer is the curated docs/aibom.yaml.
+# Closes the supply-chain gaps tracked in docs/GOVERNANCE-MAPPING.md §19.
+#
+# Pinning: every action is pinned to a commit SHA with a trailing version
+# comment (repo convention; mirrors trivy.yml / scorecard.yml).
+#
+# Docs:
+#   https://github.com/anchore/sbom-action
+#   https://github.com/actions/attest-build-provenance
+
+name: SBOM & Provenance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sbom-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Validate the curated AIBOM before producing build-time SBOMs. Keeps the
+  # checked-in inventory honest: required CycloneDX shape + the component
+  # invariants the governance mapping relies on. PyYAML is preinstalled on the
+  # GitHub-hosted ubuntu runner, so no dependency install is needed.
+  # ---------------------------------------------------------------------------
+  validate-aibom:
+    name: Validate AIBOM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Validate docs/aibom.yaml
+        run: |
+          python3 - <<'PY'
+          import sys, yaml
+          with open("docs/aibom.yaml") as f:
+              doc = yaml.safe_load(f)
+          errors = []
+          if doc.get("bomFormat") != "CycloneDX":
+              errors.append("bomFormat must be 'CycloneDX'")
+          if str(doc.get("specVersion")) != "1.6":
+              errors.append("specVersion must be '1.6'")
+          comps = doc.get("components", [])
+          svcs = doc.get("services", [])
+          for c in comps:
+              for k in ("type", "name", "bom-ref"):
+                  if k not in c:
+                      errors.append(f"component missing {k}: {c!r}")
+          for s in svcs:
+              for k in ("name", "bom-ref"):
+                  if k not in s:
+                      errors.append(f"service missing {k}: {s!r}")
+          models = [c["name"] for c in comps if c.get("type") == "machine-learning-model"]
+          agents = [c for c in comps if c.get("group") == "agent"]
+          actions = [c for c in comps if c.get("group") == "action-class"]
+          if "gemini-3-pro" not in models:
+              errors.append("primary model gemini-3-pro not inventoried")
+          if not any(s.get("name") == "action-broker" for s in svcs):
+              errors.append("Action Broker (single write surface) not inventoried")
+          if not agents:
+              errors.append("no agents inventoried")
+          if not actions:
+              errors.append("no action-class tool connectors inventoried")
+          if errors:
+              print("AIBOM validation FAILED:")
+              for e in errors:
+                  print(f"  - {e}")
+              sys.exit(1)
+          print(
+              f"AIBOM OK: {len(models)} models, {len(agents)} agents, "
+              f"{len(actions)} action classes, {len(svcs)} services."
+          )
+          PY
+
+  # ---------------------------------------------------------------------------
+  # Generate the build-time SBOM in each format and attach a signed provenance
+  # attestation. Filesystem scan of the repo captures the Python dependency
+  # graph (pyproject.toml + uv.lock across agents/ and services/).
+  # ---------------------------------------------------------------------------
+  sbom:
+    name: SBOM ${{ matrix.format }}
+    runs-on: ubuntu-latest
+    needs: validate-aibom
+    permissions:
+      contents: read
+      id-token: write # keyless Sigstore signing via the workflow OIDC identity
+      attestations: write # write the SLSA build-provenance attestation
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - format: cyclonedx-json
+            output: sbom.cdx.json
+            artifact: sbom-cyclonedx
+          - format: spdx-json
+            output: sbom.spdx.json
+            artifact: sbom-spdx
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Generate SBOM (${{ matrix.format }})
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: .
+          format: ${{ matrix.format }}
+          output-file: ${{ matrix.output }}
+          # Pin Syft for reproducible component resolution.
+          syft-version: v1.45.0
+          # Single explicit upload step below (mirrors scorecard.yml); avoid the
+          # action's built-in upload so release-asset merge stays collision-free.
+          upload-artifact: false
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.output }}
+          retention-days: 90
+
+      # Provenance + signing only on trusted events. PRs (especially from
+      # forks) cannot mint the OIDC token, and attesting unmerged code is not
+      # meaningful. The attestation is keyless: Sigstore Fulcio issues a
+      # short-lived cert bound to this workflow's identity, logged in Rekor.
+      - name: Attest SBOM provenance
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: ${{ matrix.output }}
+
+  # ---------------------------------------------------------------------------
+  # On a published release, attach the signed SBOMs as release assets so the
+  # evidence pack (GOVERNANCE-MAPPING §17.3) is self-contained.
+  # ---------------------------------------------------------------------------
+  release-assets:
+    name: Attach SBOMs to release
+    runs-on: ubuntu-latest
+    needs: sbom
+    if: github.event_name == 'release'
+    permissions:
+      contents: write # upload release assets
+    steps:
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: sbom-*
+          merge-multiple: true
+          path: sbom
+
+      - name: Upload SBOMs to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release upload "$TAG" sbom/sbom.cdx.json sbom/sbom.spdx.json \
+            --repo "$GITHUB_REPOSITORY" --clobber
