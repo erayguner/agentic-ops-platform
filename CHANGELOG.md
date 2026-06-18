@@ -5,6 +5,28 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.1...v0.9.0) (2026-06-18)
+
+
+### Features
+
+* **decommission:** add decommission agent and related actions ([7dd0333](https://github.com/erayguner/agentic-ops-platform/commit/7dd0333cab8423732783102bf0caef03c54d4da7))
+* **decommission:** introduce Decommission Agent for project closure ([6f04313](https://github.com/erayguner/agentic-ops-platform/commit/6f04313c40e4be2d4642b6b16dc97f6df33b9c5e))
+
+
+### Build
+
+* **deps:** bump cryptography from 48.0.0 to 48.0.1 in /agents ([824079d](https://github.com/erayguner/agentic-ops-platform/commit/824079d57f2099995181d9b0ee8370ab45ef3ff4))
+* **deps:** bump cryptography from 48.0.0 to 48.0.1 in /agents ([e6ff1e3](https://github.com/erayguner/agentic-ops-platform/commit/e6ff1e3c71a600cbf4cacc1156ba908ef61de8ac))
+* **deps:** bump cryptography from 48.0.0 to 48.0.1 in /services/slack-notifier ([238418b](https://github.com/erayguner/agentic-ops-platform/commit/238418b6d43d8b988fe4630826893044924dc4f1))
+* **deps:** bump cryptography in /services/slack-notifier ([2df54a1](https://github.com/erayguner/agentic-ops-platform/commit/2df54a1bce1c825a9c8cd8d107444786fb04ece3))
+* **deps:** bump python-multipart from 0.0.29 to 0.0.31 in /agents ([7a002f8](https://github.com/erayguner/agentic-ops-platform/commit/7a002f85f08d0aaa8a405d63ab59d8b51b317156))
+* **deps:** bump python-multipart from 0.0.29 to 0.0.31 in /agents ([a25b6e1](https://github.com/erayguner/agentic-ops-platform/commit/a25b6e1933580751249ea3a331b94274e4305237))
+* **deps:** bump starlette from 1.2.1 to 1.3.1 in /agents ([23ee6c2](https://github.com/erayguner/agentic-ops-platform/commit/23ee6c25f9b29c6106c2ca769197fefe34796e07))
+* **deps:** bump starlette from 1.2.1 to 1.3.1 in /agents ([1f700a2](https://github.com/erayguner/agentic-ops-platform/commit/1f700a2627f559f29caaa6965f0e7f59ec1493d8))
+* **deps:** bump the python-runtime group across 2 directories with 3 updates ([#44](https://github.com/erayguner/agentic-ops-platform/issues/44)) ([6e24263](https://github.com/erayguner/agentic-ops-platform/commit/6e24263ae855947e5d55bbe91255858e89dc4d29))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([#43](https://github.com/erayguner/agentic-ops-platform/issues/43)) ([33a1b25](https://github.com/erayguner/agentic-ops-platform/commit/33a1b25e23f079a42fe820e176255adab683b733))
+
 ## [0.8.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.0...v0.8.1) (2026-06-08)
 
 
