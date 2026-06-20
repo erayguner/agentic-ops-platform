@@ -33,7 +33,7 @@ dependencies = [
     # 2.x was a breaking change from 1.x; do not float to 3.x without review.
     "google-adk==2.2.*",
     "pydantic>=2.7",
-    "pydantic-settings>=2.5",
+    "pydantic-settings>=2.14.2",
     "pyyaml>=6.0",
     "google-cloud-pubsub>=2.39.0",
     "google-cloud-firestore>=2.16",
