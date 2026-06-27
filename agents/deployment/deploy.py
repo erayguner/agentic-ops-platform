@@ -16,9 +16,9 @@ Usage:
         --staging-bucket gs://ops-agents-prod-agent-staging
 
 PREREQUISITES (see docs/deployment/AGENT-DEPLOY.md):
-  1. The agent builder must be implemented — `build_<agent>()` in
-     aop_<agent>/agent.py currently raises NotImplementedError (skeleton ADK
-     graph). Deploy fails fast until the WorkflowAgent graph is wired.
+  1. The agent builder is implemented — `build_<agent>()` in
+     aop_<agent>/agent.py returns a real ADK 2.3 `LlmAgent` (offline-verified by
+     agents/tests/). No further agent wiring is required to deploy.
   2. **Region must support Agent Engine.** Agent Engine is region-limited and
      does NOT include europe-west2; use a supported region (e.g. us-central1 /
      europe-west1) — confirm against the Vertex AI generative-AI locations docs.
@@ -34,7 +34,7 @@ Alternative (Terraform path): pre-build each agent package and set
 The Vertex AI Agent Engine call is encapsulated in
 ``aop_common.runtime.VertexAgentEngineRuntime`` (the single swappable seam);
 confirm the ``agent_engines.create()`` signature against the installed
-google-cloud-aiplatform / google-adk 2.2.x version before first use.
+google-cloud-aiplatform / google-adk 2.3.x version before first use.
 """
 
 from __future__ import annotations
@@ -152,8 +152,8 @@ def _deploy_live(args: argparse.Namespace, spec: dict[str, str], sa_email: str) 
     module_name, builder_name = spec["builder"].split(":")
     builder = getattr(importlib.import_module(module_name), builder_name)
 
-    # Raises NotImplementedError until the ADK WorkflowAgent graph is wired —
-    # that is the prerequisite for a real deploy (see module docstring).
+    # Returns a real ADK 2.3 LlmAgent (offline-verified by agents/tests/); the
+    # remote runtime is pinned to the exact packaged google-adk build below.
     agent_instance = builder(settings)
 
     # Pin the remote runtime to the EXACT google-adk build packaged here, derived

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ModelFactory:
-    """Creates and caches the configured ADK 2.0 model instance.
+    """Creates and caches the configured ADK 2.3 model instance.
 
     Args:
         model_id: Primary model id (e.g., 'gemini-3-pro'). Comes from config.

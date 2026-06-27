@@ -79,7 +79,7 @@ class ActionBrokerClient:
         Raises:
             NotImplementedError: Skeleton — real MCP call not implemented.
 
-        ADK 2.0 API — confirm MCP tool invocation pattern against adk.dev/2.0/ release notes
+        ADK 2.3 API — confirm the MCP tool invocation pattern against the installed google-adk 2.3 package
         """
         logger.info(
             "propose_action called: class=%s target=%s tier=%d correlation=%s",
@@ -88,7 +88,7 @@ class ActionBrokerClient:
             proposed_tier,
             correlation_id,
         )
-        # SKELETON: In production, invoke the MCP tool via ADK 2.0 McpToolset:
+        # SKELETON: In production, invoke the MCP tool via ADK 2.3 McpToolset:
         #   result = self._toolset.call_tool(
         #       "propose_action",
         #       {
@@ -104,5 +104,5 @@ class ActionBrokerClient:
         #   )
         raise NotImplementedError(
             "ActionBrokerClient.propose_action is a skeleton. "
-            "Wire the ADK 2.0 McpToolset call before connecting to the real Broker."
+            "Wire the ADK 2.3 McpToolset call before connecting to the real Broker."
         )

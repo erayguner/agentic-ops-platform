@@ -12,10 +12,10 @@
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C.svg?logo=dependabot&logoColor=white)](./.github/dependabot.yml)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196.svg?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/en/v1.0.0/)
 
-A reference scaffold for a **governed multi-agent DevSecOps / SRE / Platform Engineering** framework on Google Cloud, built around **Gemini Enterprise Agent Platform** (the rebranded Vertex AI Agent Builder), **ADK 2.0**, **Agent2Agent (A2A)**, and the **Google-managed MCP server fleet**.
+A reference scaffold for a **governed multi-agent DevSecOps / SRE / Platform Engineering** framework on Google Cloud, built around **Gemini Enterprise Agent Platform** (the rebranded Vertex AI Agent Builder), **ADK 2.3**, **Agent2Agent (A2A)**, and the **Google-managed MCP server fleet**.
 
 > This repo accompanies a strategic and technical design review prepared on **2026-05-22**.
-> Status: **skeleton** — the load-bearing surface area is defined and validate-ready; executors and full agent logic are stubs.
+> Status: **scaffold** — the load-bearing surface area is defined and validate-ready. The agent tier constructs against real **ADK 2.3** (`LlmAgent`; offline-verified by `agents/tests/`); live deployment and the Action Broker executors remain pending.
 > Conformance: **`AGENT_GOVERNANCE_FRAMEWORK v1.1`** — see [`docs/GOVERNANCE-MAPPING.md`](./docs/GOVERNANCE-MAPPING.md) for the per-control attestation.
 
 ---
@@ -52,7 +52,7 @@ agentic-ops-platform/
 │   │   ├── action-broker/          ← Cloud Run for the Action Broker
 │   │   └── slack-notifier/         ← Cloud Run for the Slack notifier
 │   └── environments/{dev,prod}/    ← per-env root modules
-├── agents/                         ← ADK 2.1 Python agent skeletons
+├── agents/                         ← ADK 2.3 Python agents (LlmAgent)
 │   ├── aop_common/                 ← shared schemas, MCP wiring, Slack emitter, policy client
 │   ├── aop_orchestrator/           ← duty-manager agent (A2A hub)
 │   ├── aop_sre/
