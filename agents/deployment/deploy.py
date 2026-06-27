@@ -31,14 +31,17 @@ Alternative (Terraform path): pre-build each agent package and set
 `google_vertex_ai_reasoning_engine.package_pickle_gcs_uri` on the
 `terraform/modules/agents/_base` module instead of using this SDK path.
 
-Confirm the `vertexai.agent_engines.create()` signature against the installed
-google-cloud-aiplatform / google-adk 2.1.x version before first use.
+The Vertex AI Agent Engine call is encapsulated in
+``aop_common.runtime.VertexAgentEngineRuntime`` (the single swappable seam);
+confirm the ``agent_engines.create()`` signature against the installed
+google-cloud-aiplatform / google-adk 2.2.x version before first use.
 """
 
 from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.metadata
 import sys
 
 # --------------------------------------------------------------------------- #
@@ -138,14 +141,12 @@ def _print_plan(
 def _deploy_live(args: argparse.Namespace, spec: dict[str, str], sa_email: str) -> int:
     """Package and deploy the agent to Vertex AI Agent Engine (billable, Preview).
 
-    Confirm the agent_engines.create() signature against the installed
-    google-cloud-aiplatform version before relying on this.
+    The Agent Engine API is reached only through
+    ``aop_common.runtime.VertexAgentEngineRuntime`` so this path stays free of
+    any direct SDK coupling (keep the runtime swappable).
     """
-    import vertexai
     from aop_common.config import AopSettings
-    from vertexai import agent_engines
-
-    vertexai.init(project=args.project, location=args.region, staging_bucket=args.staging_bucket)
+    from aop_common.runtime import VertexAgentEngineRuntime
 
     settings = AopSettings(project=args.project, region=args.region, environment=args.env)
     module_name, builder_name = spec["builder"].split(":")
@@ -155,15 +156,25 @@ def _deploy_live(args: argparse.Namespace, spec: dict[str, str], sa_email: str) 
     # that is the prerequisite for a real deploy (see module docstring).
     agent_instance = builder(settings)
 
-    remote_agent = agent_engines.create(
-        agent_engine=agent_instance,
-        requirements=["google-adk==2.1.*"],
+    # Pin the remote runtime to the EXACT google-adk build packaged here, derived
+    # from the installed distribution. google-adk ships breaking changes within
+    # minor releases, so an exact pin stops the deployed reasoning engine from
+    # drifting to a different ADK build than the one tested — and it self-updates
+    # whenever Dependabot bumps the isolated `adk` group.
+    adk_requirement = f"google-adk=={importlib.metadata.version('google-adk')}"
+
+    runtime = VertexAgentEngineRuntime(
+        project=args.project, region=args.region, staging_bucket=args.staging_bucket
+    )
+    deployed = runtime.deploy(
+        agent=agent_instance,
+        requirements=[adk_requirement],
         extra_packages=["aop_common", spec["package"]],
         display_name=f"{args.agent}-agent",
         description=spec["description"],
         service_account=sa_email,
     )
-    print(f"Deployed: {remote_agent.resource_name}")
+    print(f"Deployed: {deployed.resource_name}")
     print(f"Expected: {_reasoning_engine_resource_name(args.project, args.region, args.agent)}")
     return 0
 
