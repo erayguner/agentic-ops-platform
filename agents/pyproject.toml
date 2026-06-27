@@ -34,7 +34,7 @@ dependencies = [
     # google-adk is isolated into its own Dependabot PR (.github/dependabot.yml)
     # and gated by the ADK smoke test (tests/test_adk_compat.py) on every bump.
     # 2.x was a breaking change from 1.x; do not float to 3.x without review.
-    "google-adk==2.3.*",
+    "google-adk[mcp]==2.3.*",
     "pydantic>=2.7",
     "pydantic-settings>=2.14.2",
     "pyyaml>=6.0",

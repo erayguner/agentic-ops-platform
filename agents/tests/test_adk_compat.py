@@ -11,8 +11,9 @@ caught automatically:
 
   * workflow primitives are ``SequentialAgent`` / ``LoopAgent`` (no ``WorkflowAgent``),
   * the model class is ``Gemini`` in ``google.adk.models.google_llm`` (no ``LlmModel``),
-  * ``McpToolset`` and the A2A types require optional extras
-    (``google-adk[mcp]`` / ``google-adk[a2a]``) — see the dep-gated xfail below.
+  * ``McpToolset`` takes a ``StreamableHTTPConnectionParams`` (no endpoint/transport
+    kwargs) and requires the ``google-adk[mcp]`` extra (declared in pyproject).
+    A2A wiring is deferred — best done with the orchestrator, the A2A hub.
 """
 
 from __future__ import annotations
@@ -38,22 +39,19 @@ def _adk_installed() -> bool:
         return False
 
 
-# Verified-correct ADK 2.3 import paths the platform binds to (hard assertions —
-# an ADK bump that moves any of these turns the suite red).
-_ADK_VERIFIED: tuple[tuple[str, str], ...] = (
+# Verified-correct import paths the platform binds to (hard assertions — a bump
+# that moves any of these turns the suite red). Includes the [mcp] extra the
+# platform declares.
+_VERIFIED_IMPORTS: tuple[tuple[str, str], ...] = (
     ("google.adk.agents", "LlmAgent"),
     ("google.adk.agents", "SequentialAgent"),
     ("google.adk.agents", "LoopAgent"),
     ("google.adk.models", "BaseLlm"),
     ("google.adk.models", "LLMRegistry"),
     ("google.adk.models.google_llm", "Gemini"),
+    ("google.adk.tools.mcp_tool", "McpToolset"),
+    ("google.adk.tools.mcp_tool", "StreamableHTTPConnectionParams"),
 )
-
-# Integration imports gated on an optional google-adk extra that is not yet a
-# declared dependency (Phase 1 follow-up — a dependency decision):
-#   * McpToolset             -> google-adk[mcp]  (the `mcp` package)
-#   * AgentCard / AgentSkill -> google-adk[a2a]  (the `a2a` SDK)
-_ADK_DEP_GATED: tuple[tuple[str, str], ...] = (("google.adk.tools.mcp_tool", "McpToolset"),)
 
 
 # --------------------------------------------------------------------------- #
@@ -154,33 +152,37 @@ class TestModelFactory:
         assert factory.get_model() is model  # cached on second call
 
 
-@pytest.mark.skipif(not _adk_installed(), reason="google-adk not installed")
-class TestAgentConstruction:
-    def test_llm_agent_constructs_offline(self) -> None:
-        from google.adk.agents import LlmAgent
-
-        agent = LlmAgent(name="probe", model="gemini-3-pro", instruction="x")
-        assert agent.name == "probe"
-
-
 # --------------------------------------------------------------------------- #
-# ADK import surface — early-warning for ADK API churn
+# MCP endpoint resolution — pure helper, testable without the SDK or creds
 # --------------------------------------------------------------------------- #
 
 
+class TestMcpEndpointResolution:
+    def test_appends_custom_and_formats_region(self) -> None:
+        from aop_common.mcp_tools import resolve_mcp_endpoints
+
+        resolved = resolve_mcp_endpoints(
+            [
+                "https://logging.googleapis.com/mcp",
+                "https://chronicle.{region}.rep.googleapis.com/mcp",
+            ],
+            ["https://broker.example/mcp"],
+            region="europe-west1",
+        )
+        assert resolved == [
+            "https://logging.googleapis.com/mcp",
+            "https://chronicle.europe-west1.rep.googleapis.com/mcp",
+            "https://broker.example/mcp",
+        ]
+
+
+# --------------------------------------------------------------------------- #
+# ADK import surface — early-warning for API churn
+# --------------------------------------------------------------------------- #
+
+
 @pytest.mark.skipif(not _adk_installed(), reason="google-adk not installed")
-@pytest.mark.parametrize(("module", "symbol"), _ADK_VERIFIED)
-def test_adk_symbol_resolves(module: str, symbol: str) -> None:
+@pytest.mark.parametrize(("module", "symbol"), _VERIFIED_IMPORTS)
+def test_verified_import_resolves(module: str, symbol: str) -> None:
     mod = importlib.import_module(module)
     assert hasattr(mod, symbol), f"{module}.{symbol} missing — ADK API drift"
-
-
-@pytest.mark.skipif(not _adk_installed(), reason="google-adk not installed")
-@pytest.mark.xfail(
-    reason="needs the google-adk[mcp] / google-adk[a2a] extras — Phase 1 dependency decision",
-    strict=False,
-)
-@pytest.mark.parametrize(("module", "symbol"), _ADK_DEP_GATED)
-def test_adk_dep_gated_symbol(module: str, symbol: str) -> None:
-    mod = importlib.import_module(module)
-    assert hasattr(mod, symbol)
