@@ -1,11 +1,13 @@
-"""aop_common.models — ADK 2.0 model factory with fallback list.
+"""aop_common.models — ADK model factory.
 
-The model id is NEVER hard-coded. It is read from AopSettings.model_id.
-The factory tries the primary model first; on quota or availability errors
-it cycles through model_fallback_list.
+The model id is NEVER hard-coded; it is read from AopSettings.model_id. The
+factory constructs the primary model on first use. ``model_fallback_list`` is the
+ordered runtime fallback policy (applied on quota/availability errors at
+invocation time), not a construction-time concern.
 
-ADK 2.0 API — confirm LlmModel / GenerativeModel constructor and
-fallback API against adk.dev/2.0/ release notes.
+Verified against google-adk 2.3.0: the model class is ``Gemini`` in
+``google.adk.models.google_llm`` (ADK 2.x has no ``LlmModel``, which the original
+skeleton guessed).
 """
 
 from __future__ import annotations
@@ -40,39 +42,26 @@ class ModelFactory:
         self._model: Any = None
 
     def get_model(self) -> Any:
-        """Return the ADK 2.0 model instance, constructing it on first call.
+        """Return the ADK model instance, constructing it on first call.
 
         Returns:
-            An ADK 2.0 LlmModel instance configured with the primary model id.
+            A ``google.adk.models.google_llm.Gemini`` bound to the primary model
+            id. Generation parameters (temperature, max_output_tokens) are applied
+            by the agent through its ``generate_content_config``; the fallback list
+            is a runtime policy (``model_fallback_list``), not a construction-time
+            concern.
 
-        Raises:
-            NotImplementedError: Skeleton — real ADK model construction not wired.
-
-        ADK 2.0 API — confirm google.adk.models.LlmModel (or equivalent) constructor
-        signature and fallback registration pattern against adk.dev/2.0/ release notes.
+        Verified against google-adk 2.3.0: ``Gemini(model=...)`` constructs offline
+        (no credentials are used until the model is invoked).
         """
         if self._model is not None:
             return self._model
 
+        from google.adk.models.google_llm import Gemini
+
         logger.info("ModelFactory.get_model: primary=%s", self._model_id)
-
-        # SKELETON: In production, construct via ADK 2.0 model API, e.g.:
-        #
-        #   from google.adk.models import LlmModel  # ADK 2.0 API — confirm name
-        #   self._model = LlmModel(
-        #       model=self._model_id,
-        #       generation_config={
-        #           "temperature": self._temperature,
-        #           "max_output_tokens": self._max_output_tokens,
-        #       },
-        #       fallback_models=self._fallback_list,
-        #   )
-        #   return self._model
-
-        raise NotImplementedError(
-            "ModelFactory.get_model is a skeleton. "
-            "Wire the ADK 2.0 LlmModel constructor before connecting to the model API."
-        )
+        self._model = Gemini(model=self._model_id)
+        return self._model
 
     @classmethod
     def from_settings(cls, settings: Any) -> ModelFactory:
