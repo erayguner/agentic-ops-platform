@@ -237,7 +237,7 @@ Pre-commit is **not optional** for contributors. CI runs the same hooks.
 
 - **Hardening of Terraform defaults** — least-privilege bindings, missing CMEK, missing `deletion_policy = "PREVENT"`, missing `auth_token_wo`, default-region drift.
 - **Additional action-class executors** in `services/action-broker/executors/` — with a policy entry, tests, and a roadmap-tier rationale.
-- **ADK 2.0 API confirmations** — every uncertain ADK import is currently flagged with `# ADK 2.0 API — confirm signature against adk.dev/2.0/`. PRs that replace these comments with verified signatures (and a doc-source URL in the PR description) are highly welcome.
+- **ADK 2.3 API confirmations** — every uncertain ADK import in the not-yet-migrated skeletons (`action_client.py`, `policy_client.py`) is flagged with `# ADK 2.3 API — confirm signature against the installed google-adk 2.3 package`. PRs that replace these comments with verified signatures (and a doc-source URL in the PR description) are highly welcome.
 - **Maturity updates** — when an `Announced-GA*` item from the design review reaches actual GA in-console, update Part 2.10's table and the relevant module.
 - **Improvements to the observability surface** — new alert policies, dashboard widgets, SLOs, custom metrics.
 

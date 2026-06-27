@@ -1,10 +1,12 @@
-# AOP Agent Skeletons — ADK 2.0
+# AOP Agents — ADK 2.3
 
-Python agent skeletons for the Agentic Operations Platform. These are
-**pattern demonstrations** — every ADK 2.0 / MCP / Pub/Sub call is wired
-through abstractions that are safe to run offline. The skeletons compile
-cleanly without live infrastructure and produce no real side effects until
-the `LIVE_*` env flags are set on the corresponding services.
+Python agent definitions for the Agentic Operations Platform. Every agent
+**constructs against real ADK 2.3** (`LlmAgent`; offline-verified by `tests/`) —
+the ADK / MCP / Pub/Sub calls are wired through abstractions that are safe to run
+offline. The packages compile cleanly without live infrastructure and produce no
+real side effects until the `LIVE_*` env flags are set on the corresponding
+services. Live deployment and the Action Broker executors remain pending (see
+`docs/deployment/AGENT-DEPLOY.md`).
 
 > **Python packaging is managed by [uv](https://docs.astral.sh/uv/) — not pip.**
 
@@ -12,7 +14,7 @@ the `LIVE_*` env flags are set on the corresponding services.
 
 ```text
 agents/
-├── pyproject.toml          ← uv-managed; google-adk==2.1.*; hatchling build backend
+├── pyproject.toml          ← uv-managed; google-adk[mcp]==2.3.*; hatchling build backend
 ├── uv.lock                 ← committed; regenerate with `uv lock`
 ├── README.md
 ├── aop_common/             ← shared library
@@ -21,20 +23,23 @@ agents/
 │   ├── schemas.py          ← all v1 schemas: OpsSignal, Finding, Recommendation,
 │   │                         ActionRequest, ActionApproval, ActionExecuted,
 │   │                         OpsNotification, AuditRecord
-│   ├── mcp_tools.py        ← McpToolset wiring + per-agent allow-lists
+│   ├── mcp_tools.py        ← real ADK McpToolset wiring + per-agent allow-lists
 │   ├── action_client.py    ← ActionBrokerClient — propose_action only
 │   ├── policy_client.py    ← OrgContextClient — read-only lookups
 │   ├── slack_emitter.py    ← SlackEmitter → ops.notifications
 │   ├── audit.py            ← AuditEmitter → ops.audit
-│   └── models.py           ← ModelFactory with fallback list
-├── aop_orchestrator/       ← ADK 2.0 WorkflowAgent (graph + HITL)
+│   ├── models.py           ← ModelFactory → real ADK Gemini
+│   ├── runtime.py          ← AgentRuntime seam + VertexAgentEngineRuntime
+│   ├── memory.py           ← memory safeguards (scope, isolation, injection screen)
+│   └── memory_store.py     ← MemoryStore (InMemory/Firestore) + GuardedMemory
+├── aop_orchestrator/       ← LlmAgent coordinator (sub_agents = 4 specialists)
 │   ├── agent.py
 │   └── prompts.py
 ├── aop_sre/                ← LlmAgent → Finding output
 ├── aop_devsecops/
 ├── aop_platform/
 ├── aop_finops/
-├── aop_decommission/       ← WorkflowAgent + pure-Python closure engine
+├── aop_decommission/       ← read-only LlmAgent + pure-Python closure engine
 │   ├── inventory.py        ← discover + reconcile + classify
 │   ├── exemptions.py       ← policy-driven retention (fail-safe)
 │   ├── planner.py          ← dry-run plan + dependency-ordered teardown
@@ -118,21 +123,25 @@ uv run mypy agents
 uv run --directory agents pytest
 ```
 
-## Deployment (dry-run skeleton)
+## Deployment (dry-run by default)
 
 ```bash
+# Agent Engine is region-limited and does NOT include europe-west2; use a
+# supported region (e.g. us-central1). `--execute` performs the billable deploy.
 uv run python deployment/deploy.py --agent orchestrator \
-    --project ops-agents-prod --region europe-west2 --env prod
+    --project ops-agents-prod --region us-central1 --env prod
 ```
 
-This prints `would deploy …` — the real deployment is the deployer's CI
-step (see `terraform/modules/agent-runtime/`).
+This prints `would deploy …`. `--execute` deploys through the single
+`aop_common.runtime.VertexAgentEngineRuntime` seam; the Terraform path is
+`terraform/modules/agents/_base` (see `docs/deployment/AGENT-DEPLOY.md`).
 
 ## Key design decisions
 
-- **`google-adk==2.1.*` pinned exactly.** ADK 2.0 GA'd 2026-05-19 (a breaking
-  change from 1.x); the project tracks the 2.1.x line. Do not float to 3.x
-  without review.
+- **`google-adk[mcp]==2.3.*` pinned.** `uv.lock` pins the exact patch; ADK ships
+  breaking changes within minor releases, so it is isolated into its own
+  Dependabot `adk` group and gated by the ADK smoke test
+  (`tests/test_adk_compat.py`) on every bump. Do not float to 3.x without review.
 - **Model id is configuration.** `AOP_MODEL_ID` env var; default
   `gemini-3-pro`. Never hard-coded.
 - **No agent holds write IAM on GCP.** All writes go through the Action

@@ -10,8 +10,9 @@ exemption policy protects (audit logs, billing exports, compliance records,
 backups, break-glass identities, legally-held data).
 
 It is a **campaign agent**: a multi-stage lifecycle, not a single signal→finding
-pass. The real engine is pure Python and fully unit-tested; the ADK
-`WorkflowAgent` graph in `agent.py` drives it.
+pass. The real engine is pure Python and fully unit-tested; `agent.py` is a
+read-only ADK 2.3 `LlmAgent` proposer, and the eventing + Action Broker layers
+drive the lifecycle.
 
 ```text
 discover → inventory → plan → [approval gate] → execute → validate → report
@@ -44,7 +45,7 @@ Four independent gates sit in front of any real deletion:
 | `validation.py` | Post-decommission re-scan + closure-readiness assurance                     |
 | `report.py`     | Final report + Markdown render + secret/PII redaction                       |
 | `campaign.py`   | End-to-end lifecycle + per-phase audit emission                             |
-| `agent.py`      | ADK 2.0 WorkflowAgent skeleton (graph nodes drive the campaign)             |
+| `agent.py`      | Read-only ADK 2.3 LlmAgent proposer (helper steps drive the campaign)       |
 
 ## MCP allow-list (read-only)
 

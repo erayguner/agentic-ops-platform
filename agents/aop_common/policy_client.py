@@ -7,7 +7,7 @@ environment classification, change-freeze calendar.
 This client is read-only. It never proposes or executes actions.
 The Org Context MCP server itself is stubbed in services/org-context/.
 
-ADK 2.0 API — confirm McpToolset tool-call pattern against adk.dev/2.0/ release notes
+ADK 2.3 API — confirm the McpToolset tool-call pattern against the installed google-adk 2.3 package
 """
 
 from __future__ import annotations

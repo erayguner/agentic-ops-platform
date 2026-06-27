@@ -140,7 +140,7 @@ def build_mcp_toolsets(
     region: str = "europe-west2",
     extra_custom_endpoints: list[str] | None = None,
 ) -> list[Any]:
-    """Return a list of ADK 2.0 McpToolset instances, one per allowed endpoint.
+    """Return a list of ADK 2.3 McpToolset instances, one per allowed endpoint.
 
     Args:
         allowed_endpoints: Managed Google MCP endpoint URLs for this agent.
