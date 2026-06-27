@@ -133,7 +133,7 @@ def build_mcp_toolsets(
         from google.auth import default as google_auth_default  # type: ignore[import-untyped]
     except ImportError as exc:
         raise ImportError(
-            "google-adk>=2.1 and google-auth are required. Run: pip install 'google-adk==2.1.*'"
+            "google-adk==2.2.* and google-auth are required. Run: uv sync --directory agents"
         ) from exc
 
     credentials, _ = google_auth_default(scopes=["https://www.googleapis.com/auth/cloud-platform"])

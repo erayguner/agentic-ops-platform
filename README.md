@@ -101,7 +101,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full branching strategy, Conv
 ## Status caveats
 
 - **Skeleton, not a working deployment.** Apply-readiness comes after you bind the bootstrap module to your environment variables (project IDs, billing account, the Slack workspace tokens) and after the per-action-class executors are wired to real APIs.
-- **ADK 2.0** went GA 2026-05-19; the project tracks the 2.1.x line — pin exactly (`google-adk==2.1.*`).
+- **ADK 2.0** went GA 2026-05-19; the project tracks the 2.2.x line — pin exactly (`google-adk==2.2.*`). ADK ships breaking changes within minor releases, so google-adk is isolated into its own Dependabot PR and gated by an ADK smoke test (`agents/tests/test_adk_compat.py`).
 - **Some Google capabilities used here are Preview** (Agent Identity, Memory Bank Revisions, Gen AI Evaluation Service, Cloud Asset Inventory MCP, Agent Registry MCP). See the design review §2.10 for the maturity snapshot; the scaffold's seams already accept the GA fallback.
 - **No exported service-account keys.** CI must use Workload Identity Federation.
 

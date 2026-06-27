@@ -29,7 +29,10 @@ authors = [
 ]
 
 dependencies = [
-    # ADK 2.x GA'd 2026-05-19 — pinned to the 2.1.x line (latest stable).
+    # ADK 2.0 GA'd 2026-05-19. Pinned to the 2.2.x line; uv.lock pins the exact
+    # patch. ADK ships breaking changes within MINOR releases (~biweekly), so
+    # google-adk is isolated into its own Dependabot PR (.github/dependabot.yml)
+    # and gated by the ADK smoke test (tests/test_adk_compat.py) on every bump.
     # 2.x was a breaking change from 1.x; do not float to 3.x without review.
     "google-adk==2.3.*",
     "pydantic>=2.7",

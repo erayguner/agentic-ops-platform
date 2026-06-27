@@ -65,6 +65,13 @@ updates:
       - dependencies
       - python
     groups:
+      # google-adk churns fast and ships breaking changes within MINOR releases
+      # (~biweekly cadence). Isolate it into its own PR — listed ahead of
+      # python-runtime so it claims the dependency — so the ADK smoke test's
+      # verdict is unambiguous and an ADK bump can be held or merged on its own.
+      adk:
+        patterns:
+          - "google-adk"
       python-runtime:
         dependency-type: production
         update-types:
