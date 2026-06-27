@@ -1,13 +1,15 @@
-"""aop_common.mcp_tools — ADK 2.0 McpToolset wiring for managed Google MCP servers.
+"""aop_common.mcp_tools — ADK McpToolset wiring for managed Google MCP servers.
 
 All MCP endpoints follow the managed fleet pattern:
     https://<service>.googleapis.com/mcp
 
-Authentication is Application Default Credentials (ADC); no exported keys.
-Each agent passes its allow-list of endpoint strings; this module builds
-the McpToolset filtered to only those endpoints.
+Authentication is Application Default Credentials (ADC) carried as a Bearer
+header; no exported keys. Each agent passes its allow-list of endpoint strings;
+this module builds one McpToolset per endpoint.
 
-ADK 2.0 API — confirm signature against adk.dev/2.0/ release notes
+Verified against google-adk 2.3.0: McpToolset takes a ``connection_params``
+object (``StreamableHTTPConnectionParams``), and MCP support requires the
+``google-adk[mcp]`` extra (declared in pyproject).
 """
 
 from __future__ import annotations
@@ -101,6 +103,37 @@ DECOMMISSION_MCP_ENDPOINTS: list[str] = [
 ]
 
 
+def resolve_mcp_endpoints(
+    allowed_endpoints: list[str],
+    extra_custom_endpoints: list[str] | None = None,
+    *,
+    region: str = "europe-west2",
+) -> list[str]:
+    """Resolve the final endpoint URLs for an agent (pure — no SDK, no creds).
+
+    Region-parameterised endpoints (e.g. SecOps Chronicle) are formatted with
+    ``region``; custom endpoints (Action Broker, Org Context) are appended.
+    """
+    endpoints = [*allowed_endpoints, *(extra_custom_endpoints or [])]
+    return [ep.format(region=region) if "{region}" in ep else ep for ep in endpoints]
+
+
+def _adc_bearer_headers(
+    scopes: tuple[str, ...] = ("https://www.googleapis.com/auth/cloud-platform",),
+) -> dict[str, str]:
+    """Return an Authorization header carrying a fresh ADC bearer token.
+
+    Application Default Credentials in Cloud Run / Agent Engine; gcloud locally.
+    Needs credentials — call only in an authenticated (deploy) context.
+    """
+    import google.auth
+    import google.auth.transport.requests
+
+    creds, _ = google.auth.default(scopes=list(scopes))
+    creds.refresh(google.auth.transport.requests.Request())
+    return {"Authorization": f"Bearer {creds.token}"}
+
+
 def build_mcp_toolsets(
     allowed_endpoints: list[str],
     *,
@@ -120,43 +153,28 @@ def build_mcp_toolsets(
         A list of McpToolset instances ready to be passed to the ADK agent constructor.
 
     Note:
-        McpToolset uses Streamable HTTP transport with ADC-derived Bearer tokens.
-        The credential flow uses google-auth's default credential chain —
-        Application Default Credentials in Cloud Run / Agent Engine environments,
-        and gcloud auth locally.
-
-    ADK 2.0 API — confirm McpToolset constructor signature against adk.dev/2.0/ release notes
+        Each endpoint becomes one McpToolset over Streamable HTTP. Auth is an ADC
+        Bearer header (built by ``_adc_bearer_headers``), so this needs
+        credentials — call it in an authenticated (deploy) context. Agent builders
+        inject pre-built toolsets to construct offline in tests.
     """
     try:
-        # ADK 2.0 import path — confirm against adk.dev/2.0/ release notes
-        from google.adk.tools.mcp_tool import McpToolset  # type: ignore[import-untyped]
-        from google.auth import default as google_auth_default  # type: ignore[import-untyped]
+        from google.adk.tools.mcp_tool import (  # type: ignore[import-untyped]
+            McpToolset,
+            StreamableHTTPConnectionParams,
+        )
     except ImportError as exc:
         raise ImportError(
-            "google-adk==2.2.* and google-auth are required. Run: uv sync --directory agents"
+            "MCP support requires the google-adk[mcp] extra. Run: uv sync --directory agents"
         ) from exc
 
-    credentials, _ = google_auth_default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
-
-    all_endpoints = list(allowed_endpoints)
-    if extra_custom_endpoints:
-        all_endpoints.extend(extra_custom_endpoints)
-
-    # Resolve region-parameterised endpoints
-    resolved: list[str] = []
-    for ep in all_endpoints:
-        if "{region}" in ep:
-            resolved.append(ep.format(region=region))
-        else:
-            resolved.append(ep)
+    resolved = resolve_mcp_endpoints(allowed_endpoints, extra_custom_endpoints, region=region)
+    headers = _adc_bearer_headers()
 
     toolsets: list[McpToolset] = []
     for endpoint in resolved:
-        # ADK 2.0 API — confirm McpToolset(endpoint, credentials, transport) signature
         toolset = McpToolset(
-            endpoint=endpoint,
-            credentials=credentials,
-            transport="streamable_http",
+            connection_params=StreamableHTTPConnectionParams(url=endpoint, headers=headers)
         )
         toolsets.append(toolset)
         logger.debug("Wired MCP toolset: %s", endpoint)
