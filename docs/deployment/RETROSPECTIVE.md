@@ -187,7 +187,7 @@ Most of the 18 findings collapse into five themes:
 
 | #   | Item                                                                                              | Status                             |
 | --- | ------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| 1   | Implement the ADK 2.1 `build_<agent>()` WorkflowAgent graphs                                      | open (the real blocker for agents) |
+| 1   | Implement the `build_<agent>()` agents (ADK 2.3 `LlmAgent`s)                                      | **done** — PRs #58/#63/#64/#65/#66/#67 |
 | 2   | Re-enable `enable_bq_audit_subscription` in roots (B1 fixed)                                      | ready — schema reconciled          |
 | 3   | Rework the availability SLO onto Cloud Run request metrics; un-gate `enable_slo`                  | open                               |
 | 4   | Add an orchestrator Cloud Run ingest endpoint, then wire the Eventarc triggers                    | open (architectural)               |

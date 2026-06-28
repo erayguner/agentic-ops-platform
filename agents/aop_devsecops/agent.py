@@ -1,100 +1,49 @@
-"""aop_devsecops.agent — ADK 2.0 DevSecOps Agent definition.
+"""aop_devsecops.agent — DevSecOps Agent definition (ADK 2.3).
 
-LlmAgent with:
-- Structured output schema: Finding v1
-- MCP toolsets: Cloud Logging, Cloud Monitoring, Cloud Asset Inventory,
-  Action Broker (custom)
-- System prompt from devsecops.prompts
+An ``LlmAgent`` for security posture: SCC findings, IAM drift, key exposure,
+supply-chain risk, and Model Armor signals. Proposes actions only via the Action
+Broker MCP (decision/execution separation); holds no write IAM.
 
-ADK 2.0 API — confirm LlmAgent constructor against adk.dev/2.0/ release notes
+Verified against google-adk 2.3.0 (mirrors ``aop_finops.agent``). A2A discovery-card
+registration is handled separately by the orchestrator hub and is not wired here.
 """
 
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from aop_common.config import AopSettings
-from aop_common.mcp_tools import (
-    DEVSECOPS_MCP_ENDPOINTS,
-    build_mcp_toolsets,
-)
+from aop_common.mcp_tools import DEVSECOPS_MCP_ENDPOINTS, build_mcp_toolsets
 from aop_common.models import ModelFactory
+
+from aop_devsecops.prompts import DEVSECOPS_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
 
-def build_agent_card(settings: AopSettings) -> object:
-    """Build the A2A AgentCard for the DevSecOps Agent.
+def build_devsecops_agent(settings: AopSettings, *, toolsets: list[Any] | None = None) -> Any:
+    """Construct and return the DevSecOps ``LlmAgent``.
 
-    ADK 2.0 API — confirm AgentCard / AgentSkill constructor against adk.dev/2.0/ release notes
+    ``toolsets`` defaults to the DevSecOps MCP allow-list + the Action Broker
+    (built at deploy time, needs credentials); tests inject an explicit list to
+    construct offline. See ``aop_finops.agent.build_finops_agent`` for the pattern.
     """
-    try:
-        from google.adk.a2a import AgentCard, AgentSkill  # type: ignore[import-untyped]
-    except ImportError as exc:
-        raise ImportError("google-adk>=2.1 required") from exc
+    from google.adk.agents import LlmAgent
 
-    return AgentCard(
-        name="devsecops-agent",
-        description=(
-            "DevSecOps specialist. Investigates SCC findings, IAM drift, key exposure, "
-            "vulnerability signals, and policy violations. Produces Finding v1."
-        ),
-        model_id=settings.model_id,
-        mcp_servers=[*DEVSECOPS_MCP_ENDPOINTS, settings.action_broker_mcp_endpoint],
-        skills=[
-            AgentSkill(
-                name="investigate_security",
-                description=(
-                    "Receive an OpsSignal, query Cloud Asset Inventory and audit logs; "
-                    "produce a structured Finding with risk assessment and typed "
-                    "recommendations."
-                ),
-            ),
-        ],
-    )
+    if toolsets is None:
+        toolsets = build_mcp_toolsets(
+            DEVSECOPS_MCP_ENDPOINTS,
+            region=settings.region,
+            extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
+        )
 
+    model = ModelFactory.from_settings(settings).get_model()
+    logger.info("build_devsecops_agent: model=%s tools=%d", settings.model_id, len(toolsets))
 
-def build_devsecops_agent(settings: AopSettings) -> object:
-    """Construct and return the ADK 2.0 DevSecOps LlmAgent.
-
-    The allow-list includes Cloud Asset Inventory (Preview); a deployment may
-    fall back to BigQuery-exported asset data if it is unavailable.
-
-    Returns:
-        An ADK 2.0 LlmAgent instance.
-
-    Raises:
-        NotImplementedError: Skeleton — LlmAgent not wired.
-
-    ADK 2.0 API — confirm LlmAgent constructor signature against adk.dev/2.0/ release notes
-    """
-    ModelFactory.from_settings(settings)
-    toolsets = build_mcp_toolsets(
-        DEVSECOPS_MCP_ENDPOINTS,
-        region=settings.region,
-        extra_custom_endpoints=[settings.action_broker_mcp_endpoint],
-    )
-    build_agent_card(settings)
-
-    logger.info(
-        "build_devsecops_agent: model=%s endpoint_count=%d region=%s",
-        settings.model_id,
-        len(toolsets),
-        settings.region,
-    )
-
-    # SKELETON: In production, wire ADK 2.0 LlmAgent, e.g.:
-    #
-    #   from google.adk.agents import LlmAgent
-    #   return LlmAgent(
-    #       model=model_factory.get_model(),
-    #       tools=toolsets,
-    #       system_prompt=DEVSECOPS_SYSTEM_PROMPT,
-    #       output_schema=Finding,
-    #       agent_card=agent_card,
-    #   )
-
-    raise NotImplementedError(
-        "build_devsecops_agent is a skeleton. "
-        "Wire the ADK 2.0 LlmAgent before deploying to Agent Engine."
+    return LlmAgent(
+        name="devsecops_agent",
+        model=model,
+        instruction=DEVSECOPS_SYSTEM_PROMPT,
+        tools=toolsets,
     )

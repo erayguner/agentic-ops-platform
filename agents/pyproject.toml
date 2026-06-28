@@ -1,4 +1,4 @@
-# AOP Agents — ADK 2.0 Python agent skeletons.
+# AOP Agents — ADK 2.3 Python agent packages.
 #
 # Managed by uv. To install the deps and create a venv:
 #     uv sync
@@ -20,7 +20,7 @@ build-backend = "hatchling.build"
 [project]
 name = "aop-agents"
 version = "0.1.0"
-description = "Agentic Operations Platform — ADK 2.0 agent skeletons (orchestrator, SRE, DevSecOps, Platform, FinOps)."
+description = "Agentic Operations Platform — ADK 2.3 agents (orchestrator, SRE, DevSecOps, Platform, FinOps, Decommission)."
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.13"
@@ -29,17 +29,17 @@ authors = [
 ]
 
 dependencies = [
-    # ADK 2.0 GA'd 2026-05-19. Pinned to the 2.2.x line; uv.lock pins the exact
+    # ADK 2.0 GA'd 2026-05-19. Pinned to the 2.3.x line; uv.lock pins the exact
     # patch. ADK ships breaking changes within MINOR releases (~biweekly), so
     # google-adk is isolated into its own Dependabot PR (.github/dependabot.yml)
     # and gated by the ADK smoke test (tests/test_adk_compat.py) on every bump.
     # 2.x was a breaking change from 1.x; do not float to 3.x without review.
-    "google-adk==2.3.*",
+    "google-adk[mcp]==2.3.*",
     "pydantic>=2.7",
     "pydantic-settings>=2.14.2",
     "pyyaml>=6.0",
     "google-cloud-pubsub>=2.39.0",
-    "google-cloud-firestore>=2.16",
+    "google-cloud-firestore>=2.28.0",
     "google-cloud-logging>=3.16.0",
     "opentelemetry-api>=1.42.1",
     "opentelemetry-sdk>=1.27",

@@ -1,20 +1,19 @@
 """ADK churn guardrails — smoke tests that go red when a google-adk bump breaks
 the platform's integration surface.
 
-The agents are still skeletons, so these do NOT exercise real ADK behaviour.
-They lock down the things that *can* be checked today and that an ADK version
-bump is most likely to break:
-
-  * the runtime seam (``aop_common.runtime``) stays cloud-free and swappable,
-  * the deploy CLI's dry-run + Agent Engine region guard still work,
-  * the ModelFactory's non-ADK surface is stable,
-  * the ADK import paths the code depends on still resolve (xfail until Phase 1
-    wires the real agents and verifies them — an XPASS then flags them as
-    confirmed).
-
 These run under the existing ``pytest (agents)`` CI job, so a Dependabot ADK
 bump (isolated into its own PR — see .github/dependabot.yml) turns these red on
 breakage instead of a production deploy.
+
+Import paths were verified against the installed google-adk (2.3.0). The ADK 2.x
+API differs from the original skeletons' guesses, captured here so drift is
+caught automatically:
+
+  * workflow primitives are ``SequentialAgent`` / ``LoopAgent`` (no ``WorkflowAgent``),
+  * the model class is ``Gemini`` in ``google.adk.models.google_llm`` (no ``LlmModel``),
+  * ``McpToolset`` takes a ``StreamableHTTPConnectionParams`` (no endpoint/transport
+    kwargs) and requires the ``google-adk[mcp]`` extra (declared in pyproject).
+    A2A wiring is deferred — best done with the orchestrator, the A2A hub.
 """
 
 from __future__ import annotations
@@ -27,20 +26,10 @@ from pathlib import Path
 
 import pytest
 
-_DEPLOY = Path(__file__).parent.parent / "deployment" / "deploy.py"
+# google.adk emits an [EXPERIMENTAL] UserWarning on import; it is not a defect.
+pytestmark = pytest.mark.filterwarnings("ignore::UserWarning")
 
-# The ADK 2.x import paths the codebase binds to. These are currently
-# unverified guesses (every call site is annotated "confirm against release
-# notes"), so the surface test is xfail until Phase 1 verifies them against a
-# real build.
-_ADK_SYMBOLS: tuple[tuple[str, str], ...] = (
-    ("google.adk.agents", "LlmAgent"),
-    ("google.adk.agents", "WorkflowAgent"),
-    ("google.adk.a2a", "AgentCard"),
-    ("google.adk.a2a", "AgentSkill"),
-    ("google.adk.tools.mcp_tool", "McpToolset"),
-    ("google.adk.models", "LlmModel"),
-)
+_DEPLOY = Path(__file__).parent.parent / "deployment" / "deploy.py"
 
 
 def _adk_installed() -> bool:
@@ -50,8 +39,23 @@ def _adk_installed() -> bool:
         return False
 
 
+# Verified-correct import paths the platform binds to (hard assertions — a bump
+# that moves any of these turns the suite red). Includes the [mcp] extra the
+# platform declares.
+_VERIFIED_IMPORTS: tuple[tuple[str, str], ...] = (
+    ("google.adk.agents", "LlmAgent"),
+    ("google.adk.agents", "SequentialAgent"),
+    ("google.adk.agents", "LoopAgent"),
+    ("google.adk.models", "BaseLlm"),
+    ("google.adk.models", "LLMRegistry"),
+    ("google.adk.models.google_llm", "Gemini"),
+    ("google.adk.tools.mcp_tool", "McpToolset"),
+    ("google.adk.tools.mcp_tool", "StreamableHTTPConnectionParams"),
+)
+
+
 # --------------------------------------------------------------------------- #
-# Runtime seam (aop_common.runtime) — Gap 2: keep the runtime swappable
+# Runtime seam (aop_common.runtime) — keep the runtime swappable
 # --------------------------------------------------------------------------- #
 
 
@@ -73,9 +77,8 @@ class TestRuntimeSeam:
         assert isinstance(runtime, AgentRuntime)
 
     def test_constructing_adapter_does_not_import_sdk(self) -> None:
-        # The seam must stay cloud-free: constructing the adapter must not pull
-        # in vertexai. Pop first so the assertion is deterministic regardless of
-        # test order.
+        # The seam must stay cloud-free: constructing the adapter must not pull in
+        # vertexai. Pop first so the assertion is deterministic regardless of order.
         sys.modules.pop("vertexai", None)
         from aop_common.runtime import VertexAgentEngineRuntime
 
@@ -84,7 +87,7 @@ class TestRuntimeSeam:
 
 
 # --------------------------------------------------------------------------- #
-# Deploy CLI — Gap 1/4: dry-run + Agent Engine region guard
+# Deploy CLI — dry-run + Agent Engine region guard
 # --------------------------------------------------------------------------- #
 
 
@@ -109,8 +112,8 @@ class TestDeployCli:
         assert "DRY RUN" in result.stdout
 
     def test_unsupported_region_is_rejected(self) -> None:
-        # europe-west2 (the platform default) does NOT support Agent Engine —
-        # the guard must fail fast rather than attempt a billable deploy.
+        # europe-west2 (the platform default) does NOT support Agent Engine — the
+        # guard must fail fast rather than attempt a billable deploy.
         result = subprocess.run(
             [
                 sys.executable,
@@ -134,31 +137,52 @@ class TestDeployCli:
 
 
 # --------------------------------------------------------------------------- #
-# Model factory — Gap 4: non-ADK surface stable, ADK construction still stubbed
-# --------------------------------------------------------------------------- #
-
-
-class TestModelFactory:
-    def test_factory_carries_config_without_constructing_model(self) -> None:
-        from aop_common.models import ModelFactory
-
-        factory = ModelFactory(model_id="gemini-3-pro", fallback_list=["gemini-2-flash"])
-        # Skeleton convention (cf. test_triage): the ADK construction is stubbed.
-        with pytest.raises(NotImplementedError):
-            factory.get_model()
-
-
-# --------------------------------------------------------------------------- #
-# ADK import surface — Gap 4: early-warning for ADK API churn
+# Model factory — now real: constructs a Gemini model offline (no creds)
 # --------------------------------------------------------------------------- #
 
 
 @pytest.mark.skipif(not _adk_installed(), reason="google-adk not installed")
-@pytest.mark.xfail(
-    reason="ADK 2.x import paths are unverified until Phase 1 wires real agents",
-    strict=False,
-)
-@pytest.mark.parametrize(("module", "symbol"), _ADK_SYMBOLS)
-def test_adk_symbol_resolves(module: str, symbol: str) -> None:
+class TestModelFactory:
+    def test_get_model_constructs_gemini_and_caches(self) -> None:
+        from aop_common.models import ModelFactory
+
+        factory = ModelFactory(model_id="gemini-3-pro", fallback_list=["gemini-2-flash"])
+        model = factory.get_model()
+        assert type(model).__name__ == "Gemini"
+        assert factory.get_model() is model  # cached on second call
+
+
+# --------------------------------------------------------------------------- #
+# MCP endpoint resolution — pure helper, testable without the SDK or creds
+# --------------------------------------------------------------------------- #
+
+
+class TestMcpEndpointResolution:
+    def test_appends_custom_and_formats_region(self) -> None:
+        from aop_common.mcp_tools import resolve_mcp_endpoints
+
+        resolved = resolve_mcp_endpoints(
+            [
+                "https://logging.googleapis.com/mcp",
+                "https://chronicle.{region}.rep.googleapis.com/mcp",
+            ],
+            ["https://broker.example/mcp"],
+            region="europe-west1",
+        )
+        assert resolved == [
+            "https://logging.googleapis.com/mcp",
+            "https://chronicle.europe-west1.rep.googleapis.com/mcp",
+            "https://broker.example/mcp",
+        ]
+
+
+# --------------------------------------------------------------------------- #
+# ADK import surface — early-warning for API churn
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.skipif(not _adk_installed(), reason="google-adk not installed")
+@pytest.mark.parametrize(("module", "symbol"), _VERIFIED_IMPORTS)
+def test_verified_import_resolves(module: str, symbol: str) -> None:
     mod = importlib.import_module(module)
-    assert hasattr(mod, symbol)
+    assert hasattr(mod, symbol), f"{module}.{symbol} missing — ADK API drift"

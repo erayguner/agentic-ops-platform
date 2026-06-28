@@ -1,7 +1,8 @@
 """aop_decommission.campaign — the end-to-end decommission lifecycle.
 
-Wires the engine modules into the full campaign and is the seam the ADK
-WorkflowAgent graph (``agent.py``) drives:
+Wires the engine modules into the full campaign — the deterministic lifecycle
+driven by the eventing + Action Broker layers (the agent in ``agent.py`` is a
+read-only ``LlmAgent`` proposer; see its module docstring):
 
     discover → inventory → plan → [execute → re-scan → validate] → report
 

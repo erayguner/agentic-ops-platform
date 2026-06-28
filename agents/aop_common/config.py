@@ -6,6 +6,8 @@ The model id is configuration; it must never be embedded in agent code.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -43,6 +45,19 @@ class AopSettings(BaseSettings):
         ),
     )
     environment: str = Field("dev", description="Deployment environment — 'dev' or 'prod'")
+
+    # ------------------------------------------------------------------ #
+    # Deployment profile — selects GA-only backends vs Preview-enhanced.
+    # ------------------------------------------------------------------ #
+    deployment_profile: Literal["ga-only", "preview"] = Field(
+        "ga-only",
+        description=(
+            "'ga-only' (default) binds only GA backends — Firestore memory rather "
+            "than the Preview Memory Bank, no Preview MCP servers — so the platform "
+            "stays deployable regardless of Preview-feature churn. 'preview' opts "
+            "into Preview-enhanced features."
+        ),
+    )
 
     # ------------------------------------------------------------------ #
     # Model configuration

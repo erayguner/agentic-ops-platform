@@ -7,10 +7,10 @@ agents are built out. It is **billable** (Gemini tokens once invoked) and uses a
 
 ## Prerequisites (in order)
 
-1. **Implement the agent builders.** `build_<agent>()` in `agents/aop_<agent>/agent.py`
-   currently raises `NotImplementedError` — they are skeleton ADK 2.1
-   WorkflowAgent graphs. A deploy fails fast until these are wired. This is the
-   real blocker; everything below is ready.
+1. **Agent builders are implemented.** `build_<agent>()` in `agents/aop_<agent>/agent.py`
+   returns a real ADK 2.3 `LlmAgent` (offline-verified by `agents/tests/`). No
+   further agent wiring is required — the remaining prerequisites below (region,
+   staging bucket, service accounts, live GCP creds) are the real blockers.
 2. **Pick a supported region.** Agent Engine is region-limited and **does not
    include europe-west2** (the platform's default). Use e.g. `us-central1` or
    `europe-west1` — confirm against the Vertex AI generative-AI **locations**
@@ -41,10 +41,12 @@ uv run python deployment/deploy.py --agent orchestrator \
 ```
 
 `deploy.py` calls `vertexai.agent_engines.create(agent_engine=build_<agent>(settings),
-requirements=[...], extra_packages=["aop_common", "aop_<agent>"], service_account=sa-<agent>@…)`.
-Confirm the `create()` signature against the installed `google-cloud-aiplatform`
-/ `google-adk` 2.1.x before first use. Repeat per agent (orchestrator, sre,
-devsecops, platform, finops, decommission).
+requirements=[...], extra_packages=["aop_common", "aop_<agent>"], service_account=sa-<agent>@…)`
+through the single `aop_common.runtime.VertexAgentEngineRuntime` seam (which also
+pins the remote runtime to the exact packaged `google-adk` build). Confirm the
+`create()` signature against the installed `google-cloud-aiplatform` / `google-adk`
+2.3.x before first use. Repeat per agent (orchestrator, sre, devsecops, platform,
+finops, decommission).
 
 ## Path B — Terraform: `modules/agents/_base` (or `agent-runtime`)
 

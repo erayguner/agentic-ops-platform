@@ -110,7 +110,8 @@ All six also receive `roles/mcp.toolUser`.
 - Google Cloud MCP is **beta** (`gcloud beta …`); Cloud Asset Inventory MCP is
   **Preview**. Re-confirm endpoint availability and the exact `content-security`
   flags against the [official docs](https://docs.cloud.google.com/mcp/supported-products).
-- **The agent tier is not deployed** (the ADK builders are stubs — see
+- **The agent tier is not deployed live** (the builders construct real ADK 2.3
+  `LlmAgent`s, but live deploy needs GCP creds + a supported region — see
   [`AGENT-DEPLOY.md`](./AGENT-DEPLOY.md)). This wiring is therefore _ready-to-use_:
   the APIs apply now; the `mcp.toolUser` + viewer IAM binds when the agent SAs
   are created at deploy.
