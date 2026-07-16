@@ -48,6 +48,9 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-shebang-scripts-are-executable
       - id: detect-private-key
+        # Truncated dummy PEM fixture for the redact_text() test — not a real
+        # key (gitleaks agrees); detect-private-key only regex-matches the header.
+        exclude: ^agents/tests/test_decommission_report\.py$
       - id: forbid-submodules
 
   # ────────────────────────────────────────────────────────────────────────────
@@ -65,7 +68,7 @@ repos:
   # Config lives in the top-level pyproject.toml under [tool.ruff].
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
+    rev: v0.15.22
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -75,7 +78,7 @@ repos:
   # uv — keep each project's uv.lock in lockstep with its pyproject.toml.
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.11.18
+    rev: 0.11.29
     hooks:
       - id: uv-lock
       - id: uv-export
@@ -89,7 +92,7 @@ repos:
   # tflint catches policy and best-practice issues fmt/validate don't.
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.106.0
+    rev: v1.108.0
     hooks:
       - id: terraform_fmt
       - id: terraform_validate
@@ -123,7 +126,7 @@ repos:
   # Markdown
   # ────────────────────────────────────────────────────────────────────────────
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.48.0
+    rev: v0.49.1
     hooks:
       - id: markdownlint
         args:
