@@ -77,6 +77,51 @@ variable "enable_action_broker" {
   default     = true
 }
 
+variable "enable_agent_registry" {
+  type        = bool
+  description = <<-EOT
+    Register the managed MCP servers the agents consume and grant each agent
+    roles/iap.egressor on exactly the servers in its allow-list.
+
+    This is authorisation only — it does not change how agents connect, so
+    disabling it leaves the platform working exactly as before, with the
+    allow-list enforced only by application convention.
+  EOT
+  default     = true
+}
+
+variable "agent_registry_location" {
+  type        = string
+  description = <<-EOT
+    Override the location for Agent Registry resources. Defaults to var.region.
+
+    Agent Registry is a young API with narrower regional coverage than the rest
+    of the platform; set this if an apply reports the region as unsupported.
+  EOT
+  default     = null
+}
+
+variable "enable_agent_gateway" {
+  type        = bool
+  description = <<-EOT
+    Provision a Google-managed Agent Gateway over the registry. Off by default:
+    it takes up to 30 minutes to provision and only matters once agents are
+    configured to egress through it. Requires var.enable_agent_registry.
+  EOT
+  default     = false
+}
+
+variable "enable_semantic_governance" {
+  type        = bool
+  description = <<-EOT
+    Provision the Vertex AI Semantic Governance Policy Engine that Agent
+    Gateway consults to allow or deny proposed tool calls. Off by default: it
+    is a project/region singleton, provisions managed PSC networking, and can
+    take up to 60 minutes. Requires var.enable_agent_registry.
+  EOT
+  default     = false
+}
+
 variable "enable_slack_notifier" {
   type        = bool
   description = "Provision the Slack notifier Cloud Run service and secrets."

@@ -96,6 +96,7 @@ jobs:
           - terraform/modules/action-broker
           - terraform/modules/slack-notifier
           - terraform/modules/agent-runtime
+          - terraform/modules/agent-registry
           - terraform/modules/agents/_base
           - terraform/modules/agents/orchestrator
           - terraform/modules/agents/sre

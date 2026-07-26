@@ -39,6 +39,13 @@ check "prod_requires_prevent_deletion" {
   }
 }
 
+check "agent_gateway_requires_registry" {
+  assert {
+    condition     = var.enable_agent_registry || !(var.enable_agent_gateway || var.enable_semantic_governance)
+    error_message = "enable_agent_gateway / enable_semantic_governance require enable_agent_registry = true (the gateway governs the registry, and both live in the agent-registry module)."
+  }
+}
+
 check "prod_requires_broker_warm_pool" {
   assert {
     condition     = !var.enable_action_broker || var.env != "prod" || var.min_instance_count_broker >= 1
@@ -292,6 +299,84 @@ module "agent_finops" {
   labels                       = merge(var.labels, try(var.enabled_agents["finops"].labels, {}))
 
   depends_on = [module.eventing]
+}
+
+# ---------------------------------------------------------------------------
+# Agent Registry — authorise each agent for exactly the MCP servers it uses.
+# ---------------------------------------------------------------------------
+
+locals {
+  # Mirrors the endpoint constants in agents/aop_common/mcp_tools.py. That file
+  # stays the source of truth for what an agent *connects to*; this catalogue
+  # governs what it is *allowed* to reach. Keys are the registry service_ids —
+  # renaming one recreates the registry entry and its IAM bindings.
+  mcp_server_catalogue = {
+    "logging"              = { url = "https://logging.googleapis.com/mcp", display_name = "Cloud Logging MCP" }
+    "monitoring"           = { url = "https://monitoring.googleapis.com/mcp", display_name = "Cloud Monitoring MCP" }
+    "trace"                = { url = "https://cloudtrace.googleapis.com/mcp", display_name = "Cloud Trace MCP" }
+    "error-reporting"      = { url = "https://clouderrorreporting.googleapis.com/mcp", display_name = "Error Reporting MCP" }
+    "cloud-run"            = { url = "https://run.googleapis.com/mcp", display_name = "Cloud Run MCP" }
+    "network-intelligence" = { url = "https://networkmanagement.googleapis.com/mcp", display_name = "Network Intelligence MCP" }
+    "asset-inventory"      = { url = "https://cloudasset.googleapis.com/mcp", display_name = "Cloud Asset Inventory MCP" }
+    # Region-parameterised upstream (SECOPS_MCP_TEMPLATE); resolve_mcp_endpoints()
+    # formats the same {region} placeholder at toolset-build time.
+    "secops" = { url = "https://chronicle.${var.region}.rep.googleapis.com/mcp", display_name = "Google SecOps (Chronicle) MCP" }
+  }
+
+  # Per-agent allow-lists, kept identical to the *_MCP_ENDPOINTS lists in
+  # mcp_tools.py. Only enabled agents contribute a grant.
+  agent_mcp_allowlists = {
+    orchestrator = ["logging", "monitoring"]
+    sre          = ["logging", "monitoring", "trace", "error-reporting", "cloud-run", "network-intelligence"]
+    devsecops    = ["logging", "monitoring", "asset-inventory", "secops"]
+    platform     = ["logging", "monitoring", "asset-inventory", "cloud-run"]
+    finops       = ["monitoring"]
+  }
+
+  agent_sa_member_by_slug = {
+    orchestrator = local.agent_enabled.orchestrator ? module.agent_orchestrator[0].sa_member : null
+    sre          = local.agent_enabled.sre ? module.agent_sre[0].sa_member : null
+    devsecops    = local.agent_enabled.devsecops ? module.agent_devsecops[0].sa_member : null
+    platform     = local.agent_enabled.platform ? module.agent_platform[0].sa_member : null
+    finops       = local.agent_enabled.finops ? module.agent_finops[0].sa_member : null
+  }
+
+  agent_registry_grants = {
+    for slug, member in local.agent_sa_member_by_slug :
+    slug => {
+      member      = member
+      mcp_servers = local.agent_mcp_allowlists[slug]
+    }
+    if member != null
+  }
+}
+
+module "agent_registry" {
+  source = "../agent-registry"
+  count  = var.enable_agent_registry ? 1 : 0
+
+  project_id = var.project_id
+  region     = var.region
+  location   = var.agent_registry_location
+  env        = var.env
+
+  mcp_servers  = local.mcp_server_catalogue
+  agent_grants = local.agent_registry_grants
+
+  enable_agent_gateway       = var.enable_agent_gateway
+  enable_semantic_governance = var.enable_semantic_governance
+
+  deletion_policy = var.deletion_policy_prevent ? "PREVENT" : "DELETE"
+  labels          = var.labels
+
+  # Registry entries are per-agent-scoped, so the agent SAs must exist first.
+  depends_on = [
+    module.agent_orchestrator,
+    module.agent_sre,
+    module.agent_devsecops,
+    module.agent_platform,
+    module.agent_finops,
+  ]
 }
 
 # ---------------------------------------------------------------------------

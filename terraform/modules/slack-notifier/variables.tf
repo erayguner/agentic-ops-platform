@@ -93,3 +93,18 @@ variable "labels" {
   description = "Additional labels to merge with the standard AOP label set."
   default     = {}
 }
+
+variable "tags" {
+  type        = map(string)
+  description = <<-EOT
+    Resource-manager tags bound to the Cloud Run service at creation, as
+    "<namespace>/<tag_key>" => "<tag_value>" (e.g.
+    { "my-project/data-classification" = "internal" }).
+
+    Unlike labels these are org-governed and can be referenced from IAM and
+    org-policy conditions. Cloud Run accepts tags only at CREATE, so changing
+    this replaces the service. Keys must already exist as TagKey/TagValue
+    resources or the apply fails — hence the empty default.
+  EOT
+  default     = {}
+}

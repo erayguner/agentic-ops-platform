@@ -150,6 +150,12 @@ locals {
     "clouderrorreporting.googleapis.com",
     "cloudasset.googleapis.com",
     "networkmanagement.googleapis.com",
+    # Backs the SecOps/Chronicle MCP server consumed read-only by DevSecOps
+    # (SECOPS_MCP_TEMPLATE in aop_common.mcp_tools).
+    "chronicle.googleapis.com",
+    # Agent Registry — the registry of agents/MCP servers that Agent Gateway
+    # governs and IAP authorises. See modules/agent-registry.
+    "agentregistry.googleapis.com",
   ]
 }
 

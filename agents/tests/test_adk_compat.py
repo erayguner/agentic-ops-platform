@@ -176,6 +176,48 @@ class TestMcpEndpointResolution:
         ]
 
 
+class TestDevSecOpsChronicleWiring:
+    """The DevSecOps prompt instructs the agent to query Chronicle MCP first,
+    so the endpoint must actually be in its allow-list and must resolve to a
+    concrete regional URL. This previously drifted: the prompt and the SA's
+    documented roles assumed Chronicle while the allow-list omitted it, so the
+    agent was told to use a tool it had never been given.
+    """
+
+    def test_devsecops_allowlist_includes_secops(self) -> None:
+        from aop_common.mcp_tools import DEVSECOPS_MCP_ENDPOINTS, SECOPS_MCP_TEMPLATE
+
+        assert SECOPS_MCP_TEMPLATE in DEVSECOPS_MCP_ENDPOINTS
+
+    def test_devsecops_endpoints_resolve_without_placeholders(self) -> None:
+        from aop_common.mcp_tools import DEVSECOPS_MCP_ENDPOINTS, resolve_mcp_endpoints
+
+        resolved = resolve_mcp_endpoints(DEVSECOPS_MCP_ENDPOINTS, region="europe-west2")
+
+        assert "https://chronicle.europe-west2.rep.googleapis.com/mcp" in resolved
+        # An unformatted "{region}" would be dialled literally and fail at runtime.
+        assert not any("{region}" in endpoint for endpoint in resolved)
+
+    def test_chronicle_stays_out_of_non_security_agents(self) -> None:
+        """Chronicle is the security surface — least privilege keeps it scoped
+        to DevSecOps rather than riding along with every agent."""
+        from aop_common.mcp_tools import (
+            FINOPS_MCP_ENDPOINTS,
+            ORCHESTRATOR_MCP_ENDPOINTS,
+            PLATFORM_MCP_ENDPOINTS,
+            SECOPS_MCP_TEMPLATE,
+            SRE_MCP_ENDPOINTS,
+        )
+
+        for allowlist in (
+            ORCHESTRATOR_MCP_ENDPOINTS,
+            SRE_MCP_ENDPOINTS,
+            PLATFORM_MCP_ENDPOINTS,
+            FINOPS_MCP_ENDPOINTS,
+        ):
+            assert SECOPS_MCP_TEMPLATE not in allowlist
+
+
 # --------------------------------------------------------------------------- #
 # ADK import surface — early-warning for API churn
 # --------------------------------------------------------------------------- #

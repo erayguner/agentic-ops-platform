@@ -130,3 +130,29 @@ output "audit_bq_dataset_id" {
   description = "BigQuery dataset that holds the audit log export."
   value       = var.enable_governance ? module.governance[0].audit_bq_dataset_id : local.audit_bq_dataset_id
 }
+
+# ---------------------------------------------------------------------------
+# Agent Registry
+# ---------------------------------------------------------------------------
+
+output "agent_registry_uri" {
+  description = "Registry URI governing the agents' MCP servers, or \"\" when disabled."
+  value       = var.enable_agent_registry ? module.agent_registry[0].registry_uri : ""
+}
+
+output "agent_registry_mcp_server_ids" {
+  description = "Registered MCP server ids keyed by slug, or {} when disabled."
+  value       = var.enable_agent_registry ? module.agent_registry[0].mcp_server_ids : {}
+}
+
+output "agent_registry_egress_grants" {
+  description = "The (agent/MCP-server) => member authorisation matrix, or {} when disabled."
+  value       = var.enable_agent_registry ? module.agent_registry[0].agent_egress_grants : {}
+}
+
+output "agent_gateway_mtls_endpoint" {
+  description = "mTLS endpoint for agent egress through Agent Gateway, or \"\" when disabled."
+  # Gated on both flags rather than coalesce()-ing the module output: with the
+  # gateway off that output is null, and coalesce rejects "" as a fallback.
+  value = var.enable_agent_registry && var.enable_agent_gateway ? module.agent_registry[0].agent_gateway_mtls_endpoint : ""
+}

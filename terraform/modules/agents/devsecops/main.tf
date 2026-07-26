@@ -21,6 +21,11 @@ module "base" {
     "roles/logging.privateLogViewer",
     "roles/iam.securityReviewer",
     "roles/cloudasset.viewer",
+    # Read-only SecOps/Chronicle access. The DevSecOps prompt directs the agent
+    # to query Chronicle MCP for related alerts/IOCs first, and
+    # SECOPS_MCP_TEMPLATE is in DEVSECOPS_MCP_ENDPOINTS; without this role that
+    # call 403s. Viewer only — response actions go through the Action Broker.
+    "roles/chronicle.viewer",
   ]
 
   schedule = var.schedule

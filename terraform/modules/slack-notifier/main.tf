@@ -216,6 +216,14 @@ resource "google_cloud_run_v2_service" "slack_notifier" {
 
   labels = local.common_labels
 
+  # Resource-manager tags (provider >= 7.41). Distinct from labels: tags are
+  # org/project-scoped key/value pairs usable in IAM and org-policy conditions,
+  # and Cloud Run only accepts them at CREATE time — changing this forces
+  # replacement. Empty by default because each entry requires a TagKey/TagValue
+  # that already exists in the org; supply e.g.
+  # { "<project>/data-classification" = "internal" } once those are provisioned.
+  tags = var.tags
+
   # Require authentication for all paths except /slack/events (handled by signing secret)
   ingress = "INGRESS_TRAFFIC_ALL"
 }

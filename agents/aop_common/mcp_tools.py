@@ -50,9 +50,8 @@ DEVELOPER_KNOWLEDGE_MCP = (
 #     every mutation/remediation goes through the Action Broker (decision/
 #     execution separation) — never a direct MCP write.
 #   * Excluded: GKE/Compute (not in the stack), Resource Manager (overlaps Asset
-#     Inventory), SecOps/Chronicle (not used here), and Preview/unverified
-#     servers (Gemini Cloud Assist, Developer Knowledge, Agent Registry,
-#     Recommender) to avoid broad/ambiguous surface.
+#     Inventory), and Preview/unverified servers (Gemini Cloud Assist, Developer
+#     Knowledge, Agent Registry, Recommender) to avoid broad/ambiguous surface.
 #   * Deferred: BigQuery + Pub/Sub MCP. FinOps billing-BigQuery (read-only) is
 #     the first planned addition — see MCP-SERVERS.md.
 ORCHESTRATOR_MCP_ENDPOINTS: list[str] = [
@@ -69,10 +68,18 @@ SRE_MCP_ENDPOINTS: list[str] = [
     NETWORK_INTELLIGENCE_MCP,
 ]
 
+# SecOps/Chronicle is region-parameterised — resolve_mcp_endpoints() formats
+# {region} at build time. It is the alert/IOC/threat-intel surface the DevSecOps
+# prompt already instructs the agent to query first (aop_devsecops/prompts.py),
+# and DESIGN-REVIEW.md §"Service accounts" grants the matching
+# roles/chronicle.viewer, so the endpoint belongs in this allow-list; it was
+# previously omitted, leaving the prompt instructing a tool the agent lacked.
+# Read-only: investigation only — every response action still goes via the Broker.
 DEVSECOPS_MCP_ENDPOINTS: list[str] = [
     LOGGING_MCP,
     MONITORING_MCP,
     ASSET_INVENTORY_MCP,
+    SECOPS_MCP_TEMPLATE,
 ]
 
 PLATFORM_MCP_ENDPOINTS: list[str] = [
