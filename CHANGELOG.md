@@ -5,6 +5,44 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.1...v0.9.0) (2026-07-26)
+
+
+### Features
+
+* **agents:** add GA Firestore memory fallback + ga-only deployment profile ([#65](https://github.com/erayguner/agentic-ops-platform/issues/65)) ([fbfb94e](https://github.com/erayguner/agentic-ops-platform/commit/fbfb94e8429a5b1d0157b695150f6e7d4f79c101))
+* **agents:** de-stub orchestrator + decommission as ADK 2.3 LlmAgents ([#67](https://github.com/erayguner/agentic-ops-platform/issues/67)) ([f8b4881](https://github.com/erayguner/agentic-ops-platform/commit/f8b48814650c867896e23b05f23797310784e50b))
+* **agents:** de-stub SRE/DevSecOps/Platform LlmAgent specialists ([#66](https://github.com/erayguner/agentic-ops-platform/issues/66)) ([c5483d4](https://github.com/erayguner/agentic-ops-platform/commit/c5483d48f7703ffbbabb90016475e1716b9d2f3f))
+* **agents:** isolate ADK churn behind a swappable runtime seam + smoke gates ([#58](https://github.com/erayguner/agentic-ops-platform/issues/58)) ([cac22a8](https://github.com/erayguner/agentic-ops-platform/commit/cac22a8a9ca028d3fd9f3e000a6657e856878196))
+* **agents:** make ModelFactory real + verify ADK 2.3 import surface ([#63](https://github.com/erayguner/agentic-ops-platform/issues/63)) ([5c6b03f](https://github.com/erayguner/agentic-ops-platform/commit/5c6b03f81eec35195d081880e12bba53d7b251b4))
+* **agents:** wire FinOps LlmAgent + real ADK 2.3 MCP toolset API ([#64](https://github.com/erayguner/agentic-ops-platform/issues/64)) ([1c1d062](https://github.com/erayguner/agentic-ops-platform/commit/1c1d062553a2a408c337e43dbd8631efa7839747))
+
+
+### Documentation
+
+* refresh agent-tier docs and comments for ADK 2.3 de-stub ([056517a](https://github.com/erayguner/agentic-ops-platform/commit/056517afd9e0e0a753f3e39b4ac00cad50145041))
+* refresh agent-tier docs for ADK 2.3 + add JEPA semantic-memory study ([37619f6](https://github.com/erayguner/agentic-ops-platform/commit/37619f60eeb8569aafe8d7786c967fdb6e776dae))
+* **research:** add JEPA-inspired semantic-memory study ([f649864](https://github.com/erayguner/agentic-ops-platform/commit/f649864030f47a6c9bba44aa492c5fe024aed40d))
+
+
+### Build
+
+* **deps:** bump pyasn1 from 0.6.3 to 0.6.4 in /agents ([#91](https://github.com/erayguner/agentic-ops-platform/issues/91)) ([dfdd755](https://github.com/erayguner/agentic-ops-platform/commit/dfdd7559a2973f1b1996351f613a26249889f37c))
+* **deps:** bump pyasn1 from 0.6.3 to 0.6.4 in /services/action-broker ([#92](https://github.com/erayguner/agentic-ops-platform/issues/92)) ([c492f54](https://github.com/erayguner/agentic-ops-platform/commit/c492f54bfa591c7f8be36118b68dd7b0a79816bb))
+* **deps:** bump pyasn1 from 0.6.3 to 0.6.4 in /services/slack-notifier ([#90](https://github.com/erayguner/agentic-ops-platform/issues/90)) ([984ac54](https://github.com/erayguner/agentic-ops-platform/commit/984ac54bab98bc9ed21f1e8672ae0a89f72e791d))
+* **deps:** bump the python-runtime group across 2 directories with 2 updates ([#87](https://github.com/erayguner/agentic-ops-platform/issues/87)) ([53d26c5](https://github.com/erayguner/agentic-ops-platform/commit/53d26c5e014a32fcfe56cb07f993ecf51400f3bb))
+* **deps:** bump the python-runtime group across 3 directories with 4 updates ([#61](https://github.com/erayguner/agentic-ops-platform/issues/61)) ([5669d43](https://github.com/erayguner/agentic-ops-platform/commit/5669d430ae89d43a77b0b0b06afccd47d21dfd38))
+* **deps:** bump the python-runtime group across 3 directories with 4 updates ([#83](https://github.com/erayguner/agentic-ops-platform/issues/83)) ([1b3a51e](https://github.com/erayguner/agentic-ops-platform/commit/1b3a51e6492f28f6b04e2e5fc58a79eeca96bb06))
+* **deps:** bump the python-runtime group across 3 directories with 6 updates ([#56](https://github.com/erayguner/agentic-ops-platform/issues/56)) ([699cd4b](https://github.com/erayguner/agentic-ops-platform/commit/699cd4bf3625695518279101072c1a11e6aca1e2))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([#55](https://github.com/erayguner/agentic-ops-platform/issues/55)) ([96a3371](https://github.com/erayguner/agentic-ops-platform/commit/96a33714a98f105d58061a7a3819aeab866185ea))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([#60](https://github.com/erayguner/agentic-ops-platform/issues/60)) ([0d7cbc6](https://github.com/erayguner/agentic-ops-platform/commit/0d7cbc6a2499061aa4f400673c55941306dd9e19))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([#70](https://github.com/erayguner/agentic-ops-platform/issues/70)) ([dfb715b](https://github.com/erayguner/agentic-ops-platform/commit/dfb715b3feb1c7670b64f9b68c10013df83ef225))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([#85](https://github.com/erayguner/agentic-ops-platform/issues/85)) ([ffbb15c](https://github.com/erayguner/agentic-ops-platform/commit/ffbb15c776dd554fdf6082a5ddea513542953b8b))
+* **deps:** update google-adk[mcp] requirement in /agents ([#80](https://github.com/erayguner/agentic-ops-platform/issues/80)) ([6dd4356](https://github.com/erayguner/agentic-ops-platform/commit/6dd4356d88c6cd63e9bea3f66d1bbd4ad709f2e7))
+* **deps:** update google-adk[mcp] requirement in /agents ([#89](https://github.com/erayguner/agentic-ops-platform/issues/89)) ([b2524ab](https://github.com/erayguner/agentic-ops-platform/commit/b2524ab9f8bcc94048f835ad4b782d1a62b955a2))
+* **deps:** update uvicorn[standard] requirement ([#81](https://github.com/erayguner/agentic-ops-platform/issues/81)) ([a431659](https://github.com/erayguner/agentic-ops-platform/commit/a431659700880eaddf8972ee69ee05a8ce5a2ffa))
+* **deps:** update uvicorn[standard] requirement ([#82](https://github.com/erayguner/agentic-ops-platform/issues/82)) ([f9c0e55](https://github.com/erayguner/agentic-ops-platform/commit/f9c0e55d28e582966aa916bee75e04e0ea957e93))
+
 ## [0.8.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.0...v0.8.1) (2026-06-08)
 
 
