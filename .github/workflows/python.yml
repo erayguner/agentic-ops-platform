@@ -45,10 +45,10 @@ jobs:
       # Pinned to the same ruff version as .pre-commit-config.yaml so local and
       # CI lint verdicts match. Config is the root pyproject.toml [tool.ruff].
       - name: Ruff lint
-        run: uvx ruff@0.15.14 check .
+        run: uvx ruff@0.15.22 check .
 
       - name: Ruff format check
-        run: uvx ruff@0.15.14 format --check .
+        run: uvx ruff@0.15.22 format --check .
 
   test:
     name: pytest (${{ matrix.component }})
