@@ -1,0 +1,43 @@
+# Trivy ignore file — path-scoped, justified suppressions.
+#
+# Wired in via the `trivyignores:` input in .github/workflows/trivy.yml. Trivy
+# does NOT auto-detect this file (only the plain-format `.trivyignore` is
+# auto-detected), so the workflow must pass it explicitly.
+#
+# Every entry is path-scoped on purpose: a blanket rule-ID suppression would
+# also silence the same finding on resources added later. Mirrors the inline
+# `checkov:skip` convention used in the Terraform sources.
+#
+# Rule IDs are listed in both the `AVD-`-prefixed and bare forms because the
+# prefix differs across Trivy releases; an ID that matches nothing is a no-op.
+
+misconfigurations:
+  # --- AVD-GCP-0077 — Cloud Storage Bucket Logging Not Enabled -------------
+  # Same control as checkov CKV_GCP_62, which is already skipped inline on this
+  # resource with the justification: access logging is redundant with Cloud
+  # Audit Logs Data Access logging for this single-purpose Terraform state
+  # store. Suppressed here so the accepted risk is consistent across scanners
+  # instead of reappearing as a permanent Code Scanning alert.
+  - id: AVD-GCP-0077
+    paths:
+      - "terraform/bootstrap/main.tf"
+    statement: "Accepted risk: state-bucket access logging is redundant with Cloud Audit Logs Data Access logging. Matches the inline checkov:skip=CKV_GCP_62 on the same resource."
+  - id: GCP-0077
+    paths:
+      - "terraform/bootstrap/main.tf"
+    statement: "Accepted risk: state-bucket access logging is redundant with Cloud Audit Logs Data Access logging. Matches the inline checkov:skip=CKV_GCP_62 on the same resource."
+
+  # --- AVD-GCP-0074 — Firewall Rule that Allows Large Port Range -----------
+  # False positive. The flagged block is the `deny { protocol = "all" }` of
+  # google_compute_firewall.deny_all_ingress — a priority-65534 default-DENY
+  # rule over 0.0.0.0/0. Trivy scores the wide protocol/port span without
+  # accounting for the rule being a deny, so it reads the intended
+  # default-deny posture as an exposure. Narrowing it would weaken the VPC.
+  - id: AVD-GCP-0074
+    paths:
+      - "terraform/modules/foundation/main.tf"
+    statement: "False positive: flags the deny{protocol=all} block of the default-deny ingress rule. A deny-all rule over 0.0.0.0/0 is the desired posture, not an exposure."
+  - id: GCP-0074
+    paths:
+      - "terraform/modules/foundation/main.tf"
+    statement: "False positive: flags the deny{protocol=all} block of the default-deny ingress rule. A deny-all rule over 0.0.0.0/0 is the desired posture, not an exposure."
