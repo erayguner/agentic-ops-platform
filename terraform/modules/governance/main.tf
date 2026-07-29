@@ -81,9 +81,23 @@ resource "google_model_armor_floorsetting" "project" {
   # INSPECT_AND_BLOCK: requests failing the floor policy are blocked, not just logged.
   enable_floor_setting_enforcement = true
 
+  # integrated_services is what ACTIVATES an integration; the *_floor_setting
+  # blocks only describe how it behaves once active. Without GOOGLE_MCP_SERVER
+  # listed here the block below is inert, so MCP traffic goes unscreened.
+  # Equivalent to `gcloud model-armor floorsettings update
+  #   --add-integrated-services=GOOGLE_MCP_SERVER`.
+  integrated_services = ["GOOGLE_MCP_SERVER"]
+
   # Enable Model Armor screening for all integrated Google MCP Servers.
+  # Covers tools/call and prompts/get request+response payloads — the indirect
+  # prompt-injection path for agents that read attacker-influenceable log lines
+  # and asset metadata. tools/list and resources/* are not sanitised.
   google_mcp_server_floor_setting {
     inspect_and_block = true
+
+    # Without this, a block is invisible after the fact — no record of what was
+    # rejected or why.
+    enable_cloud_logging = true
   }
 
   filter_config {

@@ -67,12 +67,18 @@ class AopSettings(BaseSettings):
         description="Primary model id passed to ADK. Never hard-coded in agent code.",
     )
     model_fallback_list: list[str] = Field(
-        default_factory=lambda: ["gemini-2-flash", "gemini-2-pro"],
+        default_factory=lambda: ["gemini-3.5-flash", "gemini-3.6-flash"],
         description=(
             "Ordered fallback model ids. The model factory tries the primary first, "
             "then each fallback in sequence on quota/unavailability errors."
         ),
     )
+    # The previous defaults, 'gemini-2-flash' and 'gemini-2-pro', are not real
+    # Vertex publisher model ids — both 404 against the live catalogue, so the
+    # fallback chain could only ever have failed at the moment it was needed.
+    # Replaced with GA ids that carry no announced retirement date (the 2.5
+    # family retires 2026-10-16). gemini-3.5-flash leads because it is the one
+    # id confirmed present in both the global and europe-west2 catalogues.
     model_temperature: float = Field(0.0, ge=0.0, le=2.0)
     model_max_output_tokens: int = Field(8192, gt=0)
 

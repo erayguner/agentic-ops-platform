@@ -33,12 +33,12 @@ COMPUTE_MCP = "https://compute.googleapis.com/mcp"
 RESOURCE_MANAGER_MCP = "https://cloudresourcemanager.googleapis.com/mcp"
 ASSET_INVENTORY_MCP = "https://cloudasset.googleapis.com/mcp"  # Preview
 SECOPS_MCP_TEMPLATE = "https://chronicle.{region}.rep.googleapis.com/mcp"  # GA
-PUBSUB_MCP = "https://pubsub.googleapis.com/mcp"
-BIGQUERY_MCP = "https://bigquery.googleapis.com/mcp"
-NETWORK_INTELLIGENCE_MCP = "https://networkmanagement.googleapis.com/mcp"
-AGENT_REGISTRY_MCP = "https://agentregistry.googleapis.com/mcp"  # Preview
+PUBSUB_MCP = "https://pubsub.googleapis.com/mcp"  # GA
+BIGQUERY_MCP = "https://bigquery.googleapis.com/mcp"  # GA
+NETWORK_INTELLIGENCE_MCP = "https://networkmanagement.googleapis.com/mcp"  # GA
+AGENT_REGISTRY_MCP = "https://agentregistry.googleapis.com/mcp"  # GA (was Preview)
 GEMINI_CLOUD_ASSIST_MCP = "https://geminicloudassist.googleapis.com/mcp"  # Preview
-RECOMMENDER_MCP = "https://recommender.googleapis.com/mcp"
+RECOMMENDER_MCP = "https://recommender.googleapis.com/mcp"  # GA (was Preview)
 DEVELOPER_KNOWLEDGE_MCP = (
     "https://developerknowledge.googleapis.com/mcp"  # GA — Google developer documentation lookup
 )
@@ -51,10 +51,10 @@ DEVELOPER_KNOWLEDGE_MCP = (
 #     execution separation) — never a direct MCP write.
 #   * Excluded: GKE/Compute (not in the stack), Resource Manager (overlaps Asset
 #     Inventory), SecOps/Chronicle (not used here), and Preview/unverified
-#     servers (Gemini Cloud Assist, Developer Knowledge, Agent Registry,
-#     Recommender) to avoid broad/ambiguous surface.
-#   * Deferred: BigQuery + Pub/Sub MCP. FinOps billing-BigQuery (read-only) is
-#     the first planned addition — see MCP-SERVERS.md.
+#     servers (Gemini Cloud Assist) to avoid broad/ambiguous surface.
+#   * Pub/Sub MCP stays out despite being GA: the agent SAs hold only
+#     pubsub.publisher on ops.audit, so its read surface would be denied anyway.
+#     Adding it needs a viewer grant first, not just an allow-list entry.
 ORCHESTRATOR_MCP_ENDPOINTS: list[str] = [
     LOGGING_MCP,
     MONITORING_MCP,
@@ -82,8 +82,15 @@ PLATFORM_MCP_ENDPOINTS: list[str] = [
     CLOUD_RUN_MCP,
 ]
 
+# Recommender and BigQuery MCP both reached GA, and the IAM they need is already
+# provisioned for this agent: roles/recommender.viewer (agents/finops/main.tf)
+# and dataset-scoped roles/bigquery.dataViewer + roles/bigquery.jobUser for the
+# billing export. BigQuery here is the read-only billing-export surface that the
+# fleet policy above always named as the first planned addition.
 FINOPS_MCP_ENDPOINTS: list[str] = [
     MONITORING_MCP,
+    RECOMMENDER_MCP,
+    BIGQUERY_MCP,
 ]
 
 # Decommission is a read-only *discovery* surface: it inventories the estate
@@ -94,12 +101,14 @@ FINOPS_MCP_ENDPOINTS: list[str] = [
 # `terraform.destroy_target` / `decommission.delete_resource` executors only.
 # Resource Manager MCP stays excluded per the fleet policy above (overlaps
 # Asset Inventory); project metadata reads are bounded by the SA's
-# resourcemanager.projectViewer role. Recommender MCP is deferred (Preview),
-# matching FinOps — the recommender.viewer role is granted for when it lands.
+# resourcemanager.projectViewer role. Recommender MCP has now reached GA — the
+# recommender.viewer role granted in agents/decommission/main.tf in anticipation
+# is what makes its idle/unused-resource signals usable here.
 DECOMMISSION_MCP_ENDPOINTS: list[str] = [
     ASSET_INVENTORY_MCP,
     MONITORING_MCP,
     LOGGING_MCP,
+    RECOMMENDER_MCP,
 ]
 
 

@@ -146,7 +146,7 @@ class TestModelFactory:
     def test_get_model_constructs_gemini_and_caches(self) -> None:
         from aop_common.models import ModelFactory
 
-        factory = ModelFactory(model_id="gemini-3-pro", fallback_list=["gemini-2-flash"])
+        factory = ModelFactory(model_id="gemini-3-pro", fallback_list=["gemini-3.5-flash"])
         model = factory.get_model()
         assert type(model).__name__ == "Gemini"
         assert factory.get_model() is model  # cached on second call
