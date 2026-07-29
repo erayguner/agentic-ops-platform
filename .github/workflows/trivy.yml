@@ -61,6 +61,9 @@ jobs:
           output: ${{ matrix.sarif }}
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          # Path-scoped, justified suppressions. Trivy only auto-detects the
+          # plain-format `.trivyignore`, so the YAML file is passed explicitly.
+          trivyignores: .trivyignore.yaml
           # exit-code: 0 lets the SARIF upload finish even on findings; the
           # Code Scanning alert is the authoritative gate, not the job step.
           exit-code: "0"
