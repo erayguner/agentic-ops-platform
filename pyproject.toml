@@ -85,6 +85,10 @@ select = [
 ignore = [
     "E501",     # line length (ruff format handles)
     "PLR0913",  # too many arguments
+    "PLR0917",  # too many POSITIONAL arguments — sibling of PLR0913 above, which
+                # this project already accepts; stabilised out of preview in ruff
+                # 0.16, so it started firing on pre-existing code rather than
+                # flagging anything new.
     "S101",     # assert (allowed in tests)
     "S603",     # subprocess without shell=True is the safe form
     "PLR2004",  # magic value in comparison
@@ -100,6 +104,12 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+# ruff 0.16 began formatting Python inside Markdown fences. Design and research
+# documents use hand-aligned illustrative snippets (aligned trailing comments,
+# compact one-line declarations) that reformatting flattens for no engineering
+# benefit — these blocks are prose, not shipped code. Formatting of real .py
+# sources, and of docstring code via docstring-code-format above, is unaffected.
+exclude = ["**/*.md"]
 
 [tool.mypy]
 python_version = "3.13"
