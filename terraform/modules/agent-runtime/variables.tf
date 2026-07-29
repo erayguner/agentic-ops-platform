@@ -111,16 +111,37 @@ variable "labels" {
 # Memory Bank (orchestrator context_spec) — OWASP §11.6 / ASI06.
 # ---------------------------------------------------------------------------
 
+# NOTE: both defaults below are resolved into a REGIONAL publisher path in
+# main.tf (projects/<p>/locations/<region>/publishers/google/models/<id>), so a
+# model must exist in var.region — not merely be GA globally. Verified against
+# the live publisher catalogue in europe-west2: the Pro tier (gemini-3-pro,
+# gemini-2.5-pro) is NOT served there, only the Flash tier. Re-check with
+#   curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+#        -H "x-goog-user-project: <project>" \
+#        https://<region>-aiplatform.googleapis.com/v1/publishers/google/models/<id>
+# before changing either default or var.region.
+
 variable "memory_generation_model" {
   type        = string
-  description = "Short model id the orchestrator Memory Bank uses to generate memories (resolved to a Vertex publisher path). A low-cost model (e.g. gemini-2.5-flash) is recommended."
-  default     = "gemini-2.5-flash"
+  description = "Short model id the orchestrator Memory Bank uses to generate memories (resolved to a Vertex publisher path). A low-cost Flash-tier model is recommended."
+  # Was gemini-2.5-flash, which retires 2026-10-16 along with the rest of the
+  # 2.5 family. gemini-3.5-flash is the GA successor and has no announced
+  # retirement date; confirmed present in europe-west2.
+  default = "gemini-3.5-flash"
 }
 
 variable "memory_embedding_model" {
   type        = string
   description = "Short embedding model id the Memory Bank uses for similarity search over stored memories (resolved to a Vertex publisher path)."
-  default     = "text-embedding-005"
+  # Was text-embedding-005, which Google classes as legacy alongside
+  # text-embedding-004 / text-multilingual-embedding-002. gemini-embedding-001
+  # is the GA replacement. (gemini-embedding-2 is GA globally but is NOT yet
+  # served in europe-west2, so it is not usable through the regional path.)
+  #
+  # Changing this on a Memory Bank that already holds entries invalidates the
+  # existing similarity index — safe here because enable_memory_bank defaults
+  # to false, but re-embed before flipping it on an established store.
+  default = "gemini-embedding-001"
 }
 
 variable "memory_default_ttl" {
