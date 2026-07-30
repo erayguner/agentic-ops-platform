@@ -5,6 +5,16 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.0...v0.9.1) (2026-07-29)
+
+
+### Build
+
+* **deps:** bump the python-runtime group across 2 directories with 2 updates ([b70fa33](https://github.com/erayguner/agentic-ops-platform/commit/b70fa3372976effc265a60ef73128889ac36b290))
+* **deps:** bump the python-runtime group across 2 directories with 2 updates ([845d60f](https://github.com/erayguner/agentic-ops-platform/commit/845d60fc7a73d9bdb14919a654f3860146e836d6))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([421829f](https://github.com/erayguner/agentic-ops-platform/commit/421829fed2b74d000ed5ca777bcf4c75138b2e80))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([30826d1](https://github.com/erayguner/agentic-ops-platform/commit/30826d1102d8380356add26b672599cde449d69d))
+
 ## [0.9.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.1...v0.9.0) (2026-07-26)
 
 
