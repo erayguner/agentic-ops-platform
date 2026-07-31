@@ -15,6 +15,47 @@ and release-please will generate the entries for you.
 * **deps:** bump the terraform group across 3 directories with 2 updates ([421829f](https://github.com/erayguner/agentic-ops-platform/commit/421829fed2b74d000ed5ca777bcf4c75138b2e80))
 * **deps:** bump the terraform group across 3 directories with 2 updates ([30826d1](https://github.com/erayguner/agentic-ops-platform/commit/30826d1102d8380356add26b672599cde449d69d))
 
+
+### Upgrade notes
+
+<!-- Added by hand. release-please generates the sections above from Conventional
+     Commits; `chore` and `ci` are hidden by design in release-please-config.json,
+     which is correct for routine work. The changes below landed under those types
+     but are NOT routine — a security fix and a live enforcement change — so they
+     are recorded here explicitly. Do not delete on regeneration. -->
+
+**Model Armor now enforces on Google-managed MCP traffic.** `google_model_armor_floorsetting`
+previously declared a `google_mcp_server_floor_setting` block but never listed
+`GOOGLE_MCP_SERVER` in `integrated_services`, which is what actually activates an
+integration — so MCP traffic was going unscreened. It is now active with
+`inspect_and_block`, meaning `tools/call` and `prompts/get` request **and response**
+payloads are screened and **can be blocked**. This applies only where
+`enable_model_armor = true` (prod). If you consume this module and want to observe
+before blocking, set `inspect_only` instead on first deploy.
+
+**Memory Bank model defaults changed.** `memory_generation_model` moved
+`gemini-2.5-flash` → `gemini-3.5-flash` (the whole 2.5 family retires 2026-10-16),
+and `memory_embedding_model` moved `text-embedding-005` → `gemini-embedding-001`.
+Both are resolved as *regional* publisher paths, so they must exist in `var.region`;
+verified present in `europe-west2`. Changing the embedding model invalidates an
+existing Memory Bank similarity index — safe at defaults because
+`enable_memory_bank` defaults to `false`, but re-embed before flipping it on an
+established store.
+
+**Security fix.** `services/action-broker` pinned `cryptography` 48.0.0, which bundles
+a vulnerable OpenSSL build (GHSA-537c-gmf6-5ccf, high). Now floored at 48.0.1 to match
+the other components.
+
+**New agent tool surface.** FinOps and Decommission gained Recommender MCP, and FinOps
+gained BigQuery MCP, both read-only and both reaching GA upstream. The required IAM was
+already provisioned. Pub/Sub MCP remains excluded — the agent service accounts hold only
+`pubsub.publisher` on `ops.audit`, so its read surface would be denied.
+
+**Toolchain.** ruff is now pinned to 0.16.0 in all three places it is declared
+(`python.yml`, `.pre-commit-config.yaml`, root `pyproject.toml`), resolving a
+pre-existing three-way drift. `PLR0917` is ignored (sibling of the already-ignored
+`PLR0913`) and Markdown is excluded from `ruff format`, preserving 0.15.x behaviour.
+
 ## [0.9.0](https://github.com/erayguner/agentic-ops-platform/compare/v0.8.1...v0.9.0) (2026-07-26)
 
 
