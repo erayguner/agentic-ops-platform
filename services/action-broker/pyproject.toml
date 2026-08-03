@@ -30,7 +30,7 @@ dependencies = [
     # Floor the transitive cryptography to the fixed OpenSSL wheels
     # (GHSA-537c-gmf6-5ccf); agents/ and slack-notifier already resolve 48.0.1 —
     # this keeps a future re-lock from regressing it.
-    "cryptography>=48.0.1",
+    "cryptography>=49.0.0",
     "pydantic>=2.7",
     "pydantic-settings>=2.14.2",
     "google-cloud-pubsub>=2.39.0",
