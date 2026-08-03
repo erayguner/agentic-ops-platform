@@ -22,7 +22,7 @@ authors = [
 ]
 
 dependencies = [
-    "fastapi>=0.140.13",
+    "fastapi>=0.141.1",
     "uvicorn[standard]>=0.51.0",
     # Floor the transitive Starlette to the BadHost fix (CVE-2026-48710); fastapi
     # 0.136.3 already resolves >=1.0.1 — this keeps a future re-lock from regressing it.
