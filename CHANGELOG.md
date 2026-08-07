@@ -5,6 +5,22 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.2](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.1...v0.9.2) (2026-08-07)
+
+
+### Documentation
+
+* **changelog:** document v0.9.1 changes that hidden commit types omitted ([e2039c4](https://github.com/erayguner/agentic-ops-platform/commit/e2039c48a2af544090725d70eeba52f569861cfb))
+* **changelog:** document v0.9.1 changes that hidden commit types omitted ([7428621](https://github.com/erayguner/agentic-ops-platform/commit/7428621d3da3227d7f4df0871a7f1cdf754a8970))
+
+
+### Build
+
+* **deps:** bump cryptography from 48.0.1 to 50.0.0 in /agents ([902f9f7](https://github.com/erayguner/agentic-ops-platform/commit/902f9f7ba82c049562038d22273027c009e50414))
+* **deps:** bump cryptography from 48.0.1 to 50.0.0 in /agents ([8df8cef](https://github.com/erayguner/agentic-ops-platform/commit/8df8cefe315fd8c4700351c921003497a213e421))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([41c2260](https://github.com/erayguner/agentic-ops-platform/commit/41c2260fa2cf7bb7263c441f8d0bd33f46feed18))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([60c63d1](https://github.com/erayguner/agentic-ops-platform/commit/60c63d1c5d73ba8ee80798c50b23af952d4a1b2a))
+
 ## [0.9.1](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.0...v0.9.1) (2026-07-29)
 
 
