@@ -22,10 +22,14 @@ authors = [
 
 dependencies = [
     "fastapi>=0.141.1",
-    "uvicorn[standard]>=0.51.0",
+    "uvicorn[standard]>=0.52.1",
     # Floor the transitive Starlette to the BadHost fix (CVE-2026-48710); fastapi
     # 0.136.3 already resolves >=1.0.1 — this keeps a future re-lock from regressing it.
     "starlette>=1.4.1",
+    # Floor the transitive cryptography past the PKCS#7 EnvelopedData Bleichenbacher
+    # oracle (GHSA-g6cj-pr64-35w5, affects >=44.0.0 <50.0.0); pulled in via google-auth —
+    # this keeps a future re-lock from regressing it.
+    "cryptography>=50.0.0",
     "slack_sdk>=3.43.0",
     "pydantic>=2.7",
     "pydantic-settings>=2.14.2",
