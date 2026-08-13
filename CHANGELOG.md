@@ -5,6 +5,23 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.3](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.2...v0.9.3) (2026-08-13)
+
+
+### Bug Fixes
+
+* **deps:** floor cryptography to 50.0.0 in action-broker and slack-notifier ([036077a](https://github.com/erayguner/agentic-ops-platform/commit/036077ace77c56814c764f5be8733f2f7c4248eb))
+* **deps:** floor cryptography to 50.0.0 in action-broker and slack-notifier ([f248b8c](https://github.com/erayguner/agentic-ops-platform/commit/f248b8ccead0a3a67f07d67f6c658613682d2331))
+
+
+### Build
+
+* **deps:** bump the terraform group across 3 directories with 2 updates ([16ddd4c](https://github.com/erayguner/agentic-ops-platform/commit/16ddd4cbd2ca17b319f28cfa82a2c18bb5054a20))
+* **deps:** update uvicorn[standard] requirement ([46d4f63](https://github.com/erayguner/agentic-ops-platform/commit/46d4f630e05d5892b0b291743c58cf67e40dab49))
+* **deps:** update uvicorn[standard] requirement ([f67b6a0](https://github.com/erayguner/agentic-ops-platform/commit/f67b6a033b313b4223281f3951fa29084235f530))
+* **deps:** update uvicorn[standard] requirement from &gt;=0.51.0 to &gt;=0.52.1 in /services/action-broker ([9d4a89a](https://github.com/erayguner/agentic-ops-platform/commit/9d4a89a95c22d225ebfb555cc2c2747b1070d412))
+* **deps:** update uvicorn[standard] requirement from &gt;=0.51.0 to &gt;=0.52.1 in /services/slack-notifier ([ae64fcb](https://github.com/erayguner/agentic-ops-platform/commit/ae64fcba05bfc75d6b0aa60821498d1951044fa8))
+
 ## [0.9.2](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.1...v0.9.2) (2026-08-10)
 
 
