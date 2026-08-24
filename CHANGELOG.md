@@ -5,6 +5,22 @@ This file is maintained by [release-please](https://github.com/googleapis/releas
 do not edit it by hand — write [Conventional Commits](https://www.conventionalcommits.org/)
 and release-please will generate the entries for you.
 
+## [0.9.4](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.3...v0.9.4) (2026-08-24)
+
+
+### Build
+
+* **deps:** bump opentelemetry-exporter-gcp-trace ([ee02e03](https://github.com/erayguner/agentic-ops-platform/commit/ee02e03ca2460391d06745c4cca1d11b2593a49e))
+* **deps:** bump opentelemetry-exporter-gcp-trace from 1.14.0 to 1.15.0 in /agents in the python-runtime group across 1 directory ([5be1355](https://github.com/erayguner/agentic-ops-platform/commit/5be13552867e4c878b8ad5bbb0db1dc2581557f3))
+* **deps:** bump the python-runtime group across 3 directories with 2 updates ([6fd71d7](https://github.com/erayguner/agentic-ops-platform/commit/6fd71d79a7e30c9fea80d26687cfcf0692cdeec8))
+* **deps:** bump the python-runtime group across 3 directories with 2 updates ([19758f1](https://github.com/erayguner/agentic-ops-platform/commit/19758f1eef932195d50d463f4c9182ffd2bcab04))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([d65a269](https://github.com/erayguner/agentic-ops-platform/commit/d65a269e04fa7114ec4c97aadbc5c845dbf73ef1))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([81567a7](https://github.com/erayguner/agentic-ops-platform/commit/81567a7a51db539e2f640063b1cf0c50934305a2))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([6820afa](https://github.com/erayguner/agentic-ops-platform/commit/6820afac0bfcf25b88b930b9c61e233cea847455))
+* **deps:** bump the terraform group across 3 directories with 2 updates ([1d5656f](https://github.com/erayguner/agentic-ops-platform/commit/1d5656fee815e92cbceeeecd4ce2062e96a69437))
+* **deps:** update google-adk[mcp] requirement from ==2.5.* to &gt;=2.5,&lt;2.8 in /agents ([53569ad](https://github.com/erayguner/agentic-ops-platform/commit/53569add4ed3f4bd8a171b75342a2d3bdadffd99))
+* **deps:** update google-adk[mcp] requirement in /agents ([fd5fb1d](https://github.com/erayguner/agentic-ops-platform/commit/fd5fb1da8da2f4650f152830ee284b19e835b019))
+
 ## [0.9.3](https://github.com/erayguner/agentic-ops-platform/compare/v0.9.2...v0.9.3) (2026-08-13)
 
 
